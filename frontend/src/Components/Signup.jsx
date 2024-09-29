@@ -232,7 +232,7 @@ const Signup = () => {
       >
         <option value="">Select Department</option>
         {departments.map((dept) => (
-          <option key={dept._id} value={dept._id}>
+          <option key={dept.id} value={dept.id}>
             {dept.name}
           </option>
         ))}
