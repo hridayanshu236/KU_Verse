@@ -1,14 +1,16 @@
 import React from 'react'
-
+import { Route, Routes } from "react-router-dom";
+import Chats from "./pages/Chats";
 function App() {
 
   return (
     <>
-     <div className='text-center font-extrabold text-6xl'>
-      <h1>Welcome to KU-Verse</h1>
-     </div>
+      <Routes>
+        <Route path="/chats" element={<Chats />} />
+
+      </Routes>
     </>
-  )
+  );               
 }
 
 export default App
