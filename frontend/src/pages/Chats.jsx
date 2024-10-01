@@ -7,7 +7,7 @@ import parthPic from "../assets/parth.png";
 import defaultPic from "../assets/default.svg";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faPhone, faVideo } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faCross, faDoorClosed, faPhone, faVideo } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell,
   faEnvelope,
@@ -153,12 +153,61 @@ const Chats = () => {
   ];
 
   const [selectedChat, setSelectedChat] = useState(chatData[0]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <>
-      <div className="sm:flex min-h-[100vh] sm:max-h-[100vh]">
+      {/* Footer on small devices */}
+      <div className="mdd:hidden fixed bottom-0 left-0 right-0 bg-[rgb(237,231,240)] bg-opacity-80 flex items-center justify-center text-[rgb(103,80,164)]">
+        <div className="p-3">
+          <FontAwesomeIcon
+            className="w-8 h-8 cursor-pointer"
+            icon={faMessage}
+          />
+        </div>
+        <div className="p-3">
+          <FontAwesomeIcon
+            className="w-8 h-8 cursor-pointer"
+            icon={faFileArchive}
+          />
+        </div>
+      </div>
+      <div className="mdd:flex min-h-[100vh] mdd:max-h-[100vh]">
+        {/* Sidebar for < medium devices */}
+        <div
+          className={`fixed flex flex-col justify-between min-h-[100vh] bg-[rgb(237,231,240)] bg-opacity-95 transition-transform duration-300 ease-in-out transform ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="p-3 pt-10 mt-5">
+            <img
+              src={profile}
+              alt="profile"
+              className="w-14 h-14 rounded-full"
+            />
+          </div>
+          <div className="p-3 text-[rgb(103,80,164)] ">
+            <FontAwesomeIcon
+              className="w-8 h-8 cursor-pointer hover:bg-[rgb(237,231,240)]"
+              icon={faBell}
+            />
+          </div>
+        </div>
+        {isSidebarOpen && (
+        <div className="fixed left-2 font-bold p-3 text-[rgb(103,80,164)] ">
+          <button
+            onClick={() => {
+              setIsSidebarOpen(!isSidebarOpen);
+            }}
+          >
+            X{" "}
+          </button>
+        </div>
+        )
+        }
+
         {/* Sidebar on large devices */}
-        <div className=" border text-[rgb(103,80,164)] text-center hidden sm:flex flex-col justify-between">
+        <div className=" border text-[rgb(103,80,164)] text-center hidden mdd:flex flex-col justify-between ">
           <div className="p-3">
             <img
               src={profile}
@@ -176,7 +225,7 @@ const Chats = () => {
               </li>
             </ul>
           </div>
-          <div className="p-3">
+          <div className="p-3 ">
             <FontAwesomeIcon
               className="w-8 h-8 cursor-pointer hover:bg-[rgb(237,231,240)]"
               icon={faBell}
@@ -190,18 +239,21 @@ const Chats = () => {
             <div className="flex">
               <FontAwesomeIcon
                 className="w-5 h-5 p-2 cursor-pointer sm:hidden"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 icon={faBars}
               />
+
               <h1 className="text-2xl pb-3 text-center">
                 <FontAwesomeIcon icon={faEnvelope} /> Inbox
               </h1>
             </div>
+
             <div className="pt-3">
               {" "}
               <input
                 type="text"
                 placeholder="Search for people or groups"
-                className="border w-full p-2 rounded-xl bg-[rgb(237,231,240)]"
+                className="border w-full p-4 rounded-3xl bg-[rgb(237,231,240)]"
               />
             </div>
           </div>
@@ -242,8 +294,9 @@ const Chats = () => {
             </ul>
           </div>
         </div>
+
         {/* Chat details */}
-        <div className="sm:flex flex-col flex-grow justify-between hidden ">
+        <div className="mdd:flex flex-col flex-grow justify-between hidden ">
           <div className="flex flex-row justify-between p-2 border-b">
             <div className="flex flex-row items-center">
               <img
@@ -309,22 +362,6 @@ const Chats = () => {
                 icon={faPaperPlane}
               />
             </div>
-          </div>
-        </div>
-        
-        {/* Footer on small devices */}
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[rgb(237,231,240)] bg-opacity-80 flex items-center justify-center text-[rgb(103,80,164)]">
-          <div className="p-3">
-            <FontAwesomeIcon
-              className="w-8 h-8 cursor-pointer"
-              icon={faMessage}
-            />
-          </div>
-          <div className="p-3">
-            <FontAwesomeIcon
-              className="w-8 h-8 cursor-pointer"
-              icon={faFileArchive}
-            />
           </div>
         </div>
       </div>
