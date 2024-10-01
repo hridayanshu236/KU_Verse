@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Chats from "./pages/Chats";
 import Posts from "./Components/Posts";
+
 function App() {
   return (
     <>

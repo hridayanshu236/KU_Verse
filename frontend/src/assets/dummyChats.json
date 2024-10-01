@@ -1,0 +1,173 @@
+[
+  {
+    "name": "Bhisma Prasad Bhandari",
+    "profilePic": "bhismaPic",
+    "messages": [
+      {
+        "text": "K cha dai?",
+        "sender": "Bhisma Prasad Bhandari",
+        "time": "12:24"
+      },
+      {
+        "text": "Sanchai Chhau?",
+        "sender": "Bhisma Prasad Bhandari",
+        "time": "12:25"
+      }
+    ]
+  },
+  {
+    "name": "Ashraya Kadel",
+    "profilePic": "kadelPic",
+    "messages": [
+      {
+        "text": "Hi how are you?",
+        "sender": "Ashraya Kadel",
+        "time": "12:26"
+      },
+      {
+        "text": "Let's meet up.",
+        "sender": "You",
+        "time": "12:27"
+      }
+    ]
+  },
+  {
+    "name": "Sachin Shrestha",
+    "profilePic": "sachinPic",
+    "messages": [
+      {
+        "text": "What are you doing?",
+        "sender": "Sachin Shrestha",
+        "time": "12:28"
+      }
+    ]
+  },
+  {
+    "name": "Parth Pandit",
+    "profilePic": "parthPic",
+    "messages": [
+      {
+        "text": "Hi, how are you?",
+        "sender": "Parth Pandit",
+        "time": "12:29"
+      },
+      {
+        "text": "Let's catch up!",
+        "sender": "You",
+        "time": "12:30"
+      }
+    ]
+  },
+  {
+    "name": "Cristiano Ronaldo",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "I scored another goal!",
+        "sender": "Cristiano Ronaldo",
+        "time": "14:15"
+      },
+      {
+        "text": "Keep pushing yourself.",
+        "sender": "Cristiano Ronaldo",
+        "time": "14:20"
+      }
+    ]
+  },
+  {
+    "name": "Lionel Messi",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "The game was amazing.",
+        "sender": "Lionel Messi",
+        "time": "15:00"
+      },
+      {
+        "text": "Let's discuss tactics.",
+        "sender": "You",
+        "time": "15:05"
+      }
+    ]
+  },
+  {
+    "name": "Prakalpa Satyal",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "Can we catch up this weekend?",
+        "sender": "Prakalpa Satyal",
+        "time": "11:00"
+      },
+      {
+        "text": "Sure! Looking forward to it.",
+        "sender": "You",
+        "time": "11:05"
+      }
+    ]
+  },
+  {
+    "name": "Aryaman Giri",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "How's the new project going?",
+        "sender": "Aryaman Giri",
+        "time": "13:45"
+      },
+      {
+        "text": "It's going great, thanks!",
+        "sender": "You",
+        "time": "13:50"
+      }
+    ]
+  },
+  {
+    "name": "Alexa Smith",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "I loved your recent post.",
+        "sender": "Alexa Smith",
+        "time": "10:30"
+      },
+      {
+        "text": "Thanks a lot!",
+        "sender": "You",
+        "time": "10:35"
+      }
+    ]
+  },
+  {
+    "name": "Jason Taylor",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "Are you coming to the event?",
+        "sender": "Jason Taylor",
+        "time": "16:30"
+      },
+      {
+        "text": "Yes, see you there!",
+        "sender": "You",
+        "time": "16:35"
+      }
+    ]
+  },
+  {
+    "name": "Nina Patel",
+    "profilePic": "defaultPic",
+    "messages": [
+      {
+        "text": "I need some advice on this task.",
+        "sender": "Nina Patel",
+        "time": "17:00"
+      },
+      {
+        "text": "Let's talk later today.",
+        "sender": "You",
+        "time": "17:10"
+      }
+    ]
+  }
+]
