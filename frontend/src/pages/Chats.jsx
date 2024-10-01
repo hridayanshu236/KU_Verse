@@ -5,6 +5,7 @@ import kadelPic from "../assets/kadel.png";
 import sachinPic from "../assets/sachin.png";
 import parthPic from "../assets/parth.png";
 import defaultPic from "../assets/default.svg";
+import Picker from "@emoji-mart/react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faCross, faDoorClosed, faPhone, faVideo } from "@fortawesome/free-solid-svg-icons";
@@ -155,6 +156,12 @@ const Chats = () => {
 
   const [selectedChat, setSelectedChat] = useState(chatData[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const addEmoji = (e) => {
+    let emoji = e.native;
+    setInputValue(inputValue + emoji);
+  };
 
   return (
     <>
@@ -341,16 +348,27 @@ const Chats = () => {
                 </div>
               ))}
             </div>
-            <div className="flex p-4">
+            <div className=" flex p-4">
               <div className="p-2">
                 <FontAwesomeIcon
                   className="w-6 h-6 cursor-pointer"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   icon={faSmile}
                 />
+                {showEmojiPicker && (
+                  <div className="absolute bottom-14">
+                    <Picker
+                      onEmojiSelect={addEmoji}
+                      // onClickOutside={() => setShowEmojiPicker(!showEmojiPicker)}
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex-grow">
                 <input
                   type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type a message"
                   className="border rounded-xl p-2 w-full"
                 />
