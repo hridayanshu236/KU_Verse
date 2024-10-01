@@ -49,7 +49,7 @@ const Posts = () => {
               />
             </div>
           </button>
-          <span className="text-red-500">{voteCount}</span>
+          <span className=" text-blue-500 font-semibold">{voteCount}</span>
           <button
             type=""
             className=" hover:bg-slate-200 w-[50px]"
