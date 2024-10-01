@@ -5,23 +5,16 @@ import kadelPic from "../assets/kadel.png";
 import sachinPic from "../assets/sachin.png";
 import parthPic from "../assets/parth.png";
 import defaultPic from "../assets/default.svg";
-import Picker from "@emoji-mart/react";
 import chatData from "../assets/dummyChats.json";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
-  faCross,
-  faDoorClosed,
-  faPhone,
-  faVideo,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faBell,
   faEnvelope,
   faFileArchive,
   faMessage,
-  faPaperPlane,
-  faSmile,
 } from "@fortawesome/free-regular-svg-icons";
 import Navbar from "../components/Navbar";
 import ChatInfo from "../components/Chats/ChatInfo";
@@ -39,15 +32,8 @@ const Chats = () => {
     person.profilePic = profilePics[person.name] || defaultPic;
   });
 
-  const [selectedChat, setSelectedChat] = useState(chatData[0]);
+  const [selectedChat, setSelectedChat] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const addEmoji = (e) => {
-    let emoji = e.native;
-    setInputValue(inputValue + emoji);
-  };
-
   return (
     <>
       <div className="flex flex-col min-h-[100vh] max-h-[100vh]">
@@ -121,7 +107,7 @@ const Chats = () => {
               />
             </div>
           </div>
-          
+
           {/* Conversation list */}
           <div className="flex flex-col border ">
             {" "}
@@ -156,8 +142,14 @@ const Chats = () => {
             </div>
           </div>
           {/* Chat details */}
-          <div className="mdd:flex flex-col flex-grow justify-between hidden ">
-            <ChatInfo selectedChat={selectedChat} />
+          <div className="mdd:flex  flex-col hidden flex-grow justify-between">
+            {selectedChat ? (
+              <ChatInfo selectedChat={selectedChat} />
+            ) : (
+              <div>
+                <h1 className="text-2xl text-center pt-4 ">No chat selected</h1>
+              </div>
+            )}
           </div>
         </div>
       </div>
