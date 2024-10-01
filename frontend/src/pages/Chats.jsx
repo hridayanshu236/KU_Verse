@@ -238,7 +238,7 @@ const Chats = () => {
           <div className="pb-8 pl-4 pt-4 pr-4 border-b">
             <div className="flex">
               <FontAwesomeIcon
-                className="w-5 h-5 p-2 cursor-pointer sm:hidden"
+                className="w-5 h-5 p-2 cursor-pointer mdd:hidden"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 icon={faBars}
               />
