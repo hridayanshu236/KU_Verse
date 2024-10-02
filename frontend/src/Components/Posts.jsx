@@ -21,7 +21,7 @@ const Posts = () => {
               alt="Profile_picture"
             />
             <span className="text-black font-semibold">
-              Prof.Perth Bahadur Pandit
+              Prof.Perth Bahadur Pandu
             </span>
             <span className="text-gray-900 font-light">
               Deparment of Mathematics
