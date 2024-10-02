@@ -10,10 +10,11 @@ import {
   faHome,
 } from "@fortawesome/free-solid-svg-icons";
 import profile from "../assets/profile.png";
-import profile_1 from "../assets/default.svg";
+
 import { NavLink } from "react-router-dom";
+import Notification from "./Notification";
 const profile_name = "Hridayanshu Raj Acharya";
-import notificationsData from "../assets/dummyNotification.json"
+
 const Navbar = () => {
   const [profileDropDown, setProfileDropDown] = useState(false);
   const [NotificationDropDown, setNotificationDropDown] = useState(false);
@@ -64,31 +65,10 @@ const Navbar = () => {
             className="w-6 h-6 cursor-pointer px-4 py-2"
             onClick={() => setNotificationDropDown(!NotificationDropDown)}
           />
-          {/* Notification Dropdown positioned below the Bell */}
+          {/* Notification Dropdown  */}
           {NotificationDropDown && (
             <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-lg text-[rgb(103,80,164)] mdd:text-xl text-sm p-5 rounded-lg cursor-pointer">
-              <ul className="text-gray-700">
-                {notificationsData.notifications.map((notification) => (
-                  <li
-                    key={notification.id}
-                    className="flex items-center p-2 hover:bg-gray-100 rounded"
-                  >
-                    <img
-                      src={profile_1}
-                      alt={notification.from.name}
-                      className="w-10 h-10 object-cover rounded-full mr-3"
-                    />
-                    <div>
-                      <p className="text-sm font-bold">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {notification.time}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+             <Notification />
             </div>
           )}
         </div>
