@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 const Posts = (props) => {
-  const randon = 2;
   const [voteCount, setVoteCount] = useState(0);
   function upVote() {
     setVoteCount((prevCount) => prevCount + 1);
