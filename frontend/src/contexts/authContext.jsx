@@ -1,0 +1,1 @@
+// Checks if user is logged in or not

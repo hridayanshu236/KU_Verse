@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useContext } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBell,
@@ -9,15 +9,15 @@ import {
   faSignOutAlt,
   faHome,
 } from "@fortawesome/free-solid-svg-icons";
-import profile from "../assets/profile.png";
-
 import { NavLink } from "react-router-dom";
 import Notification from "./Notification";
-const profile_name = "Hridayanshu Raj Acharya";
+import { useUser } from "../contexts/userContext"; 
 
 const Navbar = () => {
   const [profileDropDown, setProfileDropDown] = useState(false);
   const [NotificationDropDown, setNotificationDropDown] = useState(false);
+
+  const { user } = useUser(); // Get user details from context
 
   return (
     <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center ">
@@ -35,14 +35,13 @@ const Navbar = () => {
         </div>
         <div className="mdd:hidden px-3 py-1">
           <img
-            src={profile}
+            src={user?.avatar || "default_avatar_url"} 
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}
           />
         </div>
       </div>
-      {/* Search Bar */}
       <div className="mdd:flex hidden items-center bg-gray-100 px-2 py-1 rounded-full w-1/3 ">
         <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
         <input
@@ -65,10 +64,9 @@ const Navbar = () => {
             className="w-6 h-6 cursor-pointer px-4 py-2"
             onClick={() => setNotificationDropDown(!NotificationDropDown)}
           />
-          {/* Notification Dropdown  */}
           {NotificationDropDown && (
             <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-lg text-[rgb(103,80,164)] mdd:text-xl text-sm p-5 rounded-lg cursor-pointer">
-             <Notification />
+              <Notification />
             </div>
           )}
         </div>
@@ -80,25 +78,27 @@ const Navbar = () => {
         </NavLink>
         <div className="mdd:flex hidden px-3 py-1">
           <img
-            src={profile}
+            src={user?.avatar || "default_avatar_url"} // Replace profile picture
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}
           />
         </div>
       </div>
-      {/* Profile profileDropDown */}
       {profileDropDown && (
         <div className="absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg">
           <ul className="flex flex-col">
             <NavLink to="/profile">
               <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">
                 <img
-                  src={profile}
+                  src={user?.avatar || "default_avatar_url"} // Replace profile picture
                   alt="profile"
                   className="w-8 h-8 rounded-full"
                 />
-                <h1 className="pl-4 font-bold">{profile_name}</h1>
+                <h1 className="pl-4 font-bold">
+                  {user?.name || "Profile Name"}
+                </h1>{" "}
+                {/* Replace profile name */}
               </li>
             </NavLink>
             <NavLink to="/settings">
