@@ -10,10 +10,13 @@ function App() {
     <>
       <Routes>
         <Route path="/chats" element={<Chats />} />
-        <Route path="/posts" element={<Posts />} />
+        <Route
+          path="/posts"
+          element={<Posts textOnly={true} captionPresent={false} />}
+        />
         <Route path="/profile" element={<Profile />} />
         <Route path="/feed" element={<Feed />} />
-        <Route path="/settings" element={<Settings/>} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </>
   );
