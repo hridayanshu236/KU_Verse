@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Chat = require("../models/chatModel");
 const Message = require("../models/messageModel");
-
+const User = require("../models/userModel");
 
 const createChat = asyncHandler(async (req, res) => {
   const { participants } = req.body;
@@ -11,13 +11,13 @@ const createChat = asyncHandler(async (req, res) => {
     participants.push(req.user._id);
   }
 
-
+ 
   const isGroupChat = participants.length > 2;
 
-  
+
   const existingChat = await Chat.findOne({
     participants: { $all: participants },
-    isGroupChat: false, 
+    isGroupChat: false,
   });
 
   if (!isGroupChat && existingChat) {
@@ -26,8 +26,14 @@ const createChat = asyncHandler(async (req, res) => {
       .json({ message: "Chat already exists between these users." });
   }
 
-  
+
   const chat = await Chat.create({ participants, isGroupChat });
+
+
+  await User.updateMany(
+    { _id: { $in: participants } },
+    { $addToSet: { chats: chat._id } } 
+  );
 
   res.status(201).json(chat);
 });
