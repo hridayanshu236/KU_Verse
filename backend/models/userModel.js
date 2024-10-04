@@ -32,6 +32,10 @@ const userSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  profilePicture: {
+    type: String,
+  },
+  
   department: {
     type: String,
     required: true,
@@ -51,25 +55,25 @@ const userSchema = mongoose.Schema({
   friends: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Friends",
+      ref: "User",
     },
   ],
   chats: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Chats",
+      ref: "Chat",
     },
   ],
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Posts",
+      ref: "Post",
     },
   ],
   comments: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Comments",
+      ref: "Comment",
     },
   ],
 });

@@ -44,7 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
     department,
   });
   generate_jwt(user._id, res);
-
+  console.log("User Registered");
   res.status(201).json({
     message: "User Registered",
     user,
@@ -62,6 +62,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (user && comparePassword) {
     generate_jwt(user._id, res);
+    console.log("Login successful");
     res.status(200).json({ message: "Login successful", user });
   } else {
     res.status(401).json({ message: "Email or password invalid." });
