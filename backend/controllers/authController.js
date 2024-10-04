@@ -1,7 +1,7 @@
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const generate_jwt = require("../utilities/generateToken");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -68,4 +68,12 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, loginUser };
+const logoutUser = asyncHandler(async (req,res) =>{
+  res.cookie("token", "", {maxAge:0});
+
+  res.json({
+    message:"Logout Succesfull"
+  });
+})
+
+module.exports = { registerUser, loginUser,logoutUser };
