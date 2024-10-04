@@ -62,9 +62,9 @@ const loginUser = asyncHandler(async (req, res) => {
   const comparePassword = await bcrypt.compare(password, user.password);
 
   if (user && comparePassword) {
-    generate_jwt(user._id, res);
+    const token = generate_jwt(user._id, res);
     console.log("Login successful");
-    res.status(200).json({ message: "Login successful", user });
+    res.status(200).json({ message: "Login successful", user});
   } else {
     res.status(401).json({ message: "Email or password invalid." });
   }

@@ -15,6 +15,7 @@ app.use(errorHandler);
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/post", require("./routes/postRoutes"));
+app.use("/api/chat", require("./routes/chatRoutes"));
 
 // Database connection
 mongoose
