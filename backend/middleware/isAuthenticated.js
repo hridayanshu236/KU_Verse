@@ -6,12 +6,14 @@ const isAuth = asyncHandler(async (req,res,next)=>{
     const token = req.cookies.token;
 
     if(!token){
-        res.status(403).json({message :"UnAuthorized"});
+        res.status(403);
+        throw new Error("Unauthorized");
     }
     const data = jwt.verify(token ,process.env.access_token_jwt);
 
     if(!data){
-        res.status(400).json({message:"Token Expired"});
+        res.status(400);
+        throw new Error("Token Expired");
     }
 
     req.user = await User.findById(data.id);
