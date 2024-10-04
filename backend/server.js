@@ -13,10 +13,10 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/post", require("./routes/postRoutes"));
 
 // Database connection
-// mongoose
-//   .connect(process.env.MONGODB_URI)
-//   .then(() => console.log("MongoDB connected"))
-//   .catch((err) => console.error(err));
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error(err));
 
 // Define routes
 app.listen(PORT, () => {
