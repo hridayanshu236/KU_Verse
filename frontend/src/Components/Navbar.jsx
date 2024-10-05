@@ -1,4 +1,4 @@
-import React, { useState,useContext } from "react";
+import React, { useState,useContext,useEffect} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBell,
@@ -14,10 +14,11 @@ import Notification from "./Notification";
 import { useUser } from "../contexts/userContext"; 
 
 const Navbar = () => {
+
   const [profileDropDown, setProfileDropDown] = useState(false);
   const [NotificationDropDown, setNotificationDropDown] = useState(false);
 
-  const { user } = useUser(); // Get user details from context
+  const { user } = useUser(); 
 
   return (
     <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center ">
@@ -25,6 +26,9 @@ const Navbar = () => {
         <div>
           <h1 className="text-lg font-bold text-[rgb(103,80,164)]">KU-Verse</h1>
         </div>
+        {/* <div className="font-bold pl-6 pt-1">
+          <h1>Welcome back {user?.name}</h1>
+        </div> */}
         <div className="mdd:hidden flex items-center ml-auto bg-gray-100 px-2 py-1 rounded-full w-1/3 ">
           <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
           <input
@@ -91,14 +95,13 @@ const Navbar = () => {
             <NavLink to="/profile">
               <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">
                 <img
-                  src={user?.avatar || "default_avatar_url"} // Replace profile picture
+                  src={user?.avatar || "default_avatar_url"} 
                   alt="profile"
                   className="w-8 h-8 rounded-full"
                 />
                 <h1 className="pl-4 font-bold">
                   {user?.name || "Profile Name"}
                 </h1>{" "}
-                {/* Replace profile name */}
               </li>
             </NavLink>
             <NavLink to="/settings">

@@ -15,6 +15,7 @@ const ChatInfo = ({ selectedChat }) => {
   return (
     <>
       <div className="flex flex-row justify-between p-2 border-b">
+        
         <div className="flex flex-row items-center">
           <img
             src={selectedChat.profilePic}
@@ -24,14 +25,14 @@ const ChatInfo = ({ selectedChat }) => {
           <h1 className="font-semibold pl-2">{selectedChat.name}</h1>
         </div>
         <div className="text-[rgb(103,80,164)]">
-          <FontAwesomeIcon
+          {/* <FontAwesomeIcon
             className="w-6 h-6 p-2 cursor-pointer"
             icon={faPhone}
           />
           <FontAwesomeIcon
             className="w-6 h-6 p-2 cursor-pointer"
             icon={faVideo}
-          />
+          /> */}
           <FontAwesomeIcon
             className="w-6 h-6 p-2 cursor-pointer"
             icon={faBars}
