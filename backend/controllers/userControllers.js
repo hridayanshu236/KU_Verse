@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const bcrypt=require("bcrypt")
 
 const myProfile = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.user._id);
@@ -74,5 +75,41 @@ const friendList = asyncHandler(async(req,res)=>{
     const friendData = currentUser.friends;
     res.json(friendData);
 })
-module.exports = {myProfile,friend,unfriend,friendList};
+
+const updateProfile = asyncHandler(async (req,res)=>{
+    const profile = req.user._id;
+    const updates = req.body; 
+
+    if ("password" in updates || "email" in updates) {
+        res.status(400);
+        throw new Error("Password or email cannot be updated through this route");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(profile, updates, { new: true });
+
+    if (!updatedUser) {
+         res.status(404);
+        throw new Error("Invalid User ID");
+    }
+
+    res.status(200).json({message:"Profile Updated Successfully"});
+})
+
+const updatePassword = asyncHandler(async(req,res) =>{
+    const user = await User.findById(req.user._id);
+
+    const{oldPassword,newPassword}= req.body;
+    const comparePassword = await bcrypt.compare(oldPassword, user.password);
+    if(!comparePassword){
+        res.status(400);
+        throw new Error("Incorrect old password");
+    }
+  
+    user.password = await bcrypt.hash(newPassword,10);
+   
+    await user.save();
+    res.status(200).json({message:"Password updated successfully"});
+})
+
+module.exports = {myProfile,friend,unfriend,friendList,updateProfile,updatePassword};
 
