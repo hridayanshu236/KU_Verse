@@ -1,11 +1,11 @@
 const DataURIParser = require("datauri/parser");
 const path = require("path");
 
-const getDataURL = (file)=>{
+const getDataURI = (file)=>{
     const parser = new DataURIParser();
-    const ext = path.extname(file.originalname).toString();
+    const extName = path.extname(file.originalname).toString();
 
-    return parser.format(ext, file.buffer);
+    return parser.format(extName, file.buffer);
 }
 
-module.exports = getDataURL;
+module.exports = getDataURI;

@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const postSchema = mongoose.Schema ({
-    post :{
-        id:String,
-        url :String
-    },
     user : {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -24,9 +20,16 @@ const postSchema = mongoose.Schema ({
     caption : {
         type: String,
     },
-    type : {
-        type: String,
-        required:true,
+    image : {
+        public_id: {
+            type: String,
+            required:true,
+        },
+        url :{
+            type: String,
+            required:true,
+        }
+        
     },
     time : {
         type: Date,
