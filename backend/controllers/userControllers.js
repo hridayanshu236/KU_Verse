@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
-const bcrypt=require("bcrypt")
+const bcrypt=require("bcrypt");
 
 const myProfile = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.user._id);
