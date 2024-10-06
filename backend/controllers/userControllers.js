@@ -80,9 +80,9 @@ const updateProfile = asyncHandler(async (req,res)=>{
     const profile = req.user._id;
     const updates = req.body; 
 
-    if ("password" in updates || "email" in updates) {
+    if ("password" in updates|| "email" in updates) {
         res.status(400);
-        throw new Error("Password or email cannot be updated through this route");
+        throw new Error("Password and email cannot be updated through this route");
     }
 
     const updatedUser = await User.findByIdAndUpdate(profile, updates, { new: true });
