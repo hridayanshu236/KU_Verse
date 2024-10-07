@@ -31,6 +31,12 @@ const postSchema = mongoose.Schema ({
         }
         
     },
+    commentt:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Comment',
+        }
+    ],
     time : {
         type: Date,
         default: Date.now,
