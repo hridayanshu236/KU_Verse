@@ -144,5 +144,42 @@ const commentPost = asyncHandler(async(req,res)=>{
     res.status(200).json({message:"Comment added successfully"});
 })
 
+const deleteComment = asyncHandler(async(req,res)=>{
+    const {commentId} = req.body; 
+    const post = await Post.findById(req.params.id);
+    const currentUser = await User.findById(req.user._id);
+    const comment = await Comment.findById(commentId);
 
-module.exports = {createPost,deletePost,getAllPosts,upVote,downVote,commentPost};
+    if(!post){
+        res.status(404);
+        throw new Error("No post found");
+    }
+    if(!commentId){
+        res.status(404);
+        throw new Error("Comment Id Missing");
+    }
+    if(!comment){
+        res.status(404);
+        throw new Error("Comment Not Found");
+    }
+
+    const commentIndexPost = post.commentt.indexOf(comment._id);
+    const commentIndexUser = currentUser.comments.indexOf(comment._id);
+
+    if(post.user._id.toString()=== req.user._id.toString || comment.user._id.toString() === req.user._id.toString()){
+        await comment.deleteOne();
+
+        post.commentt.splice(commentIndexPost,1);
+        currentUser.comments.splice(commentIndexUser,1);
+
+        await post.save();
+        await currentUser.save();
+    }else{
+        res.status(401);
+        throw new Error("Unauthorized");
+    }
+
+    res.status(200).json({message:"Comment deleted succesfully"});
+})
+
+module.exports = {createPost,deletePost,getAllPosts,upVote,downVote,commentPost,deleteComment};

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const{createPost,deletePost,getAllPosts,upVote,downVote,commentPost} = require("../controllers/postController");
+const{createPost,deletePost,getAllPosts,upVote,downVote,commentPost,deleteComment} = require("../controllers/postController");
 const {isAuth} =require("../middleware/isAuthenticated");
 const uploadFile = require("../middleware/multer");
 
@@ -10,6 +10,7 @@ router.route("/posts").get(isAuth, getAllPosts);
 router.route("/upvote/:id").post(isAuth, upVote);
 router.route("/downvote/:id").post(isAuth, downVote);
 router.route("/comment/:id").post(isAuth, commentPost);
+router.route("/deletecomment/:id").post(isAuth, deleteComment);
 
 
 module.exports = router;
