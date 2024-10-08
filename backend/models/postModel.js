@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Comment = require("./commentModel");
+const User = require("./userModel");
 
 const postSchema = mongoose.Schema ({
     user : {
@@ -42,5 +44,25 @@ const postSchema = mongoose.Schema ({
         default: Date.now,
     }
 
-})
+});
+
+postSchema.pre('deleteOne', { document: true }, async function (next) {
+    try {
+        
+        const postComments = await Comment.find({ post: this._id });
+
+        for (const comment of postComments) {
+            await User.updateOne(
+                { _id: comment.user }, 
+                { $pull: { comments: comment._id } }
+            );
+
+            await Comment.deleteOne({ _id: comment._id });
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = mongoose.model('Post', postSchema);

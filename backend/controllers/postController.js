@@ -56,6 +56,7 @@ const deletePost = asyncHandler(async (req,res) =>{
         res.status(401);
         throw new Error("UnAuthorized");
     }
+    
     const deletePostId = currentUser.posts.indexOf(image);
 
     await cloudinary.uploader.destroy(image);
@@ -182,4 +183,23 @@ const deleteComment = asyncHandler(async(req,res)=>{
     res.status(200).json({message:"Comment deleted succesfully"});
 })
 
-module.exports = {createPost,deletePost,getAllPosts,upVote,downVote,commentPost,deleteComment};
+const editCaption = asyncHandler(async(req,res)=>{
+    const post = await Post.findById(req.params.id);
+    const {newCaption}=req.body;
+
+    if(!post){
+        res.status(404);
+        throw new Error("No post found");
+    }
+    if(post.user._id.toString() !== req.user._id.toString()){
+        res.status(401);
+        throw new Error("Unauthorized");
+    }
+
+    post.caption= newCaption;
+
+    await post.save();
+    res.status(200).json("Caption updated succesfully");
+})
+
+module.exports = {createPost,deletePost,getAllPosts,upVote,downVote,commentPost,deleteComment,editCaption};
