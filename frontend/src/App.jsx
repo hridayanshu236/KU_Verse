@@ -12,7 +12,7 @@ function App() {
         <Route path="/chats" element={<Chats />} />
         <Route
           path="/posts"
-          element={<Posts textOnly={true} captionPresent={false} />}
+          element={<Posts textOnly={false} captionPresent={true} />}
         />
         <Route path="/profile" element={<Profile />} />
         <Route path="/feed" element={<Feed />} />
