@@ -51,18 +51,19 @@ const getUserChats = asyncHandler(async (req, res) => {
 
 
 const sendMessage = asyncHandler(async (req, res) => {
-  const { chatId } = req.params;
-  const { message } = req.body;
+  const { chatId } = req.params; 
+  const { message } = req.body; 
 
 
   const newMessage = await Message.create({
     chat: chatId,
-    sender: req.user._id,
+    sender: req.user._id, 
     message,
   });
 
-
+  // Update the chat with the last message
   await Chat.findByIdAndUpdate(chatId, { lastMessage: newMessage._id });
+
 
   res.status(201).json(newMessage);
 });

@@ -11,7 +11,7 @@ export const UserProvider = ({ children }) => {
       const response = await axios.get(
         "http://localhost:5000/api/user/myprofile",
         {
-          withCredentials: true, // Include cookies in the request
+          withCredentials: true, 
         }
       );
       setUser(response.data);

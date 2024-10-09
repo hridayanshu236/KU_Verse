@@ -4,7 +4,6 @@ import useAuthCheck from "./authCheck";
 const PrivateRoute = () => {
 const { isAuthenticated, loading } = useAuthCheck();
   useEffect(() => {
-    
   }, []);
 
 

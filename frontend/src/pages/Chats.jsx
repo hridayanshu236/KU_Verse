@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { fetchChats } from "../utils/chatService";
 import { useUser } from "../contexts/userContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBell,
   faEnvelope,
@@ -24,24 +24,21 @@ const Chats = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(!!chatId);
 
-  const fetchChats = useCallback(async () => {
+  const loadChats = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/chat/mychats",
-        { withCredentials: true }
-      );
-      setChats(response.data);
+      const data = await fetchChats(); 
+      setChats(data);
     } catch (error) {
-      setError("Failed to fetch chats. Please try again later.");
+      setError(error.message); 
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchChats();
-  }, [fetchChats]);
+    loadChats();
+  }, [loadChats]);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);

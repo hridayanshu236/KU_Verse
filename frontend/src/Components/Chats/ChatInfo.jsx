@@ -1,38 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Import useRef
 import { useUser } from "../../contexts/userContext";
 import Picker from "@emoji-mart/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { fetchChatMessages, sendMessage } from "../../utils/messageService";
 import {
   faPaperPlane,
   faSmile,
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
+import io from "socket.io-client";
+
+const ENDPOINT = "http://localhost:5000";
+var socket;
 
 const ChatInfo = ({ selectedChat }) => {
   const { user } = useUser();
   const [inputValue, setInputValue] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null); // Ref for scrolling
 
   useEffect(() => {
-    if (selectedChat) {
-      fetchChatMessages();
-    }
+    const loadMessages = async () => {
+      if (!selectedChat || !selectedChat._id) return;
+      try {
+        const messagesData = await fetchChatMessages(selectedChat._id);
+        setMessages(messagesData);
+      } catch (error) {
+        console.error("Error fetching chat messages:", error);
+      }
+    };
+    loadMessages();
   }, [selectedChat]);
 
-  const fetchChatMessages = async () => {
-    if (!selectedChat || !selectedChat._id) return;
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/chat/${selectedChat._id}/messages`,
-        { withCredentials: true }
-      );
-      setMessages(response.data);
-    } catch (error) {
-      console.error("Error fetching chat messages:", error);
+  useEffect(() => {
+    // Connect to the socket
+    socket = io(ENDPOINT);
+
+    // Join the chat room
+    if (selectedChat?._id) {
+      socket.emit("setup", selectedChat);
     }
-  };
+
+    return () => {
+      socket.disconnect(); // Cleanup on component unmount
+    };
+  }, [selectedChat]);
 
   // Emoji picker function
   const addEmoji = (e) => {
@@ -40,12 +53,50 @@ const ChatInfo = ({ selectedChat }) => {
     setInputValue(inputValue + emoji);
   };
 
+  // Listen for incoming messages
+  useEffect(() => {
+    socket.on("message received", (newMessage) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    });
+
+    return () => {
+      socket.off("message received"); // Cleanup on unmount
+    };
+  }, []);
+
+  // Scroll to bottom function
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim() || !selectedChat?._id) return;
+
+    try {
+      const messageData = {
+        chatId: selectedChat._id,
+        senderId: user._id,
+        message: inputValue,
+      };
+
+      // Send the message via the Socket.IO event
+      console.log("Sending message:", messageData);
+      socket.emit("send message", messageData);
+
+      const sentMessage = await sendMessage(messageData);
+
+      setInputValue("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
   let displayName = "Unknown";
   let displayPicture = "";
 
   if (selectedChat && user) {
     if (selectedChat.isGroupChat) {
-   
       displayName = selectedChat.chatName || "Unnamed Group";
       displayPicture = selectedChat.groupPicture || "default_group_avatar_url";
     } else {
@@ -82,7 +133,7 @@ const ChatInfo = ({ selectedChat }) => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex flex-col h-[300px] overflow-y-auto p-4 mt-auto justify-end">
+      <div className="flex flex-col h-[200px] overflow-y-auto p-4 mt-auto justify-end">
         {messages.map((msg) => (
           <div
             key={msg._id}
@@ -120,7 +171,7 @@ const ChatInfo = ({ selectedChat }) => {
             </div>
           )}
         </div>
-        <div className="flex-grow">
+        <form onSubmit={handleSendMessage} className="flex-grow flex">
           <input
             type="text"
             value={inputValue}
@@ -128,13 +179,14 @@ const ChatInfo = ({ selectedChat }) => {
             placeholder="Type a message"
             className="border rounded-xl p-2 w-full"
           />
-        </div>
-        <div className="p-2 text-blue-800">
-          <FontAwesomeIcon
-            className="w-6 h-6 cursor-pointer"
-            icon={faPaperPlane}
-          />
-        </div>
+          <div className="p-2 text-blue-800">
+            <FontAwesomeIcon
+              className="w-6 h-6 cursor-pointer"
+              icon={faPaperPlane}
+              onClick={handleSendMessage}
+            />
+          </div>
+        </form>
       </div>
     </>
   );

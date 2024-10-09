@@ -2,13 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
-const cookieParser =require("cookie-parser");
+const cookieParser = require("cookie-parser");
 const errorHandler = require("./middleware/errorHandler");
-
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
 
 app.use(
   cors({
@@ -32,6 +30,28 @@ mongoose
   .catch((err) => console.error(err));
 
 // Define routes
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+const io = require("socket.io")(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:5173",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("Socket connected", socket.id);
+  socket.on("join chat", (chatId) => {
+    socket.join(chatId);
+    console.log(`User joined chat: ${chatId}`);
+  });
+  socket.on("send message", (messageData) => {
+    console.log("Message received on server:", messageData);
+    socket.to(messageData.chatId).emit("message received", messageData);
+  });
+  socket.on("disconnect", (reason) => {
+  console.log("Socket disconnected:", socket.id, "Reason:", reason);
+});
 });
