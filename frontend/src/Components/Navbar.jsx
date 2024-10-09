@@ -22,11 +22,11 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is not fetched yet, then fetch user details
+    
     if (!user) {
-      fetchUserDetails(); // Fetch user details when Navbar mounts
+      fetchUserDetails(); 
     }
-  }, [user, fetchUserDetails]); // Call only once when Navbar mounts or when user changes
+  }, [user, fetchUserDetails]); 
 
   const handleLogout = async () => {
     try {

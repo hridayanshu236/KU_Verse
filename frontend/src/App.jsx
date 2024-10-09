@@ -16,6 +16,7 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route element={<Feed />} path="/feed" />
           <Route element={<Chats />} path="/chats" />
+          <Route element={<Chats />} path="/chats/:chatId" />
           <Route
             path="/posts"
             element={<Posts textOnly={false} captionPresent={true} />}

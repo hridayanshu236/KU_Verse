@@ -43,7 +43,7 @@ const getUserChats = asyncHandler(async (req, res) => {
 
 
   const chats = await Chat.find({ participants: userId })
-    .populate("participants", "userName profilePicture")
+    .populate("participants", "fullName profilePicture")
     .populate("lastMessage");
 
   res.json(chats);

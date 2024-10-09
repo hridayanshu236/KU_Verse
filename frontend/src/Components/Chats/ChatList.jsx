@@ -1,16 +1,49 @@
-
-import React from "react";
+import React, { useEffect } from "react";
+import { useUser } from "../../contexts/userContext";
 
 const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
+  const { user } = useUser() 
+
+  useEffect(() => {
+    console.log("ChatList received chatData:", chatData);
+  }, [chatData]);
+
+  if (!chatData || !Array.isArray(chatData) || chatData.length === 0) {
+    return <p>No chats available</p>;
+  }
+
   return (
-      <ul>
-        {chatData.map((chat, index) => (
+    <ul>
+      {chatData.map((chat) => {
+        let displayName;
+        let displayPicture;
+
+        if (chat.isGroupChat) {
+          displayName = chat.chatName || "Unnamed Group";
+          displayPicture = chat.groupPicture || "default_group_avatar_url";
+        } else {
+          // Ensure user is defined and chat.participants is an array
+          if (user && Array.isArray(chat.participants)) {
+            const otherParticipant = chat.participants.find(
+              (participant) => participant._id !== user._id
+            );
+
+            displayName = otherParticipant?.fullName || "Unknown";
+            displayPicture =
+              otherParticipant?.profilePicture || "default_avatar_url";
+          } else {
+            displayName = "Unknown";
+            displayPicture = "default_avatar_url";
+          }
+        }
+
+        return (
           <li
-            key={index}
+            key={chat._id}
             onClick={() => setSelectedChat(chat)}
-            className={`flex justify-between items-center p-4 cursor-pointer border 
+            className={`flex justify-between items-center p-4 cursor-pointer border
               ${
-                chat.name === selectedChat.name
+                chat._id === selectedChat?._id
                   ? "bg-[rgb(237,231,240)]"
                   : "bg-white hover:bg-[rgb(237,231,240)]"
               }
@@ -18,25 +51,24 @@ const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
           >
             <div className="flex items-center">
               <img
-                src={chat.profilePic}
+                src={displayPicture}
                 alt="profile"
                 className="w-12 h-12 rounded-full"
               />
               <div className="pl-3">
-                <h1 className="text-lg">{chat.name}</h1>
-                <p className="text-sm">
-                  {chat.messages[chat.messages.length - 1].text}
-                </p>
+                <h1 className="text-lg">{displayName}</h1>
+                <p className="text-sm">Latest message preview here</p>
               </div>
             </div>
             <div className="flex flex-col items-center">
               <p className="text-sm">
-                {chat.messages[chat.messages.length - 1].time}
+                {new Date(chat.time).toLocaleTimeString()}
               </p>
             </div>
           </li>
-        ))}
-      </ul>
+        );
+      })}
+    </ul>
   );
 };
 

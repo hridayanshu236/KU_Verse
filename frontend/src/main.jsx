@@ -8,7 +8,7 @@ import { UserProvider } from "./contexts/userContext";
 
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
 
         <UserProvider>
@@ -16,5 +16,5 @@ createRoot(document.getElementById("root")).render(
         </UserProvider>
 
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );

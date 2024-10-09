@@ -1,38 +1,79 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useUser } from "../../contexts/userContext";
 import Picker from "@emoji-mart/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane, faSmile, faPhone, faVideo, faBars } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPaperPlane,
+  faSmile,
+  faBars,
+} from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const ChatInfo = ({ selectedChat }) => {
+  const { user } = useUser();
   const [inputValue, setInputValue] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    if (selectedChat) {
+      fetchChatMessages();
+    }
+  }, [selectedChat]);
+
+  const fetchChatMessages = async () => {
+    if (!selectedChat || !selectedChat._id) return;
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/chat/${selectedChat._id}/messages`,
+        { withCredentials: true }
+      );
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+    }
+  };
+
+  // Emoji picker function
   const addEmoji = (e) => {
     let emoji = e.native;
     setInputValue(inputValue + emoji);
   };
 
+  let displayName = "Unknown";
+  let displayPicture = "";
+
+  if (selectedChat && user) {
+    if (selectedChat.isGroupChat) {
+   
+      displayName = selectedChat.chatName || "Unnamed Group";
+      displayPicture = selectedChat.groupPicture || "default_group_avatar_url";
+    } else {
+      const otherParticipant = selectedChat.participants.find(
+        (participant) => participant._id !== user._id
+      );
+      displayName = otherParticipant?.fullName || "Unknown";
+      displayPicture = otherParticipant?.profilePicture || "default_avatar_url";
+    }
+  }
+
+  if (!selectedChat || !user) {
+    return <div>Loading chat information...</div>;
+  }
+
   return (
     <>
+      {/* Chat header */}
       <div className="flex flex-row justify-between p-2 border-b">
-        
         <div className="flex flex-row items-center">
           <img
-            src={selectedChat.profilePic}
+            src={displayPicture}
             alt="profile"
             className="w-14 h-14 rounded-full cursor-pointer"
           />
-          <h1 className="font-semibold pl-2">{selectedChat.name}</h1>
+          <h1 className="font-semibold pl-2">{displayName}</h1>
         </div>
         <div className="text-[rgb(103,80,164)]">
-          {/* <FontAwesomeIcon
-            className="w-6 h-6 p-2 cursor-pointer"
-            icon={faPhone}
-          />
-          <FontAwesomeIcon
-            className="w-6 h-6 p-2 cursor-pointer"
-            icon={faVideo}
-          /> */}
           <FontAwesomeIcon
             className="w-6 h-6 p-2 cursor-pointer"
             icon={faBars}
@@ -42,18 +83,24 @@ const ChatInfo = ({ selectedChat }) => {
 
       {/* Chat messages */}
       <div className="flex flex-col h-[300px] overflow-y-auto p-4 mt-auto justify-end">
-        {selectedChat.messages.map((msg, index) => (
+        {messages.map((msg) => (
           <div
-            key={index}
-            className={`flex ${msg.sender === "You" ? "justify-end" : ""} mb-2`}
+            key={msg._id}
+            className={`flex ${
+              msg.sender._id === user._id ? "justify-end" : ""
+            } mb-2`}
           >
             <div
               className={`max-w-[70%] p-2 rounded-lg ${
-                msg.sender === "You" ? "bg-blue-500 text-white" : "bg-gray-300"
+                msg.sender._id === user._id
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-300"
               }`}
             >
-              <p>{msg.text}</p>
-              <p className="text-xs text-gray-500 text-right">{msg.time}</p>
+              <p>{msg.message}</p>
+              <p className="text-xs text-gray-500 text-right">
+                {new Date(msg.time).toLocaleTimeString()}
+              </p>
             </div>
           </div>
         ))}
