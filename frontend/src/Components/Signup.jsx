@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -12,22 +13,29 @@ const Signup = () => {
     address: "",
     department: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-    console.log(formData);
     e.preventDefault();
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         formData
-      ); 
-      console.log(response.data); 
+      );
+      console.log(response.data);
+      navigate("/login");
     } catch (error) {
-      console.error(error.response.data); 
+      if (error.response) {
+        console.error("Error response status:", error.response.status);
+        console.error("Error response data:", error.response.data); 
+
+      } else {
+        console.error("Error message:", error.message); 
+      }
     }
   };
 
@@ -77,7 +85,7 @@ const Signup = () => {
       <input
         type="date"
         name="dateofBirth"
-        placeholder="YYYY-MM-DD" // Placeholder guiding the format
+        placeholder="YYYY-MM-DD" 
         value={formData.dateofBirth}
         onChange={handleChange}
         required

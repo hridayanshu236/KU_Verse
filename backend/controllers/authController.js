@@ -15,6 +15,7 @@ const registerUser = asyncHandler(async (req, res) => {
     address,
     department,
   } = req.body;
+
   if (
     !email ||
     !password ||
@@ -25,15 +26,15 @@ const registerUser = asyncHandler(async (req, res) => {
     !address ||
     !department
   ) {
-    res.status(400).json({ messsage: "All Field Mandatory" });
+    return res.status(400).json({ message: "All fields are mandatory." });
   }
+
   let user = await User.findOne({ email });
-
   if (user) {
-    res.status(400).json({ messsage: "User already registered" });
+    return res.status(400).json({ message: "User already registered." });
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
 
+  const hashedPassword = await bcrypt.hash(password, 10);
   user = await User.create({
     email,
     password: hashedPassword,
@@ -44,6 +45,7 @@ const registerUser = asyncHandler(async (req, res) => {
     address,
     department,
   });
+
   generate_jwt(user._id, res);
   console.log("User Registered");
   res.status(201).json({
