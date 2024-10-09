@@ -17,10 +17,16 @@ const Posts = (props) => {
       : "bg-blue-200 flex-1 rounded-t-lg mb-1 ";
   };
 
+  const user = {
+    Name: "Prof. Perth Bahadur Pandit",
+    short_name: "Perth Pandit",
+    Department: "Computer Science",
+    shortDepart: "D.O.M",
+  };
   const textPost = () => {
     return props.textOnly ? (
       <>
-        <div className=" font-sans font-medium text-justify p-4">
+        <div className=" font-sans font-medium text-justify p-4 leading-8">
           <p>{user_text}</p>
         </div>
       </>
@@ -35,25 +41,36 @@ const Posts = (props) => {
       </>
     );
   };
+
+  const captionPost = () => {
+    return props.captionPresent ? (
+      <div className="items-center flex flex-col p-2 m-1 justify-center border-r-black border-r-2">
+        <img
+          src="../src/Assets/parth.png"
+          className="w-[70px] h-[70px] rounded-full"
+          alt="Profile_picture"
+        />
+        <span className="text-black font-semibold">{user.short_name}</span>
+        <span className="text-gray-900 font-light">{user.shortDepart}</span>
+        <span className="text-gray-400 font-extralight">2 hours ago</span>
+      </div>
+    ) : (
+      <div className="items-center flex flex-col p-2 m-1 justify-center border-r-black border-r-2">
+        <img
+          src="../src/Assets/parth.png"
+          className="w-[70px] h-[70px] rounded-full"
+          alt="Profile_picture"
+        />
+        <span className="text-black font-semibold">{user.Name}</span>
+        <span className="text-gray-900 font-light">{user.Department}</span>
+        <span className="text-gray-400 font-extralight">2 hours ago</span>
+      </div>
+    );
+  };
   return (
     <>
       <div className="bg-slate-50 flex flex-col h-auto w-[640px] rounded p-2">
-        <div className={captionPostStyle()}>
-          <div className="items-center flex flex-col p-2 m-1 justify-center">
-            <img
-              src="../src/Assets/parth.png"
-              className="w-[70px] h-[70px] rounded-full"
-              alt="Profile_picture"
-            />
-            <span className="text-black font-semibold">
-              Prof. Perth Bahadur Pandit
-            </span>
-            <span className="text-gray-900 font-light">
-              Department of Mathematics
-            </span>
-            <span className="text-gray-400 font-extralight">2 hours ago</span>
-          </div>
-        </div>
+        <div className={captionPostStyle()}>{captionPost()}</div>
         <div className="  flex-[2] flex items-center justify-center rounded-b-lg">
           {textPost()}
         </div>

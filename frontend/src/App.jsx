@@ -16,7 +16,10 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route element={<Feed />} path="/feed" />
           <Route element={<Chats />} path="/chats" />
-          <Route element={<Posts />} path="/posts" />
+          <Route
+            path="/posts"
+            element={<Posts textOnly={false} captionPresent={true} />}
+          />
           <Route element={<Profile />} path="/profile" />
           <Route element={<Settings />} path="/settings" />
         </Route>
