@@ -63,19 +63,25 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (user && comparePassword) {
     const token = generate_jwt(user._id, res);
-    console.log("Login successful");
+    
     res.status(200).json({ message: "Login successful", user});
+    console.log("Login successful");
   } else {
     res.status(401).json({ message: "Email or password invalid." });
   }
 });
 
-const logoutUser = asyncHandler(async (req,res) =>{
-  res.cookie("token", "", {maxAge:0});
-
-  res.json({
-    message:"Logout Succesfull"
+const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie("token", "", {
+    maxAge: 0, 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === "production", 
+    sameSite: "Strict", 
   });
-})
+
+  res.status(200).json({
+    message: "Logout successful",
+  });
+});
 
 module.exports = { registerUser, loginUser,logoutUser };
