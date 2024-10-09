@@ -1,5 +1,7 @@
-import React, { useState,useContext,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   faBell,
   faCommentDots,
@@ -11,14 +13,36 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { NavLink } from "react-router-dom";
 import Notification from "./Notification";
-import { useUser } from "../contexts/userContext"; 
+import { useUser } from "../contexts/userContext";
 
 const Navbar = () => {
-
   const [profileDropDown, setProfileDropDown] = useState(false);
   const [NotificationDropDown, setNotificationDropDown] = useState(false);
+  const { user, fetchUserDetails } = useUser();
+  const navigate = useNavigate();
 
-  const { user } = useUser(); 
+  useEffect(() => {
+    // Check if user is not fetched yet, then fetch user details
+    if (!user) {
+      fetchUserDetails(); // Fetch user details when Navbar mounts
+    }
+  }, [user, fetchUserDetails]); // Call only once when Navbar mounts or when user changes
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Logout successful");
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout", error);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center ">
@@ -26,9 +50,6 @@ const Navbar = () => {
         <div>
           <h1 className="text-lg font-bold text-[rgb(103,80,164)]">KU-Verse</h1>
         </div>
-        {/* <div className="font-bold pl-6 pt-1">
-          <h1>Welcome back {user?.name}</h1>
-        </div> */}
         <div className="mdd:hidden flex items-center ml-auto bg-gray-100 px-2 py-1 rounded-full w-1/3 ">
           <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
           <input
@@ -39,7 +60,7 @@ const Navbar = () => {
         </div>
         <div className="mdd:hidden px-3 py-1">
           <img
-            src={user?.avatar || "default_avatar_url"} 
+            src={user?.avatar || "default_avatar_url"}
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}
@@ -82,7 +103,7 @@ const Navbar = () => {
         </NavLink>
         <div className="mdd:flex hidden px-3 py-1">
           <img
-            src={user?.avatar || "default_avatar_url"} // Replace profile picture
+            src={user?.avatar || "default_avatar_url"}
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}
@@ -95,13 +116,13 @@ const Navbar = () => {
             <NavLink to="/profile">
               <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">
                 <img
-                  src={user?.avatar || "default_avatar_url"} 
+                  src={user?.profilePicture || "default_avatar_url"}
                   alt="profile"
                   className="w-8 h-8 rounded-full"
                 />
                 <h1 className="pl-4 font-bold">
-                  {user?.name || "Profile Name"}
-                </h1>{" "}
+                  {user?.fullName || "Profile Name"}
+                </h1>
               </li>
             </NavLink>
             <NavLink to="/settings">
@@ -110,7 +131,10 @@ const Navbar = () => {
                 <h1 className="pl-4 font-bold">Settings</h1>
               </li>
             </NavLink>
-            <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">
+            <li
+              className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer"
+              onClick={() => handleLogout()}
+            >
               <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
               <h1 className="pl-4 font-bold">Logout</h1>
             </li>
