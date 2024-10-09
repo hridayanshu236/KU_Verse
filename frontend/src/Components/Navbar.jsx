@@ -60,7 +60,7 @@ const Navbar = () => {
         </div>
         <div className="mdd:hidden px-3 py-1">
           <img
-            src={user?.avatar || "default_avatar_url"}
+            src={user?.profilePicture}
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}
@@ -103,7 +103,7 @@ const Navbar = () => {
         </NavLink>
         <div className="mdd:flex hidden px-3 py-1">
           <img
-            src={user?.avatar || "default_avatar_url"}
+            src={user?.profilePicture || "default_avatar_url"}
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer"
             onClick={() => setProfileDropDown(!profileDropDown)}

@@ -34,8 +34,9 @@ const userSchema = mongoose.Schema({
   },
   profilePicture: {
     type: String,
+    default: "https://www.gravatar.com/avatar/?d=mp",
   },
-  
+
   department: {
     type: String,
     required: true,

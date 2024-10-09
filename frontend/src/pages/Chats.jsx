@@ -53,7 +53,7 @@ const Chats = () => {
           <div className="border text-[rgb(103,80,164)] text-center hidden mdd:flex flex-col justify-between">
             <div className="p-3">
               <img
-                src={user?.avatar || "default_avatar_url"}
+                src={user?.profilePicture || "default_avatar_url"}
                 alt="profile"
                 className="w-14 h-14 rounded-full"
               />
