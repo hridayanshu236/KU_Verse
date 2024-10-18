@@ -9,6 +9,7 @@ import PrivateRoute from "./utils/PrivateRoute";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import PublicRoute from "./utils/PublicRoute";
+import StoryCard from "./Components/StoryCard";
 function App() {
   return (
     <>
