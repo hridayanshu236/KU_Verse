@@ -12,7 +12,7 @@ const PostInput = () => {
           />
           <input
             type="text"
-            placeholder="Something New for KU-Verse ?"
+            placeholder="Something New for KU-Verse?"
             className="w-full bg-emerald-50 rounded-full px-6 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300 text-gray-700"
           />
         </div>

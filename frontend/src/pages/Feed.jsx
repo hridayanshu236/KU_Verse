@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import StoryCard from "../Components/StoryCard";
 import PostInput from "../Components/PostInput";
+import Posts from "../Components/Posts";
 const Feed = () => {
   return (
     <>
@@ -9,24 +10,26 @@ const Feed = () => {
         <div className="">
           <Navbar />
         </div>
-        <div className="flex flex-row h-[100vh]">
+        <div className="flex flex-row h-full">
           {/* left Section */}
           <div className="flex-1 bg-slate-500">Left</div>
           {/* Middle Post section */}
           <div className="flex-[2] bg-green-500">
-            <PostInput />
+            <PostInput className="mb-6" />
+            <Posts />
+            <Posts />
           </div>
           {/* RightSide Chat and Story Section  */}
           <div className="flex-[0.8] flex flex-col bg-yellow-400 pl-4 justify-end">
             {/* Story Section  */}
-            <div className="flex-[1.3] flex flex-col h-full justify-between border-2 border-black">
+            <div className="flex-[1.3] flex flex-col h-full justify-between ">
               <StoryCard />
               <StoryCard />
               <StoryCard />
               <StoryCard />
             </div>
             {/* Chat Heads  */}
-            <div className="flex-1 flex flex-col justify-between items-center w-[120px] self-end p-2 border-2 border-black">
+            <div className="flex-1 flex flex-col justify-between items-center w-[120px] self-end p-2 max-h-[40vh]">
               <button>
                 <img
                   className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
