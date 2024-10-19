@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "../components/Navbar";
 import StoryCard from "../Components/StoryCard";
+import PostInput from "../Components/PostInput";
 const Feed = () => {
   return (
     <>
@@ -13,7 +14,7 @@ const Feed = () => {
           <div className="flex-1 bg-slate-500">Left</div>
           {/* Middle Post section */}
           <div className="flex-[2] bg-green-500">
-            <h1>Middle</h1>
+            <PostInput />
           </div>
           {/* RightSide Chat and Story Section  */}
           <div className="flex-[0.8] flex flex-col bg-yellow-400 pl-4 justify-end">
