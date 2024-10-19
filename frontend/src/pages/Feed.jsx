@@ -12,59 +12,61 @@ const Feed = () => {
         </div>
         <div className="flex flex-row h-full">
           {/* left Section */}
-          <div className="flex-1 bg-slate-500">Left</div>
+          <div className="flex-1">Left</div>
           {/* Middle Post section */}
-          <div className="flex-[2] bg-green-500">
+          <div className="flex-[2]">
             <PostInput className="mb-6" />
             <Posts />
             <Posts />
           </div>
           {/* RightSide Chat and Story Section  */}
-          <div className="flex-[0.8] flex flex-col bg-yellow-400 pl-4 justify-end">
-            {/* Story Section  */}
-            <div className="flex-[1.3] flex flex-col h-full justify-between ">
-              <StoryCard />
-              <StoryCard />
-              <StoryCard />
-              <StoryCard />
-            </div>
-            {/* Chat Heads  */}
-            <div className="flex-1 flex flex-col justify-between items-center w-[120px] self-end p-2 max-h-[40vh]">
-              <button>
-                <img
-                  className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
-                  src="../src/Assets/parth.png"
-                  alt="Rounded avatar"
-                />
-              </button>
-              <button>
-                <img
-                  className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
-                  src="../src/Assets/profile.png"
-                  alt="Rounded avatar"
-                />
-              </button>
-              <button>
-                <img
-                  className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
-                  src="../src/Assets/bhisma.png"
-                  alt="Rounded avatar"
-                />
-              </button>
-              <button>
-                <img
-                  className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
-                  src="../src/Assets/sachin.png"
-                  alt="Rounded avatar"
-                />
-              </button>
-              <button>
-                <img
-                  className=" min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
-                  src="../src/Assets/kadel.png"
-                  alt="Rounded avatar"
-                />
-              </button>
+          <div className="flex-[0.8] flex flex-col  pl-4 sticky top-0 h-screen">
+            <div className="flex flex-col h-full">
+              {/* Story Section  */}
+              <div className="flex flex-col gap-2 overflow-y-auto py-2 sticky top-0 mb-3">
+                <StoryCard />
+                <StoryCard />
+                <StoryCard />
+                <StoryCard />
+              </div>
+              {/* Chat Heads  */}
+              <div className="flex flex-col gap-6 items-center w-[120px] self-end p-2 sticky bottom-0 pt-2">
+                <button>
+                  <img
+                    className="min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
+                    src="../src/Assets/parth.png"
+                    alt="Rounded avatar"
+                  />
+                </button>
+                <button>
+                  <img
+                    className="min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
+                    src="../src/Assets/profile.png"
+                    alt="Rounded avatar"
+                  />
+                </button>
+                <button>
+                  <img
+                    className="min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
+                    src="../src/Assets/bhisma.png"
+                    alt="Rounded avatar"
+                  />
+                </button>
+                <button>
+                  <img
+                    className="min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
+                    src="../src/Assets/sachin.png"
+                    alt="Rounded avatar"
+                  />
+                </button>
+                <button>
+                  <img
+                    className="min-w[30px] min-h-[30px] max-w-[60px] rounded-full transform transition-transform duration-200 ease-in-out hover:scale-110 hover:shadow-2xl"
+                    src="../src/Assets/kadel.png"
+                    alt="Rounded avatar"
+                  />
+                </button>
+              </div>
             </div>
           </div>
         </div>

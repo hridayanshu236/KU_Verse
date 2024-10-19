@@ -3,8 +3,8 @@ import React from "react";
 const StoryCard = () => {
   return (
     <>
-      <div>
-        <div className="relative max-h-[120px] bg-green-100 rounded-sm shadow-lg p-4 mb-4 py-2 border-y-2">
+      <div className="self-end">
+        <div className="relative max-h-[120px] max-w-[350px] bg-green-100 rounded-sm shadow-lg p-4 mb-4 py-2 border-y-2">
           {/* Foreground Content */}
           <div className="relative z-10 text-center">
             {/* Profile Image */}
