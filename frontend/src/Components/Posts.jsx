@@ -69,7 +69,7 @@ const Posts = (props) => {
   };
   return (
     <div className="flex justify-center my-2">
-      <div className="bg-slate-50 flex flex-col h-auto w-[640px] rounded p-2">
+      <div className=" flex flex-col h-auto w-[640px] rounded p-2">
         <div className={captionPostStyle()}>{captionPost()}</div>
         <div className="  flex-[2] flex items-center justify-center rounded-b-lg">
           {textPost()}
