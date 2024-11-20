@@ -260,6 +260,6 @@ At the completion of testing, a **Test Summary Report** will be prepared contain
 
 ---
 
-> **Document Status:** Draft  
-> **Version:** 1.0  
-> **Last Updated:** 16 September 2024
+> **Document Status:** Final  
+> **Version:** 2.0  
+> **Last Updated:** 19 November 2024
