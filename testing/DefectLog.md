@@ -51,11 +51,7 @@ Only the non-match was password was displayed.
 >
 > `![Evidence screenshot for DID-S1-001](./evidence/DID-S1-001.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
+
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -97,11 +93,7 @@ Clear and concise email or password mismatch is not provided.
 >
 > `![Evidence screenshot for DID-S1-002](./evidence/DID-S1-002.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
+
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -143,11 +135,7 @@ The post deletion in the feed page is not successful.
 >
 > `![Evidence screenshot for DID-S3-001](./evidence/DID-S3-001.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
+
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -189,11 +177,7 @@ No additional remarks recorded.
 >
 > `![Evidence screenshot for DID-S5-001](./evidence/DID-S5-001.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
+
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -235,11 +219,6 @@ No additional remarks recorded.
 >
 > `![Evidence screenshot for DID-S5-002](./evidence/DID-S5-002.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -281,11 +260,6 @@ No additional remarks recorded.
 >
 > `![Evidence screenshot for DID-S9-001](./evidence/DID-S9-001.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
@@ -327,11 +301,7 @@ No additional remarks recorded.
 >
 > `![Evidence screenshot for DID-S9-002](./evidence/DID-S9-002.png)`
 >
-> **Evidence file/name:** __________________________________________
->
-> **Additional evidence notes:** ____________________________________
->
-> __________________________________________________________________
+
 
 #### Developer Resolution / Retest
 - **Fix provided:** No
