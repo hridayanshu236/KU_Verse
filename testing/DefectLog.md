@@ -48,9 +48,8 @@ Although sign-up was rejected, clear validation feedback was not displayed.
 Only the non-match was password was displayed.
 
 #### Evidence Screenshot / Photograph
->
-> `![Evidence screenshot for DID-S1-001](./evidence/DID-S1-001.png)`
->
+
+![Evidence screenshot for DID-S1-001](./evidence/DID-S1-001.png)
 
 
 #### Developer Resolution / Retest
