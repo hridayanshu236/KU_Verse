@@ -90,7 +90,7 @@ Clear and concise email or password mismatch is not provided.
 #### Evidence Screenshot / Photograph
 > **Insert evidence screenshot/photo here.**
 >
-> `![Evidence screenshot for DID-S1-002](./evidence/DID-S1-002.png)`
+![Evidence screenshot for DID-S1-002](./evidence/DID-S1-002.png)
 >
 
 
@@ -103,47 +103,7 @@ Clear and concise email or password mismatch is not provided.
 
 ---
 
-### DID-S3-001 — Verify deletion of a post
 
-- **Scenario ID:** S3
-- **Test Case ID:** TC-S3-008
-- **Priority:** High
-- **Severity:** Medium
-- **Environment:** Local development environment
-- **Executed By:** Ashraya Kadel
-- **Execution Date:** 2024-10-08
-- **Status:** **Open / Unresolved**
-
-#### Description / Observed Issue
-The post is deleted successfully only when the user visits their profile page. 
-
-#### Steps to Reproduce
-Delete a post owned by the current user.
-
-#### Expected Result
-The post is deleted successfully.
-
-#### Actual Result
-The post is deleted successfully only when the user visits their profile page. 
-
-#### Remarks
-The post deletion in the feed page is not successful.
-
-#### Evidence Screenshot / Photograph
-> **Insert evidence screenshot/photo here.**
->
-> `![Evidence screenshot for DID-S3-001](./evidence/DID-S3-001.png)`
->
-
-
-#### Developer Resolution / Retest
-- **Fix provided:** No
-- **Fix date:** ____________________
-- **Retest date:** ____________________
-- **Retest result:** ____________________
-- **Retest notes:** _________________________________________________
-
----
 
 ### DID-S5-001 — Verify unbookmarking a post
 
@@ -174,7 +134,7 @@ No additional remarks recorded.
 #### Evidence Screenshot / Photograph
 > **Insert evidence screenshot/photo here.**
 >
-> `![Evidence screenshot for DID-S5-001](./evidence/DID-S5-001.png)`
+>!`[Evidence screenshot for DID-S5-001](./evidence/DID-S5-001.png)`
 >
 
 
@@ -216,7 +176,7 @@ No additional remarks recorded.
 #### Evidence Screenshot / Photograph
 > **Insert evidence screenshot/photo here.**
 >
-> `![Evidence screenshot for DID-S5-002](./evidence/DID-S5-002.png)`
+>!`[Evidence screenshot for DID-S5-002](./evidence/DID-S5-002.png)`
 >
 
 #### Developer Resolution / Retest
@@ -257,7 +217,7 @@ No additional remarks recorded.
 #### Evidence Screenshot / Photograph
 > **Insert evidence screenshot/photo here.**
 >
-> `![Evidence screenshot for DID-S9-001](./evidence/DID-S9-001.png)`
+>!`[Evidence screenshot for DID-S9-001](./evidence/DID-S9-001.png)`
 >
 
 #### Developer Resolution / Retest
@@ -298,7 +258,7 @@ No additional remarks recorded.
 #### Evidence Screenshot / Photograph
 > **Insert evidence screenshot/photo here.**
 >
-> `![Evidence screenshot for DID-S9-002](./evidence/DID-S9-002.png)`
+>!`[Evidence screenshot for DID-S9-002](./evidence/DID-S9-002.png)`
 >
 
 
