@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"; // Import useRef
+import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "../../contexts/userContext";
 import Picker from "@emoji-mart/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,7 +18,7 @@ const ChatInfo = ({ selectedChat }) => {
   const [inputValue, setInputValue] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [messages, setMessages] = useState([]);
-  const messagesEndRef = useRef(null); // Ref for scrolling
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -34,37 +34,31 @@ const ChatInfo = ({ selectedChat }) => {
   }, [selectedChat]);
 
   useEffect(() => {
-    // Connect to the socket
     socket = io(ENDPOINT);
-
-    // Join the chat room
     if (selectedChat?._id) {
       socket.emit("setup", selectedChat);
     }
 
     return () => {
-      socket.disconnect(); // Cleanup on component unmount
+      socket.disconnect();
     };
   }, [selectedChat]);
 
-  // Emoji picker function
   const addEmoji = (e) => {
     let emoji = e.native;
     setInputValue(inputValue + emoji);
   };
 
-  // Listen for incoming messages
   useEffect(() => {
     socket.on("message received", (newMessage) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
     return () => {
-      socket.off("message received"); // Cleanup on unmount
+      socket.off("message received");
     };
   }, []);
 
-  // Scroll to bottom function
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -80,12 +74,9 @@ const ChatInfo = ({ selectedChat }) => {
         message: inputValue,
       };
 
-      // Send the message via the Socket.IO event
-      console.log("Sending message:", messageData);
       socket.emit("send message", messageData);
 
-      const sentMessage = await sendMessage(messageData);
-
+      await sendMessage(messageData);
       setInputValue("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -133,7 +124,7 @@ const ChatInfo = ({ selectedChat }) => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex flex-col h-[200px] overflow-y-auto p-4 mt-auto justify-end">
+      <div className="flex flex-col mdd:h-[70vh] h-[60vh]  overflow-y-auto p-4 mt-auto">
         {messages.map((msg) => (
           <div
             key={msg._id}
@@ -155,6 +146,8 @@ const ChatInfo = ({ selectedChat }) => {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />{" "}
+        {/* This empty div will be used to scroll to the bottom */}
       </div>
 
       {/* Message input and emoji picker */}
