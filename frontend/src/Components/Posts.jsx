@@ -16,8 +16,8 @@ const Posts = (props) => {
 
   const captionPostStyle = () => {
     return props.captionPresent
-      ? "bg-blue-200 flex-1 rounded-t-lg mb-1 flex justify-start"
-      : "bg-blue-200 flex-1 rounded-t-lg mb-1";
+      ? "bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-start"
+      : "bg-green-100 flex-1 rounded-t-lg mb-1";
   };
 
   const user = {
