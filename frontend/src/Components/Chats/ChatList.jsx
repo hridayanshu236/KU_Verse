@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import { useUser } from "../../contexts/userContext";
+import { format } from "date-fns";
 
 const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
-  const { user } = useUser() 
+  const { user } = useUser();
 
   useEffect(() => {
     console.log("ChatList received chatData:", chatData);
@@ -22,7 +23,6 @@ const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
           displayName = chat.chatName || "Unnamed Group";
           displayPicture = chat.groupPicture || "default_group_avatar_url";
         } else {
-          // Ensure user is defined and chat.participants is an array
           if (user && Array.isArray(chat.participants)) {
             const otherParticipant = chat.participants.find(
               (participant) => participant._id !== user._id
@@ -57,12 +57,18 @@ const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
               />
               <div className="pl-3">
                 <h1 className="text-lg">{displayName}</h1>
-                <p className="text-sm">Latest message preview here</p>
+                <p className="text-sm truncate">
+                  {chat.lastMessage
+                    ? chat.lastMessage.message
+                    : "No messages yet"}
+                </p>
               </div>
             </div>
             <div className="flex flex-col items-center">
               <p className="text-sm">
-                {new Date(chat.time).toLocaleTimeString()}
+                {chat.lastMessage
+                  ? format(new Date(chat.lastMessage.time), "p")
+                  : ""}
               </p>
             </div>
           </li>
