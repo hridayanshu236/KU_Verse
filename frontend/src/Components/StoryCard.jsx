@@ -8,7 +8,7 @@ const StoryCard = (props) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 m-2 border border-gray-200 rounded-lg shadow-md bg-green-100 min-w-[240px] min-h-[100px] md:min-w-[300px] md:min-h-[120px]">
+    <div className="flex flex-col items-center justify-center p-2  border border-gray-200 rounded-lg shadow-md bg-green-100 min-w-[240px] min-h-[100px] md:min-w-[300px] md:min-h-[120px]">
       {/* Profile Image */}
       <img
         src={user.profileImage}
