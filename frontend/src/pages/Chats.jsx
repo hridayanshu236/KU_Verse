@@ -13,6 +13,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Navbar from "../components/Navbar";
 import ChatInfo from "../components/Chats/ChatInfo";
 import ChatList from "../components/Chats/ChatList";
+import Modal from "../components/Chats/Modal";
 
 const Chats = () => {
   const { user } = useUser();
@@ -23,14 +24,15 @@ const Chats = () => {
   const { chatId } = useParams();
   const [selectedChat, setSelectedChat] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(!!chatId);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
   const loadChats = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await fetchChats(); 
+      const data = await fetchChats();
       setChats(data);
     } catch (error) {
-      setError(error.message); 
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +61,14 @@ const Chats = () => {
     }
   }, [chatId, chats]);
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -72,7 +82,7 @@ const Chats = () => {
       <Navbar />
       <div className="flex flex-grow overflow-hidden">
         {/* Sidebar on large devices */}
-        <div className="hidden mdd:flex flex-col justify-between border text-[rgb(103,80,164)] text-center ">
+        <div className="hidden mdd:flex flex-col justify-between border text-[rgb(103,80,164)] text-center">
           <div className="p-3">
             <img
               src={user?.profilePicture || "default_avatar_url"}
@@ -118,6 +128,7 @@ const Chats = () => {
                   src="https://img.icons8.com/material-two-tone/24/create-new--v1.png"
                   alt="create-new--v1"
                   className="cursor-pointer"
+                  onClick={handleOpenModal} // Open the modal on click
                 />
               </div>
             </div>
@@ -158,7 +169,7 @@ const Chats = () => {
                   onClick={handleBackToChatList}
                 />
               </div>
-              <div className="flex-grow flex flex-col">
+              <div className="flex-grow flex flex-col min-h-[full]">
                 <ChatInfo
                   selectedChat={selectedChat}
                   handleBackToChatList={handleBackToChatList}
@@ -172,6 +183,26 @@ const Chats = () => {
           )}
         </div>
       </div>
+
+      {/* Modal for creating new chat */}
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="New Chat">
+        <div>
+          <h2 className="text-lg">Start a New Conversation</h2>
+          <form className="mt-4">
+            <input
+              type="text"
+              placeholder="Search for friends"
+              className="border w-full p-2 rounded-lg"
+            />
+            <button
+              type="submit"
+              className="mt-4 bg-[rgb(103,80,164)] text-white py-2 px-4 rounded-lg"
+            >
+              Create
+            </button>
+          </form>
+        </div>
+      </Modal>
     </div>
   );
 };

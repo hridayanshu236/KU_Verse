@@ -34,24 +34,39 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+// Socket.io Setup
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", // React app URL
   },
 });
 
 io.on("connection", (socket) => {
-  console.log("Socket connected", socket.id);
-  socket.on("join chat", (chatId) => {
-    socket.join(chatId);
-    console.log(`User joined chat: ${chatId}`);
+  console.log("Connected to socket.io");
+
+  // Join a chat room
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log("User joined room: " + room);
   });
-  socket.on("send message", (messageData) => {
-    console.log("Message received on server:", messageData);
-    socket.to(messageData.chatId).emit("message received", messageData);
+
+  // Handle typing indicators
+  socket.on("typing", (room) => socket.in(room).emit("typing"));
+  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+
+  // Handle new messages
+  socket.on("new message", (newMessageReceived) => {
+    const chat = newMessageReceived.chat;
+    if (!chat.users) return console.log("chat.users not defined");
+
+    chat.users.forEach(user => {
+      if (user._id == newMessageReceived.sender._id) return;
+      socket.in(user._id).emit("message received", newMessageReceived);
+    });
   });
-  socket.on("disconnect", (reason) => {
-  console.log("Socket disconnected:", socket.id, "Reason:", reason);
-});
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
 });

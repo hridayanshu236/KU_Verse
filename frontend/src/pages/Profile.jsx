@@ -1,6 +1,8 @@
 import React from "react";
+import { useUser } from "../contexts/userContext";
 import Navbar from "../components/Navbar";
 const Profile = () => {
+  const { user } = useUser();
   return (
     <>
       <div className="flex flex-col">
