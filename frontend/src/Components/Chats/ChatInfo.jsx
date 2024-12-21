@@ -107,6 +107,7 @@ const ChatInfo = ({ selectedChat }) => {
     <>
       {/* Chat header */}
       <div className="flex flex-row justify-between p-2 border-b">
+        
         <div className="flex flex-row items-center">
           <img
             src={displayPicture}
@@ -124,7 +125,8 @@ const ChatInfo = ({ selectedChat }) => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex flex-col mdd:h-[70vh] h-[60vh]  overflow-y-auto p-4 mt-auto">
+      
+      <div className="flex flex-col mdd:h-[70vh] h-[full]  overflow-y-auto p-4 mt-auto">
         {messages.map((msg) => (
           <div
             key={msg._id}
