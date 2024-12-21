@@ -18,19 +18,22 @@ import Modal from "../components/Chats/Modal";
 const Chats = () => {
   const { user } = useUser();
   const [chats, setChats] = useState([]);
+  const [filteredChats, setFilteredChats] = useState([]); // New state for filtered chats
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { chatId } = useParams();
   const [selectedChat, setSelectedChat] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(!!chatId);
-  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadChats = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchChats();
       setChats(data);
+      setFilteredChats(data); // Initialize filtered chats
     } catch (error) {
       setError(error.message);
     } finally {
@@ -67,6 +70,20 @@ const Chats = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    // Filter chats based on participants' fullName
+    const filtered = chats.filter((chat) =>
+      chat.participants.some((participant) =>
+        participant.fullName.toLowerCase().includes(value)
+      )
+    );
+
+    setFilteredChats(filtered);
   };
 
   if (isLoading) {
@@ -135,17 +152,19 @@ const Chats = () => {
             <div className="pt-3">
               <input
                 type="text"
-                placeholder="Search for people or groups"
+                value={searchTerm}
+                onChange={handleSearchChange} 
+                placeholder="Search messages"
                 className="border w-full p-4 rounded-3xl bg-[rgb(237,231,240)]"
               />
             </div>
           </div>
           <div className="flex-grow overflow-y-auto">
-            {chats.length === 0 ? (
+            {filteredChats.length === 0 ? (
               <h1 className="text-2xl text-center pt-4">No chats available</h1>
             ) : (
               <ChatList
-                chatData={chats}
+                chatData={filteredChats} // Use filtered chats
                 selectedChat={selectedChat}
                 setSelectedChat={handleChatSelect}
               />
