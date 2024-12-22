@@ -1,7 +1,79 @@
 import React, { useState } from "react";
 
+const CommentSection = ({ userProfile }) => {
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (comment.trim()) {
+      const newComment = {
+        id: Date.now(),
+        text: comment,
+        user: userProfile,
+        timestamp: new Date().toLocaleString(),
+      };
+      setComments([newComment, ...comments]);
+      setComment("");
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg p-4 mt-2 border-t border-gray-200">
+      {/* Comment Input Section */}
+      <div className="flex gap-3 mb-4">
+        <img
+          src={userProfile.image}
+          alt="Profile"
+          className="w-8 h-8 rounded-full"
+        />
+        <form onSubmit={handleSubmit} className="flex-1">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Write a comment..."
+              className="flex-1 rounded-full px-4 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-full"
+            >
+              Post
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Comments List */}
+      <div className="space-y-3">
+        {comments.map((comment) => (
+          <div key={comment.id} className="flex gap-3">
+            <img
+              src={comment.user.image}
+              alt="Profile"
+              className="w-8 h-8 rounded-full"
+            />
+            <div className="flex-1">
+              <div className="bg-gray-100 rounded-2xl px-4 py-2">
+                <div className="font-semibold">{comment.user.name}</div>
+                <div>{comment.text}</div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1 ml-4">
+                {comment.timestamp}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Posts = (props) => {
   const [voteCount, setVoteCount] = useState(0);
+  const [showComments, setShowComments] = useState(false);
 
   function upVote() {
     setVoteCount((prevCount) => prevCount + 1);
@@ -25,6 +97,7 @@ const Posts = (props) => {
     short_name: "Perth Pandit",
     Department: "Computer Science",
     shortDepart: "D.O.M",
+    image: "../src/Assets/parth.png", // Added for comment section
   };
 
   const textPost = () => {
@@ -63,7 +136,7 @@ const Posts = (props) => {
   };
 
   return (
-    <div className="flex justify-center my-2 w-full px-2 md:px-4">
+    <div className="flex justify-center my-2 w-full px-2 md:px-4 min-w-[400px]">
       <div className="flex flex-col h-auto w-full max-w-[640px] min-w-[280px] rounded p-2 border border-gray-200 shadow-sm">
         {/* Caption Section */}
         <div className={captionPostStyle()}>{captionPost()}</div>
@@ -103,6 +176,7 @@ const Posts = (props) => {
           <button
             type="button"
             className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+            onClick={() => setShowComments(!showComments)}
           >
             <img
               src="..\src\Assets\Post_Components\message-circle.png"
@@ -131,6 +205,9 @@ const Posts = (props) => {
             />
           </button>
         </div>
+
+        {/* Comment Section */}
+        {showComments && <CommentSection userProfile={user} />}
       </div>
     </div>
   );

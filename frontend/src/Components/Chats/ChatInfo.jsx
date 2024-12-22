@@ -11,13 +11,15 @@ import {
 import io from "socket.io-client";
 
 const ENDPOINT = "http://localhost:5000";
-var socket;
+let socket;
+let typingTimeout;
 
 const ChatInfo = ({ selectedChat }) => {
   const { user } = useUser();
   const [inputValue, setInputValue] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ const ChatInfo = ({ selectedChat }) => {
   useEffect(() => {
     socket = io(ENDPOINT);
     if (selectedChat?._id) {
-      socket.emit("setup", selectedChat);
+      socket.emit("join chat", selectedChat._id);
     }
 
     return () => {
@@ -54,10 +56,15 @@ const ChatInfo = ({ selectedChat }) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop typing", () => setIsTyping(false));
+
     return () => {
       socket.off("message received");
+      socket.off("typing");
+      socket.off("stop typing");
     };
-  }, []);
+  }, [selectedChat]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -67,20 +74,42 @@ const ChatInfo = ({ selectedChat }) => {
     e.preventDefault();
     if (!inputValue.trim() || !selectedChat?._id) return;
 
+    const messageData = {
+      chatId: selectedChat._id,
+      senderId: user._id,
+      message: inputValue,
+    };
+
+    // Emit message immediately
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { ...messageData, sender: user },
+    ]);
+    setInputValue("");
+    socket.emit("new message", messageData);
+
     try {
-      const messageData = {
-        chatId: selectedChat._id,
-        senderId: user._id,
-        message: inputValue,
-      };
-
-      socket.emit("send message", messageData);
-
-      await sendMessage(messageData);
-      setInputValue("");
+      await sendMessage(messageData); // Save to backend
     } catch (error) {
       console.error("Error sending message:", error);
     }
+  };
+
+  const handleTyping = (e) => {
+    setInputValue(e.target.value);
+
+    if (!socket || !selectedChat) return;
+
+    // Emit typing event
+    socket.emit("typing", selectedChat._id);
+
+    // Clear previous timeout
+    if (typingTimeout) clearTimeout(typingTimeout);
+
+    // Stop typing after a delay
+    typingTimeout = setTimeout(() => {
+      socket.emit("stop typing", selectedChat._id);
+    }, 2000);
   };
 
   let displayName = "Unknown";
@@ -124,7 +153,7 @@ const ChatInfo = ({ selectedChat }) => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex flex-col mdd:h-[70vh] h-[60vh]  overflow-y-auto p-4 mt-auto">
+      <div className="flex flex-col mdd:h-[70vh] h-full overflow-y-auto p-4 mt-auto">
         {messages.map((msg) => (
           <div
             key={msg._id}
@@ -146,8 +175,10 @@ const ChatInfo = ({ selectedChat }) => {
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />{" "}
-        {/* This empty div will be used to scroll to the bottom */}
+        {isTyping && (
+          <div className="text-gray-500 text-sm italic mb-4">Typing...</div>
+        )}
+        <div ref={messagesEndRef} /> {/* Used to scroll to the bottom */}
       </div>
 
       {/* Message input and emoji picker */}
@@ -168,7 +199,7 @@ const ChatInfo = ({ selectedChat }) => {
           <input
             type="text"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleTyping}
             placeholder="Type a message"
             className="border rounded-xl p-2 w-full"
           />

@@ -16,7 +16,7 @@ const createChat = asyncHandler(async (req, res) => {
 
 
   const existingChat = await Chat.findOne({
-    participants: { $all: participants },
+    participants: { $all: participants }, 
     isGroupChat: false,
   });
 
