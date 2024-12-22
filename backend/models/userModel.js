@@ -77,6 +77,12 @@ const userSchema = mongoose.Schema({
       ref: "Comment",
     },
   ],
+  isVerified:{
+    type:Boolean,
+    default:false
+  },
+  verificationToken:String,
+  verificationTokenExpiresAt: Date,
 });
 
 module.exports = mongoose.model("User", userSchema);

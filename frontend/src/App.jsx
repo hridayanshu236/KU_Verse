@@ -10,6 +10,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import PublicRoute from "./utils/PublicRoute";
 import StoryCard from "./Components/StoryCard";
+import LoginPage from "./pages/LoginPage";
 function App() {
   return (
     <>
@@ -26,7 +27,7 @@ function App() {
           <Route element={<Settings />} path="/settings" />
         </Route>
         <Route element={<PublicRoute />}>
-          <Route element={<Login />} path="/login" />
+          <Route element={<LoginPage />} path="/login" />
           <Route element={<Signup />} path="/signup" />
         </Route>
       </Routes>

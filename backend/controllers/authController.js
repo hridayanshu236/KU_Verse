@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const generate_jwt = require("../utilities/generateToken");
 const bcrypt = require("bcrypt");
-
+const { sendVerificationEmail } = require("../utilities/emailUtility");
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -35,6 +35,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  const verificationToken = Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
   user = await User.create({
     email,
     password: hashedPassword,
@@ -44,14 +47,41 @@ const registerUser = asyncHandler(async (req, res) => {
     dateofBirth,
     address,
     department,
+    verificationToken: verificationToken,
+    verificationTokenExpiresAt: Date.now() + 15 * 60 * 1000,
   });
 
+  await user.save();
+
   generate_jwt(user._id, res);
+
+  await sendVerificationEmail(user.email, verificationToken);
+
   console.log("User Registered");
   res.status(201).json({
     message: "User Registered",
     user,
   });
+});
+
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { code } = req.body;
+  const user = await User.findOne({
+    verificationToken: code,
+    verificationTokenExpiresAt: { $gt: Date.now() },
+  });
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired verification code",
+    });
+  }
+  user.isVerified = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpiresAt = undefined;
+  await user.save();
+
+  res.status(200).json({ success: true, message: "Email verified successfully" });
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -64,9 +94,13 @@ const loginUser = asyncHandler(async (req, res) => {
   const comparePassword = await bcrypt.compare(password, user.password);
 
   if (user && comparePassword) {
+    const isVerified= user.isVerified;
+    if(!isVerified){
+      res.status(400).json({success:false, message:"Email not verified"})
+    }
     const token = generate_jwt(user._id, res);
-    
-    res.status(200).json({ message: "Login successful", user});
+
+    res.status(200).json({ message: "Login successful", user });
     console.log("Login successful");
   } else {
     res.status(401).json({ message: "Email or password invalid." });
@@ -75,10 +109,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
-    maxAge: 0, 
-    httpOnly: true, 
-    secure: process.env.NODE_ENV === "production", 
-    sameSite: "Strict", 
+    maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
   });
 
   res.status(200).json({
@@ -86,4 +120,4 @@ const logoutUser = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerUser, loginUser,logoutUser };
+module.exports = { registerUser, loginUser, logoutUser,verifyEmail };

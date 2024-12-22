@@ -4,6 +4,7 @@ const getDataURI = require("../utilities/generateURL");
 const cloudinary = require("../utilities/cloudinary");
 const User = require("../models/userModel");
 const Comment = require("../models/commentModel");
+const mongoose = require("mongoose");
 
 const createPost = asyncHandler(async (req,res) =>{
     const {caption} =req.body;
@@ -68,13 +69,64 @@ const deletePost = asyncHandler(async (req,res) =>{
     res.status(200).json({message:"Post Deleted succesfully"});
 })
 
-
 const getAllPosts = asyncHandler(async(req,res)=>{
     const posts = await Post.find()
                             .select("-user")
                             .sort({createdAt:-1});
     
     res.json({posts});
+})
+
+const getPostsById = asyncHandler(async(req,res)=>{
+    const friendId = req.params.id;
+    const user = await User.findById(req.user._id);
+    
+    if (!mongoose.Types.ObjectId.isValid(friendId)) {
+        res.status(400);
+        throw new Error("Invalid friend ID");
+    }
+    
+    const posts = await Post.find({user:friendId}).select("-user").sort({createdAt:-1});
+    if(!posts){
+        res.status(404);
+        throw new Error("No posts found!");
+    }
+
+    res.status(200).json({posts, success:true});
+
+})
+
+const getPost = asyncHandler(async(req,res)=>{
+    const userId = req.user._id;
+    const posts = await Post.find({user:userId}).select("-user").sort({createdAt:-1});
+    if(!posts){
+        req.status(404);
+        throw new Error("No Posts Found!")
+    }
+    res.status(200).json({posts, success:true})
+})
+
+const getFeedPosts = asyncHandler(async(req,res)=>{
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    const friendsId = user?.friends;
+
+    console.log(friendsId);
+
+    const posts = await Post.find({
+        $or: [
+            { user: userId },      
+            { user: { $in: friendsId } } 
+        ]
+    }).select("-user")
+    .sort({ createdAt: -1 }); 
+
+    if(!posts){
+        res.status(404);
+        throw new Error("No posts found!");
+    }
+
+    res.status(200).json({posts, success:true});
 })
 
 const upVote = asyncHandler(async(req,res)=>{
@@ -202,4 +254,4 @@ const editCaption = asyncHandler(async(req,res)=>{
     res.status(200).json("Caption updated succesfully");
 })
 
-module.exports = {createPost,deletePost,getAllPosts,upVote,downVote,commentPost,deleteComment,editCaption};
+module.exports = {createPost,deletePost,getAllPosts,getPostsById,getPost,getFeedPosts,upVote,downVote,commentPost,deleteComment,editCaption};
