@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchChats, createChat } from "../utils/chatService";
-import { fetchFriendList } from "../utils/friendservice";
 import { useUser } from "../contexts/userContext";
+
+import { fetchFriendList } from "../utils/userServices";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBell,
@@ -36,7 +37,7 @@ const Chats = () => {
     isModalOpen: false,
     friends: [],
     friendSearchTerm: "",
-    selectedFriends: [], 
+    selectedFriends: [],
     isCreatingChat: false,
   });
 
@@ -145,7 +146,7 @@ const Chats = () => {
 
     try {
       setState((prev) => ({ ...prev, isCreatingChat: true }));
-  
+
       const participantIds = [
         ...new Set(state.selectedFriends.map((friend) => friend._id)),
       ];
@@ -168,7 +169,6 @@ const Chats = () => {
       console.error("Error creating chat:", error);
     }
   }, [state.selectedFriends, navigate]);
-
 
   useEffect(() => {
     loadChats();
