@@ -2,81 +2,91 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000/api/post";
 
-export const fetchPosts = async () => {
+// Helper function to format user info
+const formatUserInfo = (user) => {
+  if (!user) {
+    return {
+      Name: "Anonymous",
+      Department: "No Department",
+      image: "/default-profile-image.png",
+    };
+  }
+
+  return {
+    Name: user.fullName || "Anonymous",
+    Department: user.department || "No Department",
+    image: user.profilePicture || "/default-profile-image.png",
+  };
+};
+
+// Transform post data for frontend use
+const transformPostData = (post) => ({
+  _id: post._id,
+  caption: post.caption || "",
+  image: {
+    url: post.image?.url || "/default-post-image.png",
+    public_id: post.image?.public_id || "",
+  },
+  user: formatUserInfo(post.user),
+  upvotes: post.upvotes || [],
+  downvotes: post.downvotes || [],
+  comments: post.comments || [],
+  createdAt: post.createdAt || new Date().toISOString(),
+});
+
+// Fetch posts (feed, friend, or personal)
+export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/posts`, {
+    let endpoint;
+
+    switch (type) {
+      case "friend":
+        endpoint = id
+          ? `${API_BASE_URL}/friendposts/${id}`
+          : `${API_BASE_URL}/feedposts`;
+        break;
+      case "myposts":
+        endpoint = `${API_BASE_URL}/myposts`;
+        break;
+      default:
+        endpoint = `${API_BASE_URL}/feedposts`;
+    }
+
+    const response = await axios.get(endpoint, {
       withCredentials: true,
     });
 
-    // Transform the response to ensure all required fields exist
-    const transformedPosts = response.data.posts.map((post) => ({
-      _id: post._id,
-      caption: post.caption || "",
-      image: {
-        url: post.image?.url || "/default-post-image.png",
-        public_id: post.image?.public_id || "",
-      },
-      user: {
-        Name: post.user?.Name || "Anonymous",
-        Department: post.user?.Department || "No Department",
-        image: post.user?.image || "/default-profile-image.png",
-        short_name: post.user?.short_name || "Anon",
-        shortDepart: post.user?.shortDepart || "N/A",
-      },
-      upvotes: post.upvotes || [],
-      downvotes: post.downvotes || [],
-      comments: post.commentt || [],
-      createdAt: post.time || new Date().toISOString(),
-    }));
+    const posts = response.data.posts || [];
 
-    return transformedPosts;
+    return posts.map(transformPostData);
   } catch (error) {
-    throw new Error("Failed to fetch posts. Please try again later.");
+    console.error("Failed to fetch posts:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to fetch posts. Please try again."
+    );
   }
 };
 
+// Create a new post
 export const createPost = async (postData) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/createpost`, postData, {
       withCredentials: true,
     });
 
-    // Transform the created post data
     const post = response.data.post;
-    return {
-      _id: post._id,
-      caption: post.caption || "",
-      image: {
-        url: post.image?.url || "/default-post-image.png",
-        public_id: post.image?.public_id || "",
-      },
-      user: {
-        Name: post.user?.Name || "Anonymous",
-        Department: post.user?.Department || "No Department",
-        image: post.user?.image || "/default-profile-image.png",
-        short_name: post.user?.short_name || "Anon",
-        shortDepart: post.user?.shortDepart || "N/A",
-      },
-      upvotes: post.upvotes || [],
-      downvotes: post.downvotes || [],
-      comments: post.commentt || [],
-      createdAt: post.time || new Date().toISOString(),
-    };
+    return transformPostData(post);
   } catch (error) {
-    throw new Error("Failed to create post. Please try again later.");
+    console.error("Failed to create post:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to create post. Please try again."
+    );
   }
 };
 
-export const deletePost = async (postId) => {
-  try {
-    await axios.delete(`${API_BASE_URL}/deletepost/${postId}`, {
-      withCredentials: true,
-    });
-  } catch (error) {
-    throw new Error("Failed to delete post. Please try again later.");
-  }
-};
-
+// Upvote Post
 export const upvotePost = async (postId) => {
   try {
     const response = await axios.post(
@@ -88,10 +98,12 @@ export const upvotePost = async (postId) => {
     );
     return response.data;
   } catch (error) {
-    throw new Error("Failed to upvote post. Please try again later.");
+    console.error("Failed to upvote post:", error.response?.data || error);
+    throw new Error("Failed to upvote. Try again.");
   }
 };
 
+// Downvote Post
 export const downvotePost = async (postId) => {
   try {
     const response = await axios.post(
@@ -103,22 +115,35 @@ export const downvotePost = async (postId) => {
     );
     return response.data;
   } catch (error) {
-    throw new Error("Failed to downvote post. Please try again later.");
+    console.error("Failed to downvote post:", error.response?.data || error);
+    throw new Error("Failed to downvote. Try again.");
   }
 };
 
-export const commentOnPost = async (postId, comment) => {
+// Comment on Post
+export const commentOnPost = async (postId, commentText) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/comment/${postId}`,
-      { comment },
+      { comment: commentText },
       {
         withCredentials: true,
       }
     );
     return response.data;
   } catch (error) {
-    throw new Error("Failed to comment on post. Please try again later.");
+    console.error("Failed to comment on post:", error.response?.data || error);
+    throw new Error("Failed to add comment. Please try again.");
+  }
+};
+
+export const deletePost = async (postId) => {
+  try {
+    await axios.delete(`${API_BASE_URL}/deletepost/${postId}`, {
+      withCredentials: true,
+    });
+  } catch (error) {
+    throw new Error("Failed to delete post. Please try again later.");
   }
 };
 
