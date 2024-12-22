@@ -7,7 +7,29 @@ export const fetchPosts = async () => {
     const response = await axios.get(`${API_BASE_URL}/posts`, {
       withCredentials: true,
     });
-    return response.data.posts;
+
+    // Transform the response to ensure all required fields exist
+    const transformedPosts = response.data.posts.map((post) => ({
+      _id: post._id,
+      caption: post.caption || "",
+      image: {
+        url: post.image?.url || "/default-post-image.png",
+        public_id: post.image?.public_id || "",
+      },
+      user: {
+        Name: post.user?.Name || "Anonymous",
+        Department: post.user?.Department || "No Department",
+        image: post.user?.image || "/default-profile-image.png",
+        short_name: post.user?.short_name || "Anon",
+        shortDepart: post.user?.shortDepart || "N/A",
+      },
+      upvotes: post.upvotes || [],
+      downvotes: post.downvotes || [],
+      comments: post.commentt || [],
+      createdAt: post.time || new Date().toISOString(),
+    }));
+
+    return transformedPosts;
   } catch (error) {
     throw new Error("Failed to fetch posts. Please try again later.");
   }
@@ -18,7 +40,28 @@ export const createPost = async (postData) => {
     const response = await axios.post(`${API_BASE_URL}/createpost`, postData, {
       withCredentials: true,
     });
-    return response.data;
+
+    // Transform the created post data
+    const post = response.data.post;
+    return {
+      _id: post._id,
+      caption: post.caption || "",
+      image: {
+        url: post.image?.url || "/default-post-image.png",
+        public_id: post.image?.public_id || "",
+      },
+      user: {
+        Name: post.user?.Name || "Anonymous",
+        Department: post.user?.Department || "No Department",
+        image: post.user?.image || "/default-profile-image.png",
+        short_name: post.user?.short_name || "Anon",
+        shortDepart: post.user?.shortDepart || "N/A",
+      },
+      upvotes: post.upvotes || [],
+      downvotes: post.downvotes || [],
+      comments: post.commentt || [],
+      createdAt: post.time || new Date().toISOString(),
+    };
   } catch (error) {
     throw new Error("Failed to create post. Please try again later.");
   }
