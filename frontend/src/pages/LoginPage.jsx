@@ -38,11 +38,12 @@ const LoginPage = () => {
   };
 
   const linkStyle = {
-    color: isHovered ? "#B80BF1" : "#D0A9F5", // Change color based on hover state
+    color: isHovered ? "#8246C2" : "#6B3FA0", // Change color based on hover state
     textDecoration: "none",
     fontWeight: "500",
     transition: "color 0.3s ease, transform 0.2s ease",
-    transform: isHovered ? "scale(1.05)" : "none", // Slight scale-up effect on hover
+    transform: isHovered ? "scale(1.07)" : "none", // Slight scale-up effect on hover
+    borderBottom: isHovered ? "2px solid #8246C2" : "none",// Add underline on hover
   };
 
   return (
