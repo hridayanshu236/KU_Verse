@@ -57,7 +57,7 @@ const ChatInfo = ({ selectedChat }) => {
     return () => {
       socket.off("message received");
     };
-  }, []);
+  }, [selectedChat]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
