@@ -4,9 +4,18 @@ import { fetchUserProfile } from "./userServices";
 
 const API_BASE_URL = "http://localhost:5000/api/post";
 
-export const fetchPosts = async () => {
+export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/posts`, {
+    let endpoint;
+    if (type === "friend" && id) {
+      endpoint = `${API_BASE_URL}/friendposts/${id}`; // Fetch friend's posts
+    } else if (type === "myposts") {
+      endpoint = `${API_BASE_URL}/myposts`; // Fetch your own posts
+    } else {
+      endpoint = `${API_BASE_URL}/feedposts`; // Fetch main feed
+    }
+    console.log(endpoint);
+    const response = await axios.get(endpoint, {
       withCredentials: true,
     });
 
