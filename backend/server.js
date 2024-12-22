@@ -6,11 +6,11 @@ const cookieParser = require("cookie-parser");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT ;
 
 app.use(
   cors({
-    origin: "http://localhost:5174", // Your frontend URL
+    origin: "http://localhost:5173", // Your frontend URL
     credentials: true, // Allow credentials (cookies)
   })
 );
