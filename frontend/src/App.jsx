@@ -11,6 +11,7 @@ import Signup from "./components/Signup";
 import PublicRoute from "./utils/PublicRoute";
 import StoryCard from "./Components/StoryCard";
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignUpPage";
 function App() {
   return (
     <>
@@ -28,7 +29,7 @@ function App() {
         </Route>
         <Route element={<PublicRoute />}>
           <Route element={<LoginPage />} path="/login" />
-          <Route element={<Signup />} path="/signup" />
+          <Route element={<SignupPage />} path="/signup" />
         </Route>
       </Routes>
     </>
