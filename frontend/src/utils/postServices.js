@@ -1,4 +1,6 @@
+// postServices.js
 import axios from "axios";
+import { fetchUserProfile } from "./userServices";
 
 const API_BASE_URL = "http://localhost:5000/api/post";
 
@@ -7,6 +9,9 @@ export const fetchPosts = async () => {
     const response = await axios.get(`${API_BASE_URL}/posts`, {
       withCredentials: true,
     });
+
+    // Fetch current user profile data
+    const userProfile = await fetchUserProfile(); // Fetch the user profile
 
     // Transform the response to ensure all required fields exist
     const transformedPosts = response.data.posts.map((post) => ({
@@ -17,16 +22,20 @@ export const fetchPosts = async () => {
         public_id: post.image?.public_id || "",
       },
       user: {
-        Name: post.user?.Name || "Anonymous",
-        Department: post.user?.Department || "No Department",
-        image: post.user?.image || "/default-profile-image.png",
-        short_name: post.user?.short_name || "Anon",
-        shortDepart: post.user?.shortDepart || "N/A",
+        Name: post.user?.fullName || userProfile.fullName || "Anonymous", // Using fullName from the post or current user profile
+        Department:
+          post.user?.department || userProfile.department || "No Department", // Using department
+        image:
+          post.user?.profilePicture ||
+          userProfile.profilePicture ||
+          "/default-profile-image.png", // Using profilePicture
+        short_name: post.user?.userName || userProfile.userName || "Anon", // Using userName as a short name
+        shortDepart: post.user?.department || userProfile.department || "N/A", // Using department for shortDepart
       },
       upvotes: post.upvotes || [],
       downvotes: post.downvotes || [],
-      comments: post.commentt || [],
-      createdAt: post.time || new Date().toISOString(),
+      comments: post.comments || [],
+      createdAt: post.createdAt || new Date().toISOString(),
     }));
 
     return transformedPosts;
