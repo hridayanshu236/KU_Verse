@@ -7,6 +7,39 @@ const myProfile = asyncHandler(async (req,res) =>{
 
     res.json(user);
 })
+const viewUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id)
+    .select("-password") // Exclude password from the response
+    .populate("friends", "-password"); // Populate friends without their passwords
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user._id.toString() === req.user._id.toString()) {
+    res.status(400);
+    throw new Error("Use /profile/me route to view your own profile");
+  }
+
+  res.json(user);
+});
+
+const getAllUsers = asyncHandler(async (req, res) => {
+    const searchQuery = req.query.search;
+    let query = {};
+  
+    if (searchQuery) {
+      query.fullName = { $regex: searchQuery, $options: "i" };
+    }
+  
+    const users = await User.find(query)
+      .select("fullName profilePicture department")
+      .limit(10) // Limit results for better performance
+      .lean();
+  
+    res.json({ users });
+  });
 
 const friend = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.params.id);
@@ -111,5 +144,5 @@ const updatePassword = asyncHandler(async(req,res) =>{
     res.status(200).json({message:"Password updated successfully"});
 })
 
-module.exports = {myProfile,friend,unfriend,friendList,updateProfile,updatePassword};
+module.exports = {myProfile,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword};
 

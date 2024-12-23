@@ -3,6 +3,8 @@ const asyncHandler = require("express-async-handler");
 const generate_jwt = require("../utilities/generateToken");
 const bcrypt = require("bcrypt");
 const { sendVerificationEmail } = require("../utilities/emailUtility");
+const getDataURI = require("../utilities/generateURL");
+const cloudinary = require("../utilities/cloudinary");
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -29,6 +31,25 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "All fields are mandatory." });
   }
 
+  let cloudData = null;
+  if (req.file) {
+    console.log("Processing file upload");
+    try {
+      const fileURI = getDataURI(req.file);
+      if (!fileURI || !fileURI.content) {
+        throw new Error("Failed to process uploaded file");
+      }
+      cloudData = await cloudinary.uploader.upload(fileURI.content);
+      console.log("File uploaded to Cloudinary successfully");
+    } catch (error) {
+      console.error("File upload error:", error);
+      return res.status(500).json({
+        message: "Error uploading profile picture",
+        error: error.message,
+      });
+    }
+  }
+
   let user = await User.findOne({ email });
   if (user) {
     return res.status(400).json({ message: "User already registered." });
@@ -46,12 +67,12 @@ const registerUser = asyncHandler(async (req, res) => {
     phoneNumber,
     dateofBirth,
     address,
+    profilePicture:
+      cloudData?.secure_url || "https://www.gravatar.com/avatar/?d=mp",
     department,
     verificationToken: verificationToken,
     verificationTokenExpiresAt: Date.now() + 15 * 60 * 1000,
   });
-
-  await user.save();
 
   generate_jwt(user._id, res);
 
@@ -81,7 +102,9 @@ const verifyEmail = asyncHandler(async (req, res) => {
   user.verificationTokenExpiresAt = undefined;
   await user.save();
 
-  res.status(200).json({ success: true, message: "Email verified successfully" });
+  res
+    .status(200)
+    .json({ success: true, message: "Email verified successfully" });
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -94,9 +117,9 @@ const loginUser = asyncHandler(async (req, res) => {
   const comparePassword = await bcrypt.compare(password, user.password);
 
   if (user && comparePassword) {
-    const isVerified= user.isVerified;
-    if(!isVerified){
-      res.status(400).json({success:false, message:"Email not verified"})
+    const isVerified = user.isVerified;
+    if (!isVerified) {
+      res.status(400).json({ success: false, message: "Email not verified" });
     }
     const token = generate_jwt(user._id, res);
 
@@ -120,4 +143,4 @@ const logoutUser = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerUser, loginUser, logoutUser,verifyEmail };
+module.exports = { registerUser, loginUser, logoutUser, verifyEmail };

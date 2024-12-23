@@ -23,6 +23,16 @@ export const fetchUserProfile = async () => {
     throw new Error("Failed to fetch user profile. Please try again later.");
   }
 };
+export const fetchOtherUserProfile = async (userId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/profile/${userId}`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error("Failed to fetch user profile. Please try again later.");
+  }
+};
 
 export const updateUserProfile = async (updates) => {
   try {

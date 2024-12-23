@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const {registerUser,loginUser,logoutUser,verifyEmail} = require("../controllers/authController");
 const {isAuth} = require("../middleware/isAuthenticated");
-router.route("/register").post(registerUser);
+const uploadFile = require("../middleware/multer");
+
+router.route("/register").post(uploadFile,registerUser);
 router.route("/login").post(loginUser);
 router.route("/logout").post(logoutUser);
 router.route("/verifyemail").post(isAuth, verifyEmail);

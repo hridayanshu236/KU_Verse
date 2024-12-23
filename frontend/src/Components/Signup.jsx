@@ -15,18 +15,31 @@ const Signup = () => {
     address: "",
     department: "",
   });
+
+  const [file, setFile] = useState();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  const changeFileHandler = (e) => {
+    setFile(e.target.files[0]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const submitFormData = new FormData();
+    Object.keys(formData).forEach((key) => {
+      submitFormData.append(key, formData[key]);
+    });
+    if (file) {
+      submitFormData.append("file", file);
+    }
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        formData
+        "http://localhost:5000/api/auth/register",
+        submitFormData
       );
       console.log(response.data);
       navigate("/login");
@@ -168,6 +181,18 @@ const Signup = () => {
         value={formData.department}
         onChange={handleChange}
         required
+        style={{
+          padding: "10px",
+          borderRadius: "5px",
+          border: "1px solid #ddd",
+          fontSize: "14px",
+        }}
+      />
+      <input
+        accept="image/*"
+        type="file"
+        id="picture"
+        onChange={changeFileHandler}
         style={{
           padding: "10px",
           borderRadius: "5px",
