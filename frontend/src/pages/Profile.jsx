@@ -6,7 +6,12 @@ import {
   addFriend,
   removeFriend,
 } from "../utils/userServices";
-import { fetchPosts } from "../utils/postServices";
+import {
+  fetchPosts,
+  upvotePost,
+  downvotePost,
+  commentOnPost,
+} from "../utils/postServices";
 import Navbar from "../components/Navbar";
 import Posts from "../components/Posts";
 
@@ -17,6 +22,8 @@ const Profile = () => {
   const [updatedProfile, setUpdatedProfile] = useState({});
   const [posts, setPosts] = useState([]);
   const [searchFriend, setSearchFriend] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch user profile
   const loadProfile = async () => {
@@ -24,11 +31,13 @@ const Profile = () => {
       const userData = await fetchUserProfile();
       setUser(userData);
       setUpdatedProfile(userData);
+      console.log("User profile loaded successfully", userData);
     } catch (error) {
       console.error(
         "An error occurred while fetching the user profile.",
         error
       );
+      setError("Failed to load profile");
     }
   };
 
@@ -38,7 +47,8 @@ const Profile = () => {
       const friendData = await fetchFriendList();
       setFriends(friendData);
     } catch (error) {
-      console.error(error.message);
+      console.error("Failed to load friends:", error.message);
+      setError("Failed to load friends");
     }
   };
 
@@ -46,43 +56,107 @@ const Profile = () => {
   const loadPosts = async () => {
     try {
       const postList = await fetchPosts({ type: "myposts" });
-      setPosts(postList);
       console.log("Posts loaded successfully", postList);
+      if (Array.isArray(postList)) {
+        setPosts(postList);
+      } else {
+        console.error("Expected array of posts but received:", typeof postList);
+        setError("Invalid posts data format");
+      }
     } catch (error) {
-      console.error(error.message);
+      console.error("Error loading posts:", error);
+      setError(error.message);
     }
   };
 
+  // Save profile changes
   const saveProfile = async () => {
     try {
       await updateUserProfile(updatedProfile);
-      loadProfile();
+      await loadProfile();
       setEditing(false);
     } catch (error) {
-      console.error(error.message);
+      console.error("Failed to update profile:", error.message);
+      setError("Failed to update profile");
     }
   };
 
+  // Handle friend removal
   const handleRemoveFriend = async (friendId) => {
     try {
       await removeFriend(friendId);
-      loadFriends();
+      await loadFriends();
     } catch (error) {
-      console.error(error.message);
+      console.error("Failed to remove friend:", error.message);
+      setError("Failed to remove friend");
     }
   };
 
+  // Handle post upvote
+  const handleUpvote = async (postId) => {
+    try {
+      const updatedPost = await upvotePost(postId);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
+      );
+    } catch (error) {
+      console.error("Failed to upvote post:", error.message);
+    }
+  };
+
+  // Handle post downvote
+  const handleDownvote = async (postId) => {
+    try {
+      const updatedPost = await downvotePost(postId);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
+      );
+    } catch (error) {
+      console.error("Failed to downvote post:", error.message);
+    }
+  };
+
+  // Handle post comment
+  const handleComment = async (postId, comment) => {
+    try {
+      const updatedPost = await commentOnPost(postId, comment);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
+      );
+    } catch (error) {
+      console.error("Failed to add comment:", error.message);
+    }
+  };
+
+  // Load all data on component mount
   useEffect(() => {
-    loadPosts();
-    loadProfile();
-    loadFriends();
-    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([loadPosts(), loadProfile(), loadFriends()]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        setError("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="loader"></div>
+        <div className="text-red-500">Error loading profile</div>
       </div>
     );
   }
@@ -95,7 +169,7 @@ const Profile = () => {
         <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-md p-6 mt-6">
           <div className="flex items-center gap-6">
             <img
-              src={user.profilePicture || "https://via.placeholder.com/150"}
+              src={user.profilePicture || "⁦https://via.placeholder.com/150⁩"}
               alt="Profile"
               className="w-24 h-24 rounded-full shadow-md border-4 border-blue-500"
             />
@@ -197,7 +271,7 @@ const Profile = () => {
                 >
                   <img
                     src={
-                      friend.profilePicture || "https://via.placeholder.com/150"
+                      friend.profilePicture || "⁦https://via.placeholder.com/150⁩"
                     }
                     alt="Friend"
                     className="w-14 h-14 rounded-full mb-1 shadow-md"
@@ -221,10 +295,18 @@ const Profile = () => {
           <h2 className="text-xl font-semibold text-gray-700 mb-4">
             Your Posts
           </h2>
+          {error && (
+            <p className="text-red-500 mb-4">Error loading posts: {error}</p>
+          )}
           {posts.length === 0 ? (
             <p className="text-md text-gray-500">No posts to display.</p>
           ) : (
-            posts.map((post) => <Posts key={post._id} {...post} />)
+            <Posts
+              posts={posts}
+              onUpvote={handleUpvote}
+              onDownvote={handleDownvote}
+              onComment={handleComment}
+            />
           )}
         </div>
       </div>
