@@ -148,10 +148,11 @@ const Feed = () => {
             <div>Loading...</div>
           ) : (
             <Posts
+              key={post._id} // Ensure this key is unique (usually use `post._id` or `id`)
               posts={posts}
-              onUpvote={handleUpvote}
-              onDownvote={handleDownvote}
-              onComment={handleComment}
+              onUpvote={onUpvote}
+              onDownvote={onDownvote}
+              onComment={onComment}
             />
           )}
         </div>
