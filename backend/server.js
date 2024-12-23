@@ -45,11 +45,12 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (socket) => {
   console.log("Connected to socket.io");
+  console.log(socket.id);
 
   // Join a chat room
   socket.on("join chat", (room) => {
     socket.join(room);
-    console.log("User joined room: " + room);
+    // console.log("User joined room: " + room);
   });
 
   // Handle typing indicators

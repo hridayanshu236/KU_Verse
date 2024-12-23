@@ -16,6 +16,9 @@ import Navbar from "../components/Navbar";
 import ChatInfo from "../components/Chats/ChatInfo";
 import ChatList from "../components/Chats/ChatList";
 import Modal from "../components/Chats/Modal";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 const SIDEBAR_ITEMS = [
   { icon: faMessage, label: "Messages" },

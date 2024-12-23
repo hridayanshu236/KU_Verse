@@ -25,11 +25,21 @@ const viewUserProfile = asyncHandler(async (req, res) => {
   res.json(user);
 });
 
-const getAllUsers = asyncHandler(async(req,res)=>{
-    const users = await User.find();
-
-    res.json({users});
-})
+const getAllUsers = asyncHandler(async (req, res) => {
+    const searchQuery = req.query.search;
+    let query = {};
+  
+    if (searchQuery) {
+      query.fullName = { $regex: searchQuery, $options: "i" };
+    }
+  
+    const users = await User.find(query)
+      .select("fullName profilePicture department")
+      .limit(10) // Limit results for better performance
+      .lean();
+  
+    res.json({ users });
+  });
 
 const friend = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.params.id);

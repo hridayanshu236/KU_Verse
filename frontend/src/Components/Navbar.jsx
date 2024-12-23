@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SearchModal from "./SearchModal";
 import {
   faBell,
   faCommentDots,
   faCog,
-  faSearch,
-  faUser,
   faSignOutAlt,
   faHome,
 } from "@fortawesome/free-solid-svg-icons";
@@ -22,16 +21,15 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    
     if (!user) {
-      fetchUserDetails(); 
+      fetchUserDetails();
     }
-  }, [user, fetchUserDetails]); 
+  }, [user, fetchUserDetails]);
 
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        "⁦http://localhost:5000/api/auth/logout⁩",
         {},
         {
           withCredentials: true,
@@ -45,18 +43,13 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center ">
-      <div className="flex items-center ">
+    <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center">
+      <div className="flex items-center">
         <div>
           <h1 className="text-lg font-bold text-[rgb(103,80,164)]">KU-Verse</h1>
         </div>
-        <div className="mdd:hidden flex items-center ml-auto bg-gray-100 px-2 py-1 rounded-full w-1/3 ">
-          <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="bg-transparent focus:outline-none w-full pl-2 text-gray-700"
-          />
+        <div className="mdd:hidden flex ml-auto w-1/3">
+          <SearchModal />
         </div>
         <div className="mdd:hidden px-3 py-1">
           <img
@@ -67,16 +60,12 @@ const Navbar = () => {
           />
         </div>
       </div>
-      <div className="mdd:flex hidden items-center bg-gray-100 px-2 py-1 rounded-full w-1/3 ">
-        <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="bg-transparent focus:outline-none w-full pl-2 text-gray-700"
-        />
+
+      <div className="mdd:flex hidden w-1/3">
+        <SearchModal />
       </div>
 
-      <div className="mdd:flex flex justify-center px-4 text-[rgb(103,80,164)] ">
+      <div className="mdd:flex flex justify-center px-4 text-[rgb(103,80,164)]">
         <NavLink to="/feed">
           <FontAwesomeIcon
             icon={faHome}
