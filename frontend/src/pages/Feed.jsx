@@ -73,25 +73,75 @@ const Feed = () => {
 
   // Upvote a post
   const handleUpvote = async (postId) => {
+    let hasError = false;
+
+    // Optimistic UI Update
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === postId ? { ...post, upvotes: post.upvotes + 1 } : post
+      )
+    );
+
     try {
       const updatedPost = await upvotePost(postId);
+
+      // Update only specific fields to avoid double increment
       setPosts((prevPosts) =>
-        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
+        prevPosts.map((post) =>
+          post._id === postId ? { ...post, upvotes: updatedPost.upvotes } : post
+        )
       );
     } catch (error) {
+      hasError = true;
       console.error(error.message);
+    }
+
+    // Rollback only if there was an error
+    if (hasError) {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId ? { ...post, upvotes: post.upvotes - 1 } : post
+        )
+      );
     }
   };
 
   // Downvote a post
   const handleDownvote = async (postId) => {
+    let hasError = false;
+
+    // Optimistic UI Update
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === postId ? { ...post, downvotes: post.downvotes + 1 } : post
+      )
+    );
+
     try {
       const updatedPost = await downvotePost(postId);
+
+      // Update only specific fields to avoid double decrement
       setPosts((prevPosts) =>
-        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
+        prevPosts.map((post) =>
+          post._id === postId
+            ? { ...post, downvotes: updatedPost.downvotes }
+            : post
+        )
       );
     } catch (error) {
+      hasError = true;
       console.error(error.message);
+    }
+
+    // Rollback only if there was an error
+    if (hasError) {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? { ...post, downvotes: post.downvotes - 1 }
+            : post
+        )
+      );
     }
   };
 
@@ -147,13 +197,7 @@ const Feed = () => {
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <Posts
-              key={post._id} // Ensure this key is unique (usually use `post._id` or `id`)
-              posts={posts}
-              onUpvote={onUpvote}
-              onDownvote={onDownvote}
-              onComment={onComment}
-            />
+            <Posts key={posts._id} posts={posts} onComment={handleComment} />
           )}
         </div>
 

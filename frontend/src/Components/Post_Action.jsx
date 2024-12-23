@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { upvotePost, downvotePost } from "../utils/postServices";
 
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
@@ -13,7 +14,6 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
 
   return (
     <div className="bg-white rounded-lg p-4 mt-2 border-t border-gray-200">
-      {/* Comment Input Section */}
       <div className="flex gap-3 mb-4">
         <img
           src={userProfile.image}
@@ -39,7 +39,6 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
         </form>
       </div>
 
-      {/* Comments List */}
       <div className="space-y-3">
         {comments.map((comment) => (
           <div key={comment._id} className="flex gap-3">
@@ -75,82 +74,117 @@ const Post_Action = ({
   onComment,
 }) => {
   const [showComments, setShowComments] = useState(false);
+  const [voteStatus, setVoteStatus] = useState(null); // 'upvoted' or 'downvoted'
+  const [voteCount, setVoteCount] = useState(upvotes - downvotes);
+  const [isVoting, setIsVoting] = useState(false); // Prevent spam clicks
 
-  const ActionButtons = () => (
-    <div className="flex flex-row justify-between px-2 items-center">
-      {/* Upvote Button */}
-      <button
-        type="button"
-        className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-        onClick={onUpvote}
-      >
-        <img
-          src="../src/Assets/Post_Components/circle-arrow-up.png"
-          alt="Upvote"
-          className="w-5 h-5 md:w-6 md:h-6"
-        />
-      </button>
+  const handleUpvote = async () => {
+    if (voteStatus === "upvoted" || isVoting) return;
+    setIsVoting(true);
 
-      {/* Vote Count */}
-      <span className="text-blue-500 font-semibold mx-2 text-sm md:text-base">
-        {upvotes - downvotes}
-      </span>
+    // Optimistically update UI
+    setVoteCount((prev) => prev + 1);
+    setVoteStatus("upvoted");
 
-      {/* Downvote Button */}
-      <button
-        type="button"
-        className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-        onClick={onDownvote}
-      >
-        <img
-          src="../src/Assets/Post_Components/circle-arrow-down.png"
-          alt="Downvote"
-          className="w-5 h-5 md:w-6 md:h-6"
-        />
-      </button>
+    try {
+      await upvotePost(postId);
+    } catch (error) {
+      console.error("Failed to upvote:", error);
+      // Revert if API fails
+      setVoteCount((prev) => prev - 1);
+      setVoteStatus(null);
+    } finally {
+      setIsVoting(false);
+    }
+  };
 
-      {/* Comment Button */}
-      <button
-        type="button"
-        className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-        onClick={() => setShowComments(!showComments)}
-      >
-        <img
-          src="../src/Assets/Post_Components/message-circle.png"
-          alt="Comment"
-          className="w-5 h-5 md:w-6 md:h-6"
-        />
-      </button>
+  const handleDownvote = async () => {
+    if (voteStatus === "downvoted" || isVoting) return;
+    setIsVoting(true);
 
-      {/* Share Button */}
-      <button
-        type="button"
-        className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-      >
-        <img
-          src="../src/Assets/Post_Components/share-2.png"
-          alt="Share"
-          className="w-5 h-5 md:w-6 md:h-6"
-        />
-      </button>
+    // Optimistically update UI
+    setVoteCount((prev) => prev - 1);
+    setVoteStatus("downvoted");
 
-      {/* Bookmark Button */}
-      <button
-        type="button"
-        className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-      >
-        <img
-          src="../src/Assets/Post_Components/bookmark-plus.png"
-          alt="Bookmark"
-          className="w-5 h-5 md:w-6 md:h-6"
-        />
-      </button>
-    </div>
-  );
+    try {
+      await downvotePost(postId);
+    } catch (error) {
+      console.error("Failed to downvote:", error);
+      // Revert if API fails
+      setVoteCount((prev) => prev + 1);
+      setVoteStatus(null);
+    } finally {
+      setIsVoting(false);
+    }
+  };
 
   return (
     <>
-      <ActionButtons />
+      <div className="flex flex-row justify-between px-2 items-center">
+        <button
+          type="button"
+          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+          onClick={handleUpvote}
+        >
+          <img
+            src="../src/Assets/Post_Components/circle-arrow-up.png"
+            alt="Upvote"
+            className="w-5 h-5 md:w-6 md:h-6"
+          />
+        </button>
+
+        <span className="text-blue-500 font-semibold mx-2 text-sm md:text-base">
+          {voteCount}
+        </span>
+
+        <button
+          type="button"
+          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+          onClick={handleDownvote}
+        >
+          <img
+            src="../src/Assets/Post_Components/circle-arrow-down.png"
+            alt="Downvote"
+            className="w-5 h-5 md:w-6 md:h-6"
+          />
+        </button>
+
+        <button
+          type="button"
+          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+          onClick={() => setShowComments(!showComments)}
+        >
+          <img
+            src="../src/Assets/Post_Components/message-circle.png"
+            alt="Comment"
+            className="w-5 h-5 md:w-6 md:h-6"
+          />
+        </button>
+        {/* Share Button */}
+        <button
+          type="button"
+          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+        >
+          <img
+            src="../src/Assets/Post_Components/share-2.png"
+            alt="Share"
+            className="w-5 h-5 md:w-6 md:h-6"
+          />
+        </button>
+
+        {/* Bookmark Button */}
+        <button
+          type="button"
+          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+        >
+          <img
+            src="../src/Assets/Post_Components/bookmark-plus.png"
+            alt="Bookmark"
+            className="w-5 h-5 md:w-6 md:h-6"
+          />
+        </button>
+      </div>
+
       {showComments && (
         <CommentSection
           userProfile={userProfile}

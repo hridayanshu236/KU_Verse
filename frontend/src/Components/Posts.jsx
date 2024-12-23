@@ -1,7 +1,7 @@
 import React from "react";
 import Post_Action from "./Post_Action";
 
-const Posts = ({ posts, onUpvote, onDownvote, onComment }) => {
+const Posts = ({ posts, onComment }) => {
   const captionPostStyle = () => {
     return props.captionPresent
       ? "bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-start"
@@ -87,8 +87,6 @@ const Posts = ({ posts, onUpvote, onDownvote, onComment }) => {
                 upvotes={post.upvotes?.length || 0}
                 downvotes={post.downvotes?.length || 0}
                 comments={post.comments || []}
-                onUpvote={() => onUpvote(post._id)}
-                onDownvote={() => onDownvote(post._id)}
                 onComment={(comment) => onComment(post._id, comment)}
               />
             </div>

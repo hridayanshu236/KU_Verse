@@ -126,8 +126,8 @@ const upVote = asyncHandler(async (req, res) => {
 
   post.upvotes.push(req.user._id);
 
-  await post.save();
-  res.status(200).json({ message: "Post upvoted" });
+  const updatedPost = await post.save();
+  res.status(200).json(updatedPost); // Return full updated post
 });
 
 const downVote = asyncHandler(async (req, res) => {
@@ -151,8 +151,8 @@ const downVote = asyncHandler(async (req, res) => {
 
   post.downvotes.push(req.user._id);
 
-  await post.save();
-  res.status(200).json({ message: "Post downvoted" });
+  const updatedPost = await post.save();
+  res.status(200).json(updatedPost); // Return full updated post
 });
 
 const commentPost = asyncHandler(async (req, res) => {
