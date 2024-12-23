@@ -25,6 +25,7 @@ function App() {
             element={<Posts textOnly={false} captionPresent={true} />}
           />
           <Route element={<Profile />} path="/profile" />
+          <Route element={<Profile />} path="/profile/:id" />
           <Route element={<Settings />} path="/settings" />
         </Route>
         <Route element={<PublicRoute />}>

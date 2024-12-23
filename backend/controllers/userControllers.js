@@ -7,6 +7,23 @@ const myProfile = asyncHandler(async (req,res) =>{
 
     res.json(user);
 })
+const viewUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id)
+    .select("-password") // Exclude password from the response
+    .populate("friends", "-password"); // Populate friends without their passwords
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user._id.toString() === req.user._id.toString()) {
+    res.status(400);
+    throw new Error("Use /profile/me route to view your own profile");
+  }
+
+  res.json(user);
+});
 
 const friend = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.params.id);
@@ -111,5 +128,5 @@ const updatePassword = asyncHandler(async(req,res) =>{
     res.status(200).json({message:"Password updated successfully"});
 })
 
-module.exports = {myProfile,friend,unfriend,friendList,updateProfile,updatePassword};
+module.exports = {myProfile,viewUserProfile,friend,unfriend,friendList,updateProfile,updatePassword};
 
