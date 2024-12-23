@@ -25,6 +25,12 @@ const viewUserProfile = asyncHandler(async (req, res) => {
   res.json(user);
 });
 
+const getAllUsers = asyncHandler(async(req,res)=>{
+    const users = await User.find();
+
+    res.json({users});
+})
+
 const friend = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.params.id);
     const currentUser = await User.findById(req.user._id);
@@ -128,5 +134,5 @@ const updatePassword = asyncHandler(async(req,res) =>{
     res.status(200).json({message:"Password updated successfully"});
 })
 
-module.exports = {myProfile,viewUserProfile,friend,unfriend,friendList,updateProfile,updatePassword};
+module.exports = {myProfile,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword};
 
