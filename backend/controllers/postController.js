@@ -202,6 +202,30 @@ const deleteComment = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Comment deleted successfully" });
 });
 
+const getCommentsByPostId = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    res.status(400);
+    throw new Error("Invalid post ID");
+  }
+
+  const post = await Post.findById(postId).populate({
+    path: "commentt",
+    populate: {
+      path: "user",
+      select: "fullName userName profilePicture",
+    },
+  });
+
+  if (!post) {
+    res.status(404);
+    throw new Error("No post found");
+  }
+
+  res.status(200).json({ comments: post.commentt });
+});
+
 const editCaption = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id);
   const { newCaption } = req.body;
@@ -232,4 +256,5 @@ module.exports = {
   commentPost,
   deleteComment,
   editCaption,
+  getCommentsByPostId,
 };

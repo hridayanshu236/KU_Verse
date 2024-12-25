@@ -6,13 +6,7 @@ import Posts from "../Components/Posts";
 import AchievementCard from "../Components/AchievementCard";
 import EventCard from "../Components/EventCard";
 import ChatInterface from "../Components/ChatInterface";
-import {
-  fetchPosts,
-  createPost,
-  upvotePost,
-  downvotePost,
-  commentOnPost,
-} from "../utils/postServices";
+import { fetchPosts, createPost } from "../utils/postServices";
 
 const Feed = () => {
   const [activeChatState, setActiveChatState] = useState({
@@ -47,7 +41,6 @@ const Feed = () => {
     }));
   };
 
-  // Fetch posts on mount
   useEffect(() => {
     const loadPosts = async () => {
       try {
@@ -66,92 +59,6 @@ const Feed = () => {
     try {
       const createdPost = await createPost(newPost);
       setPosts((prevPosts) => [createdPost, ...prevPosts]);
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  // Upvote a post
-  const handleUpvote = async (postId) => {
-    let hasError = false;
-
-    // Optimistic UI Update
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post._id === postId ? { ...post, upvotes: post.upvotes + 1 } : post
-      )
-    );
-
-    try {
-      const updatedPost = await upvotePost(postId);
-
-      // Update only specific fields to avoid double increment
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId ? { ...post, upvotes: updatedPost.upvotes } : post
-        )
-      );
-    } catch (error) {
-      hasError = true;
-      console.error(error.message);
-    }
-
-    // Rollback only if there was an error
-    if (hasError) {
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId ? { ...post, upvotes: post.upvotes - 1 } : post
-        )
-      );
-    }
-  };
-
-  // Downvote a post
-  const handleDownvote = async (postId) => {
-    let hasError = false;
-
-    // Optimistic UI Update
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post._id === postId ? { ...post, downvotes: post.downvotes + 1 } : post
-      )
-    );
-
-    try {
-      const updatedPost = await downvotePost(postId);
-
-      // Update only specific fields to avoid double decrement
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId
-            ? { ...post, downvotes: updatedPost.downvotes }
-            : post
-        )
-      );
-    } catch (error) {
-      hasError = true;
-      console.error(error.message);
-    }
-
-    // Rollback only if there was an error
-    if (hasError) {
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId
-            ? { ...post, downvotes: post.downvotes - 1 }
-            : post
-        )
-      );
-    }
-  };
-
-  // Add a comment to a post
-  const handleComment = async (postId, comment) => {
-    try {
-      const updatedPost = await commentOnPost(postId, comment);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) => (post._id === postId ? updatedPost : post))
-      );
     } catch (error) {
       console.error(error.message);
     }
@@ -190,17 +97,15 @@ const Feed = () => {
             />
           </div>
         </div>
-
         {/* Main Feed Section */}
         <div className="flex-[2] w-full min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
           <PostInput onPostCreate={handleCreatePost} className="mb-6" />
           {loading ? (
             <div>Loading...</div>
           ) : (
-            <Posts key={posts._id} posts={posts} onComment={handleComment} />
+            <Posts key={posts._id} posts={posts} />
           )}
         </div>
-
         {/* Right Sidebar */}
         <div className="flex flex-[0.8] flex-col pl-4">
           <div className="flex flex-col h-full">
@@ -214,15 +119,16 @@ const Feed = () => {
               <div className="flex flex-col gap-6 min-w-[80px]">
                 {chatUsers.map((user) => (
                   <button
-                    key={user.id}
+                    key={user.id} // Add unique key prop here
+                    post_id={user.id}
                     className="min-w-[50px]"
                     onClick={() => handleChatClick(user)}
                   >
                     <img
                       className="w-[50px] h-[50px] min-w-[50px] max-w-[60px] 
-                        rounded-full transform transition-transform 
-                        duration-200 ease-in-out hover:scale-110 
-                        hover:shadow-2xl"
+                rounded-full transform transition-transform 
+                duration-200 ease-in-out hover:scale-110 
+                hover:shadow-2xl"
                       src={user.avatar}
                       alt={`${user.name}'s avatar`}
                     />
@@ -233,10 +139,9 @@ const Feed = () => {
           </div>
         </div>
 
-        {/* Chat Interfaces */}
         {chatUsers.map((user) => (
           <ChatInterface
-            key={user.id}
+            key={user.id} // Add unique key prop here
             isOpen={activeChatState.activeUserId === user.id}
             onClose={handleChatClose}
             recipient={user}

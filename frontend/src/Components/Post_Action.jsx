@@ -8,7 +8,7 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
     e.preventDefault();
     if (comment.trim()) {
       onComment(postId, comment);
-      setComment(""); // Clear the input field
+      setComment("");
     }
   };
 

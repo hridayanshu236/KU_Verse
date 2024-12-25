@@ -12,6 +12,7 @@ const {
   commentPost,
   deleteComment,
   editCaption,
+  getCommentsByPostId,
 } = require("../controllers/postController");
 const { isAuth } = require("../middleware/isAuthenticated");
 const uploadFile = require("../middleware/multer");
@@ -28,5 +29,5 @@ router.route("/comment/:id").post(isAuth, commentPost);
 router.route("/deletecomment/:id").delete(isAuth, deleteComment);
 router.route("/updatecaption/:id").put(isAuth, editCaption);
 router.put("/editcaption/:id", editCaption);
-
+router.route("/:id/comments").get(isAuth, getCommentsByPostId);
 module.exports = router;

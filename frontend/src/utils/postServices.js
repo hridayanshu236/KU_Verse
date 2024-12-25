@@ -2,24 +2,25 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000/api/post";
 
-// Helper function to format user info
 const formatUserInfo = (user) => {
   if (!user) {
     return {
-      Name: "Anonymous",
-      Department: "No Department",
-      image: "/default-profile-image.png",
+      fullName: "Anonymous",
+      department: "No Department",
+      profilePicture: "/default-profile-image.png",
     };
   }
 
   return {
-    Name: user.fullName || "Anonymous",
-    Department: user.department || "No Department",
-    image: user.profilePicture || "/default-profile-image.png",
+    fullName: user.fullName || "Anonymous",
+    department:
+      user.department != null && user.department.trim() !== ""
+        ? user.department
+        : "No Department",
+    profilePicture: user.profilePicture || "/default-profile-image.png",
   };
 };
 
-// Transform post data for frontend use
 const transformPostData = (post) => ({
   _id: post._id,
   caption: post.caption || "",
@@ -31,10 +32,9 @@ const transformPostData = (post) => ({
   upvotes: post.upvotes || [],
   downvotes: post.downvotes || [],
   comments: post.comments || [],
-  createdAt: post.createdAt || new Date().toISOString(),
+  time: post.time || new Date().toISOString(),
 });
 
-// Fetch posts (feed, friend, or personal)
 export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
   try {
     let endpoint;
@@ -68,7 +68,6 @@ export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
   }
 };
 
-// Create a new post
 export const createPost = async (postData) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/createpost`, postData, {
@@ -86,7 +85,6 @@ export const createPost = async (postData) => {
   }
 };
 
-// Upvote Post
 export const upvotePost = async (postId) => {
   try {
     const response = await axios.post(
@@ -158,6 +156,18 @@ export const deleteComment = async (postId, commentId) => {
   }
 };
 
+export const fetchCommentsByPostId = async (postId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/${postId}/comments`, {
+      withCredentials: true,
+    });
+    return response.data.comments;
+  } catch (error) {
+    console.error("Failed to fetch comments:", error.response?.data || error);
+    throw new Error("Failed to fetch comments. Try again.");
+  }
+};
+
 export const updateCaption = async (postId, newCaption) => {
   try {
     const response = await axios.put(
@@ -170,5 +180,25 @@ export const updateCaption = async (postId, newCaption) => {
     return response.data;
   } catch (error) {
     throw new Error("Failed to update caption. Please try again later.");
+  }
+};
+
+export const fetchPostUserInfo = async (postId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/${postId}`, {
+      withCredentials: true,
+    });
+
+    const post = response.data.post;
+    return {
+      ...transformPostData(post).user,
+      createdAt: post.time || new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error(
+      "Failed to fetch post user info:",
+      error.response?.data || error
+    );
+    throw new Error("Failed to fetch post user info. Try again.");
   }
 };
