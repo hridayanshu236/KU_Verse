@@ -126,14 +126,11 @@ const upVote = asyncHandler(async (req, res) => {
   }
 
   post.upvotes.push(req.user._id);
-
+  post.voteCount += 1;
+  
   const updatedPost = await post.save();
-
-  // Trigger vote recalculation if needed
-  await Post.findByIdAndUpdate(post._id, {
-    $set: { voteCount: post.upvotes.length - post.downvotes.length },
-  });
-
+  console.log('Current vote count:', updatedPost.voteCount);
+  
   res.status(200).json(updatedPost);
 });
 
@@ -152,19 +149,17 @@ const downVote = asyncHandler(async (req, res) => {
 
   // Remove from upvotes if present
   const wasUpvoted = post.upvotes.includes(req.user._id);
-
+  
   if (wasUpvoted) {
-    post.upvotes = post.upvotes.filter((id) => !id.equals(req.user._id));
+    post.upvotes = post.upvotes.filter(id => !id.equals(req.user._id));
   }
 
   post.downvotes.push(req.user._id);
-
+  post.voteCount -= 1;
+  
   const updatedPost = await post.save();
-
-  await Post.findByIdAndUpdate(post._id, {
-    $set: { voteCount: post.upvotes.length - post.downvotes.length },
-  });
-
+  console.log('Current vote count:', updatedPost.voteCount);
+  
   res.status(200).json(updatedPost);
 });
 
