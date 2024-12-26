@@ -118,16 +118,23 @@ const upVote = asyncHandler(async (req, res) => {
     throw new Error("Post already upvoted");
   }
 
+  const wasDownvoted = post.downvotes.includes(req.user._id);
+
   // Remove from downvotes if present
-  if (post.downvotes.includes(req.user._id)) {
-    const indexDownvote = post.downvotes.indexOf(req.user._id);
-    post.downvotes.splice(indexDownvote, 1);
+  if (wasDownvoted) {
+    post.downvotes = post.downvotes.filter((id) => !id.equals(req.user._id));
   }
 
   post.upvotes.push(req.user._id);
 
   const updatedPost = await post.save();
-  res.status(200).json(updatedPost); // Return full updated post
+
+  // Trigger vote recalculation if needed
+  await Post.findByIdAndUpdate(post._id, {
+    $set: { voteCount: post.upvotes.length - post.downvotes.length },
+  });
+
+  res.status(200).json(updatedPost);
 });
 
 const downVote = asyncHandler(async (req, res) => {
@@ -144,15 +151,21 @@ const downVote = asyncHandler(async (req, res) => {
   }
 
   // Remove from upvotes if present
-  if (post.upvotes.includes(req.user._id)) {
-    const indexUpvote = post.upvotes.indexOf(req.user._id);
-    post.upvotes.splice(indexUpvote, 1);
+  const wasUpvoted = post.upvotes.includes(req.user._id);
+
+  if (wasUpvoted) {
+    post.upvotes = post.upvotes.filter((id) => !id.equals(req.user._id));
   }
 
   post.downvotes.push(req.user._id);
 
   const updatedPost = await post.save();
-  res.status(200).json(updatedPost); // Return full updated post
+
+  await Post.findByIdAndUpdate(post._id, {
+    $set: { voteCount: post.upvotes.length - post.downvotes.length },
+  });
+
+  res.status(200).json(updatedPost);
 });
 
 const commentPost = asyncHandler(async (req, res) => {
