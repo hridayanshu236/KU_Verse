@@ -36,11 +36,21 @@ export const fetchOtherUserProfile = async (userId) => {
 
 export const updateUserProfile = async (updates) => {
   try {
-    await axios.put(`${API_BASE_URL}/updateprofile`, updates, {
+    const response = await axios.put(`${API_BASE_URL}/updateprofile`, updates, {
       withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+
+    // Return the response data
+    return response.data;
   } catch (error) {
-    throw new Error("Failed to update profile. Please try again later.");
+    console.error("Update profile error:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to update profile. Please try again later."
+    );
   }
 };
 export const updateProfilePicture = async (file) => {
@@ -51,7 +61,7 @@ export const updateProfilePicture = async (file) => {
     const response = await fetch(`${API_BASE_URL}/updateDp`, {
       method: "PUT",
       body: formData,
-      credentials: "include", 
+      credentials: "include",
     });
 
     if (!response.ok) {
