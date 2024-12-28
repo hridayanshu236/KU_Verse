@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useSocket } from "../../Hooks/useSocket";
 
-const ChatInfo = ({ selectedChat, onMessageSent }) => {
+const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
   const { user } = useUser();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
@@ -81,30 +81,63 @@ useEffect(() => {
 
   // Handle socket events
 useEffect(() => {
-  const handleNewMessage = (newMessage) => {
-    console.log("New message received:", newMessage);
+  // In ChatInfo.jsx
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim() || !selectedChat?._id || !user?._id) return;
 
-    // Verify the message is for the current chat
-    if (newMessage?.chatId === selectedChat?._id) {
-      setMessages((prevMessages) => {
-        // Check if message already exists to prevent duplicates
-        if (!prevMessages.some((msg) => msg._id === newMessage._id)) {
-          console.log("Adding new message to state:", newMessage);
-          const updatedMessages = [
-            ...prevMessages,
-            {
-              ...newMessage,
-              senderId: newMessage.sender?._id || newMessage.senderId,
-            },
-          ];
+    const messageData = {
+      chatId: selectedChat._id,
+      senderId: user._id,
+      sender: {
+        _id: user._id,
+        fullName: user.fullName,
+      },
+      message: inputValue.trim(),
+      time: new Date().toISOString(),
+    };
 
-          // Scroll to bottom after state update
-          setTimeout(scrollToBottom, 100);
-
-          return updatedMessages;
-        }
-        return prevMessages;
+    // Clear typing and input
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      emitStopTyping({
+        chatId: selectedChat._id,
+        userId: user._id,
+        userName: user.fullName,
       });
+    }
+    setInputValue("");
+
+    try {
+      const savedMessage = await sendMessage(messageData);
+
+      // Update messages in current chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...savedMessage,
+          sender: { _id: user._id, fullName: user.fullName },
+        },
+      ]);
+
+      // Emit through socket
+      emitMessage({
+        ...savedMessage,
+        chatId: selectedChat._id,
+        sender: {
+          _id: user._id,
+          fullName: user.fullName,
+        },
+      });
+
+      // Update chat list
+      if (onMessageSent) {
+        onMessageSent(savedMessage);
+      }
+
+      setTimeout(scrollToBottom, 100);
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
   };
 
