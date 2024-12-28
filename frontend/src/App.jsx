@@ -12,6 +12,7 @@ import PublicRoute from "./utils/PublicRoute";
 import StoryCard from "./Components/StoryCard";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignUpPage";
+import LandingPage from "./pages/LandingPage";
 function App() {
   return (
     <>
@@ -29,6 +30,7 @@ function App() {
           <Route element={<Settings />} path="/settings" />
         </Route>
         <Route element={<PublicRoute />}>
+          <Route element={<LandingPage />} path="/" />
           <Route element={<LoginPage />} path="/login" />
           <Route element={<SignupPage />} path="/signup" />
         </Route>

@@ -50,9 +50,11 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
       };
     }
   }, [selectedChat?._id, user?._id]);
-useEffect(() => {
-  console.log("Current messages:", messages);
-}, [messages]);
+
+  useEffect(() => {
+    console.log("Current messages:", messages);
+  }, [messages]);
+
   // Load initial messages
   useEffect(() => {
     const loadMessages = async () => {
@@ -80,103 +82,61 @@ useEffect(() => {
   }, [selectedChat?._id, user?._id]);
 
   // Handle socket events
-useEffect(() => {
-  // In ChatInfo.jsx
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputValue.trim() || !selectedChat?._id || !user?._id) return;
-
-    const messageData = {
-      chatId: selectedChat._id,
-      senderId: user._id,
-      sender: {
-        _id: user._id,
-        fullName: user.fullName,
-      },
-      message: inputValue.trim(),
-      time: new Date().toISOString(),
+  useEffect(() => {
+    const handleReceivedMessage = (message) => {
+      console.log("Message received in ChatInfo:", message);
+      if (message.chatId === selectedChat._id) {
+        setMessages((prev) => {
+          if (!prev.some((m) => m._id === message._id)) {
+            const newMessages = [...prev, message];
+            setTimeout(scrollToBottom, 100);
+            return newMessages;
+          }
+          return prev;
+        });
+      }
+      if (handleNewMessage) {
+        handleNewMessage(message);
+      }
     };
 
-    // Clear typing and input
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      emitStopTyping({
-        chatId: selectedChat._id,
-        userId: user._id,
-        userName: user.fullName,
-      });
-    }
-    setInputValue("");
-
-    try {
-      const savedMessage = await sendMessage(messageData);
-
-      // Update messages in current chat
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...savedMessage,
-          sender: { _id: user._id, fullName: user.fullName },
-        },
-      ]);
-
-      // Emit through socket
-      emitMessage({
-        ...savedMessage,
-        chatId: selectedChat._id,
-        sender: {
-          _id: user._id,
-          fullName: user.fullName,
-        },
-      });
-
-      // Update chat list
-      if (onMessageSent) {
-        onMessageSent(savedMessage);
+    const handleTypingStart = (data) => {
+      if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
+        setTypingUsers((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(data.userName);
+          return newSet;
+        });
       }
+    };
 
-      setTimeout(scrollToBottom, 100);
-    } catch (error) {
-      console.error("Error sending message:", error);
+    const handleTypingStop = (data) => {
+      if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
+        setTypingUsers((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(data.userName);
+          return newSet;
+        });
+      }
+    };
+
+    // Set up socket event listeners if chat and user are available
+    if (selectedChat?._id && user?._id) {
+      console.log("Setting up message listeners for chat:", selectedChat._id);
+      onMessageReceived(handleReceivedMessage);
+      onTyping(handleTypingStart);
+      onStopTyping(handleTypingStop);
     }
-  };
 
-  const handleTypingStart = (data) => {
-    if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
-      setTypingUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(data.userName);
-        return newSet;
-      });
-    }
-  };
+    // Cleanup function
+    return () => {
+      console.log("Cleaning up message listeners");
+      onMessageReceived(null);
+      onTyping(null);
+      onStopTyping(null);
+    };
+  }, [selectedChat?._id, user?._id, handleNewMessage]);
 
-  const handleTypingStop = (data) => {
-    if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
-      setTypingUsers((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(data.userName);
-        return newSet;
-      });
-    }
-  };
-
-  // Set up socket event listeners if chat and user are available
-  if (selectedChat?._id && user?._id) {
-    console.log("Setting up message listeners for chat:", selectedChat._id);
-    onMessageReceived(handleNewMessage);
-    onTyping(handleTypingStart);
-    onStopTyping(handleTypingStop);
-  }
-
-  // Cleanup function
-  return () => {
-    console.log("Cleaning up message listeners");
-    onMessageReceived(null);
-    onTyping(null);
-    onStopTyping(null);
-  };
-}, [selectedChat?._id, user?._id]);
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputValue.trim() || !selectedChat?._id || !user?._id) return;
@@ -228,12 +188,12 @@ useEffect(() => {
         },
       });
 
-      // Scroll to bottom after message is added
-      setTimeout(scrollToBottom, 100);
-
+      // Update chat list
       if (onMessageSent) {
         onMessageSent(savedMessage);
       }
+
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -428,5 +388,3 @@ useEffect(() => {
 };
 
 export default ChatInfo;
-
-       

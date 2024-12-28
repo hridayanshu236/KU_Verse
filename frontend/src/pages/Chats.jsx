@@ -369,6 +369,10 @@ const Chats = () => {
                     console.log("Message sent, updating chat list:", message);
                     updateChatWithNewMessage(selectedChat._id, message);
                   }}
+                  handleNewMessage={(message) => {
+                    console.log("New message received in chat:", message);
+                    updateChatWithNewMessage(selectedChat._id, message);
+                  }}
                   socket={socketRef.current}
                 />
               </div>
