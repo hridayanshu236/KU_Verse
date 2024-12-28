@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT;
 
 app.use(
   cors({
@@ -46,30 +46,41 @@ const io = require("socket.io")(server, {
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
+  // Setup user room
   socket.on("setup", (userId) => {
     console.log(`User ${userId} has joined their user room.`);
     socket.join(userId);
   });
 
+  // User joins chat room
   socket.on("join chat", (chatId) => {
     console.log(`User joined chat room: ${chatId}`);
     socket.join(chatId);
   });
 
   socket.on("new message", (messageData) => {
-    console.log(`New message in chat ${messageData.chatId}:`, messageData);
-    socket.in(messageData.chatId).emit("message received", messageData);
+    console.log("Server received new message:", messageData);
+    // Broadcast to all clients in the chat room except sender
+    socket.to(messageData.chatId).emit("message received", {
+      ...messageData,
+      sender: {
+        _id: messageData.sender._id,
+        fullName: messageData.sender.fullName,
+      },
+    });
   });
 
-  socket.on("typing", (chatId) => {
-    console.log(`User is typing in chat: ${chatId}`);
-    socket.in(chatId).emit("typing");
-  });
+  // Typing event
+socket.on("typing", ({ chatId, userId, userName }) => {
+  console.log(`${userName} is typing in chat: ${chatId}`);
+  socket.to(chatId).emit("typing", { chatId, userId, userName }); // Include chatId
+});
 
-  socket.on("stop typing", (chatId) => {
-    console.log(`User stopped typing in chat: ${chatId}`);
-    socket.in(chatId).emit("stop typing");
-  });
+socket.on("stop typing", ({ chatId, userId, userName }) => {
+  console.log(`${userName} stopped typing in chat: ${chatId}`);
+  socket.to(chatId).emit("stop typing", { chatId, userId, userName }); // Include chatId
+});
+
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);

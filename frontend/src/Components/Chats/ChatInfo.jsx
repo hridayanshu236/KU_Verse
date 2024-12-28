@@ -14,11 +14,12 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
   const { user } = useUser();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState(new Set());
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const processedMessages = useRef(new Set());
+  const typingTimeoutRef = useRef(null);
 
   const {
     joinChat,
@@ -29,30 +30,30 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
     onStopTyping,
     emitTyping,
     emitStopTyping,
-  } = useSocket(user?._id);
+  } = useSocket(user?._id, user?.fullName, selectedChat);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Join and leave chat
+  // Join chat when selected chat changes
   useEffect(() => {
     if (selectedChat?._id && user?._id) {
       console.log("Joining chat:", selectedChat._id);
       joinChat(selectedChat._id);
       processedMessages.current.clear();
-    }
+      setTypingUsers(new Set());
 
-    return () => {
-      if (selectedChat?._id) {
+      return () => {
         console.log("Leaving chat:", selectedChat._id);
         leaveChat(selectedChat._id);
-        processedMessages.current.clear();
-      }
-    };
-  }, [selectedChat?._id, user?._id, joinChat, leaveChat]);
-
-  // Fetch messages with proper sender handling
+      };
+    }
+  }, [selectedChat?._id, user?._id]);
+useEffect(() => {
+  console.log("Current messages:", messages);
+}, [messages]);
+  // Load initial messages
   useEffect(() => {
     const loadMessages = async () => {
       if (!selectedChat?._id || !user?._id) return;
@@ -61,15 +62,10 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
       try {
         const messagesData = await fetchChatMessages(selectedChat._id);
         if (messagesData && Array.isArray(messagesData)) {
-          // Ensure each message has the correct sender information
           const processedMessagesData = messagesData.map((msg) => ({
             ...msg,
-            // Ensure senderId is always present and correct
             senderId: msg.sender?._id || msg.senderId,
-            // Keep the full sender object if needed
-            sender: msg.sender || { _id: msg.senderId },
           }));
-
           setMessages(processedMessagesData);
           scrollToBottom();
         }
@@ -83,110 +79,161 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
     loadMessages();
   }, [selectedChat?._id, user?._id]);
 
-  // Handle new messages and typing
-  useEffect(() => {
-    const handleNewMessage = (newMessage) => {
-      console.log("Received message:", newMessage);
+  // Handle socket events
+useEffect(() => {
+  const handleNewMessage = (newMessage) => {
+    console.log("New message received:", newMessage);
 
-      if (newMessage.chatId === selectedChat?._id) {
-        if (!processedMessages.current.has(newMessage._id)) {
-          processedMessages.current.add(newMessage._id);
+    // Verify the message is for the current chat
+    if (newMessage?.chatId === selectedChat?._id) {
+      setMessages((prevMessages) => {
+        // Check if message already exists to prevent duplicates
+        if (!prevMessages.some((msg) => msg._id === newMessage._id)) {
+          console.log("Adding new message to state:", newMessage);
+          const updatedMessages = [
+            ...prevMessages,
+            {
+              ...newMessage,
+              senderId: newMessage.sender?._id || newMessage.senderId,
+            },
+          ];
 
-          const processedMessage = {
-            ...newMessage,
-            senderId: newMessage.sender?._id || newMessage.senderId,
-            sender: newMessage.sender || { _id: newMessage.senderId },
-          };
+          // Scroll to bottom after state update
+          setTimeout(scrollToBottom, 100);
 
-          setMessages((prev) => [...prev, processedMessage]);
-          scrollToBottom();
+          return updatedMessages;
         }
-      }
-    };
+        return prevMessages;
+      });
+    }
+  };
 
-    const handleTypingStart = () => setIsTyping(true);
-    const handleTypingStop = () => setIsTyping(false);
+  const handleTypingStart = (data) => {
+    if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
+      setTypingUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(data.userName);
+        return newSet;
+      });
+    }
+  };
 
+  const handleTypingStop = (data) => {
+    if (data.chatId === selectedChat?._id && data.userId !== user?._id) {
+      setTypingUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(data.userName);
+        return newSet;
+      });
+    }
+  };
+
+  // Set up socket event listeners if chat and user are available
+  if (selectedChat?._id && user?._id) {
+    console.log("Setting up message listeners for chat:", selectedChat._id);
     onMessageReceived(handleNewMessage);
     onTyping(handleTypingStart);
     onStopTyping(handleTypingStop);
+  }
 
-    return () => {
-      onMessageReceived(null);
-      onTyping(null);
-      onStopTyping(null);
-    };
-  }, [onMessageReceived, onTyping, onStopTyping, selectedChat?._id]);
-
+  // Cleanup function
+  return () => {
+    console.log("Cleaning up message listeners");
+    onMessageReceived(null);
+    onTyping(null);
+    onStopTyping(null);
+  };
+}, [selectedChat?._id, user?._id]);
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputValue.trim() || !selectedChat?._id || !user?._id) return;
 
-    const tempId = `temp-${Date.now()}`;
     const messageData = {
-      _id: tempId,
       chatId: selectedChat._id,
       senderId: user._id,
-      sender: user, // Include the full user object
-      message: inputValue,
+      sender: {
+        _id: user._id,
+        fullName: user.fullName,
+      },
+      message: inputValue.trim(),
       time: new Date().toISOString(),
     };
 
-    // Add to processed messages to prevent duplication
-    processedMessages.current.add(tempId);
+    // Clear typing indicators
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      emitStopTyping({
+        chatId: selectedChat._id,
+        userId: user._id,
+        userName: user.fullName,
+      });
+    }
 
-    // Optimistic update
-    setMessages((prev) => [...prev, messageData]);
+    // Clear input immediately
     setInputValue("");
-    scrollToBottom();
 
     try {
-      // Emit via socket first for real-time update
-      emitMessage(messageData);
-
-      // Then save to database
+      // First save to database
       const savedMessage = await sendMessage(messageData);
 
-      // Update the temporary message with the saved one
-      processedMessages.current.delete(tempId);
-      processedMessages.current.add(savedMessage._id);
+      // Update local state with saved message
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...savedMessage,
+          sender: { _id: user._id, fullName: user.fullName },
+        },
+      ]);
 
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === tempId
-            ? {
-                ...savedMessage,
-                senderId: user._id,
-                sender: user, // Ensure sender information is preserved
-              }
-            : msg
-        )
-      );
+      // Emit through socket with saved message ID
+      emitMessage({
+        ...savedMessage,
+        chatId: selectedChat._id,
+        sender: {
+          _id: user._id,
+          fullName: user.fullName,
+        },
+      });
+
+      // Scroll to bottom after message is added
+      setTimeout(scrollToBottom, 100);
 
       if (onMessageSent) {
         onMessageSent(savedMessage);
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages((prev) => prev.filter((msg) => msg._id !== tempId));
-      processedMessages.current.delete(tempId);
     }
   };
 
   const handleTyping = (e) => {
     setInputValue(e.target.value);
 
-    if (!selectedChat?._id) return;
+    if (!selectedChat?._id || !user?._id) return;
 
-    emitTyping(selectedChat._id);
+    // Log the typing event being emitted
+    console.log("Emitting typing event for chat:", selectedChat._id);
 
-    if (window.typingTimeout) {
-      clearTimeout(window.typingTimeout);
+    emitTyping({
+      chatId: selectedChat._id,
+      userId: user._id,
+      userName: user.fullName,
+    });
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
 
-    window.typingTimeout = setTimeout(() => {
-      emitStopTyping(selectedChat._id);
-    }, 2000);
+    // Set new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      console.log("Emitting stop typing event for chat:", selectedChat._id);
+      emitStopTyping({
+        chatId: selectedChat._id,
+        userId: user._id,
+        userName: user.fullName,
+      });
+    }, 3000);
   };
 
   const addEmoji = (emoji) => {
@@ -196,7 +243,7 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
 
   const displayInfo = React.useMemo(() => {
     let displayName = "Unknown";
-    let displayPicture = "";
+    let displayPicture = "/default_avatar.png";
 
     if (selectedChat && user) {
       if (selectedChat.isGroupChat) {
@@ -207,7 +254,7 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
         const otherParticipant = selectedChat.participants?.find(
           (participant) => participant._id !== user._id
         );
-        displayName = otherParticipant?.fullName || "Unknown";
+        displayName = otherParticipant?.fullName || "Unknown User";
         displayPicture =
           otherParticipant?.profilePicture || "/default_avatar.png";
       }
@@ -215,11 +262,6 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
 
     return { displayName, displayPicture };
   }, [selectedChat, user]);
-
-  // Helper function to determine if a message is from the current user
-  const isMessageFromCurrentUser = (message) => {
-    return message.senderId === user?._id || message.sender?._id === user?._id;
-  };
 
   if (!selectedChat || !user) {
     return (
@@ -259,7 +301,8 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
           ) : (
             <>
               {messages.map((msg, index) => {
-                const isCurrentUser = isMessageFromCurrentUser(msg);
+                const isCurrentUser =
+                  msg.senderId === user?._id || msg.sender?._id === user?._id;
                 return (
                   <div
                     key={msg._id || `temp-${index}`}
@@ -286,52 +329,71 @@ const ChatInfo = ({ selectedChat, onMessageSent }) => {
                   </div>
                 );
               })}
-              {isTyping && (
-                <div className="text-gray-500 text-sm italic mb-4">
-                  Typing...
+              {typingUsers.size > 0 && (
+                <div className="flex items-center space-x-2 bg-gray-100 p-3 rounded-lg mb-2">
+                  <div className="flex space-x-1">
+                    <div
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
+                  </div>
+                  <span className="text-gray-600 text-sm">
+                    {Array.from(typingUsers).join(", ")}{" "}
+                    {typingUsers.size === 1 ? "is" : "are"} typing...
+                  </span>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </>
           )}
         </div>
-      </div>
 
-      <div className="flex p-4 border-t">
-        <div className="p-2 relative">
-          <FontAwesomeIcon
-            className="w-6 h-6 cursor-pointer text-[rgb(103,80,164)]"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            icon={faSmile}
-          />
-          {showEmojiPicker && (
-            <div className="absolute bottom-14 z-50">
-              <Picker onEmojiSelect={addEmoji} />
-            </div>
-          )}
-        </div>
-        <form onSubmit={handleSendMessage} className="flex-grow flex">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={handleTyping}
-            placeholder="Type a message"
-            className="border rounded-xl p-2 w-full focus:outline-none focus:ring-2 focus:ring-[rgb(103,80,164)]"
-          />
-          <button
-            type="submit"
-            className="p-2 text-[rgb(103,80,164)] hover:text-[rgb(83,60,144)] transition-colors"
-            disabled={!inputValue.trim()}
-          >
+        <div className="flex p-4 border-t">
+          <div className="p-2 relative">
             <FontAwesomeIcon
-              className="w-6 h-6 cursor-pointer"
-              icon={faPaperPlane}
+              className="w-6 h-6 cursor-pointer text-[rgb(103,80,164)]"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              icon={faSmile}
             />
-          </button>
-        </form>
+            {showEmojiPicker && (
+              <div className="absolute bottom-14 z-50">
+                <Picker onEmojiSelect={addEmoji} />
+              </div>
+            )}
+          </div>
+          <form onSubmit={handleSendMessage} className="flex-grow flex">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={handleTyping}
+              placeholder="Type a message"
+              className="border rounded-xl p-2 w-full focus:outline-none focus:ring-2 focus:ring-[rgb(103,80,164)]"
+            />
+            <button
+              type="submit"
+              className="p-2 text-[rgb(103,80,164)] hover:text-[rgb(83,60,144)] transition-colors"
+              disabled={!inputValue.trim()}
+            >
+              <FontAwesomeIcon
+                className="w-6 h-6 cursor-pointer"
+                icon={faPaperPlane}
+              />
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
 
 export default ChatInfo;
+
+       
