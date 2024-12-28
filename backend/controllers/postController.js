@@ -75,7 +75,7 @@ const getPostsById = asyncHandler(async (req, res) => {
   }
 
   const posts = await Post.find({ user: friendId })
-    .populate("user", "fullName userName profilePicture")
+    .populate("user", "fullName userName profilePicture department")
     .sort({ createdAt: -1 });
 
   res.status(200).json({ posts, success: true });
@@ -84,7 +84,7 @@ const getPostsById = asyncHandler(async (req, res) => {
 const getPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const posts = await Post.find({ user: userId })
-    .populate("user", "fullName userName profilePicture")
+    .populate("user", "fullName userName profilePicture department")
     .sort({ createdAt: -1 });
 
   res.status(200).json({ posts, success: true });
@@ -99,7 +99,7 @@ const getFeedPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find({
     $or: [{ user: userId }, { user: { $in: friendsId } }],
   })
-    .populate("user", "fullName userName profilePicture")
+    .populate("user", "fullName userName profilePicture department")
     .sort({ createdAt: -1 });
 
   res.status(200).json({ posts, success: true });
