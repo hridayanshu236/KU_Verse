@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   UserCircle,
@@ -6,6 +6,10 @@ import {
   UserMinus,
   UserCheck,
   Search,
+  Camera,
+  X,
+  Eye,
+  Edit as EditIcon,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Posts from "../components/Posts";
@@ -16,6 +20,7 @@ import {
   updateUserProfile,
   removeFriend,
   addFriend,
+  updateProfilePicture
 } from "../utils/userServices";
 import {
   fetchPosts,
@@ -23,6 +28,143 @@ import {
   downvotePost,
   commentOnPost,
 } from "../utils/postServices";
+
+const ProfilePicture = ({ src, isCurrentUser, onUpdatePicture }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const newProfilePicUrl = await updateProfilePicture(file);
+      onUpdatePicture(newProfilePicUrl);
+      setShowMenu(false);
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      // You might want to show an error message to the user
+      alert("Failed to update profile picture: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const menuItems = isCurrentUser
+    ? [
+        {
+          icon: <Eye className="w-5 h-5" />,
+          label: "View",
+          angle: -45,
+          action: () => setShowModal(true),
+        },
+        {
+          icon: <Camera className="w-5 h-5" />,
+          label: "Update",
+          angle: 45,
+          action: () => fileInputRef.current?.click(),
+        },
+      ]
+    : [
+        {
+          icon: <Eye className="w-5 h-5" />,
+          label: "View",
+          angle: 0,
+          action: () => setShowModal(true),
+        },
+      ];
+
+   return (
+     <div className="relative group">
+       <div
+         
+         className="relative w-24 h-24 rounded-full shadow-lg overflow-hidden cursor-pointer"
+         onMouseEnter={() => setShowMenu(true)}
+         onMouseLeave={() => setShowMenu(false)}
+       >
+         <img
+           src={src || "https://via.placeholder.com/150"}
+           alt="Profile"
+           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+         />
+
+         {showMenu && (
+           <div className="absolute inset-0  flex items-center justify-center">
+             <div className="relative w-14 h-16">
+               {" "}
+               {menuItems.map((item, index) => {
+                 const angle = item.angle;
+                 const radian = (angle * Math.PI) / 180;
+                 // Reduced radius from 32 to 24 to keep buttons more contained
+                 const x = Math.cos(radian) * 24;
+                 const y = Math.sin(radian) * 24;
+
+                 return (
+                   <button
+                     key={item.label}
+                     onClick={item.action}
+                     
+                     className="absolute p-1.5 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2 hover:bg-blue-50 transition-colors duration-200 "
+                     style={{
+                       left: `50%`,
+                       top: `50%`,
+                       transform: `translate(${x}px, ${y}px)`,
+                     }}
+                   >
+                   
+                     <div className="w-4 h-4">{item.icon}</div>
+                     <span className="absolute hidden group-hover/item:block whitespace-nowrap bg-black text-white text-xs py-1 px-2 rounded -bottom-6 left-1/2 transform -translate-x-1/2">
+                       {item.label}
+                     </span>
+                   </button>
+                 );
+               })}
+             </div>
+           </div>
+         )}
+
+         {loading && (
+           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+           </div>
+         )}
+       </div>
+
+       <input
+         type="file"
+         ref={fileInputRef}
+         onChange={handleFileChange}
+         className="hidden"
+         accept="image/*"
+       />
+
+       {showModal && (
+         <div
+           className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+           onClick={() => setShowModal(false)}
+         >
+           <div className="relative max-w-4xl max-h-[90vh] mx-4">
+             <button
+               onClick={() => setShowModal(false)}
+               className="absolute -top-12 right-0 text-white hover:text-blue-400 transition-colors"
+             >
+               <X className="w-8 h-8" />
+             </button>
+             <img
+               src={src || "https://via.placeholder.com/400"}
+               alt="Profile"
+               className="max-w-full max-h-[80vh] rounded-lg"
+               onClick={(e) => e.stopPropagation()}
+             />
+           </div>
+         </div>
+       )}
+     </div>
+   );
+};
 
 const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
@@ -125,14 +267,18 @@ const ProfileInfo = ({
   connectionStatus,
   onConnect,
   onDisconnect,
+  onEdit,
+  onUpdatePicture,
 }) => (
   <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
     <div className="flex items-center gap-6">
-      <img
-        src={user.profilePicture || "https://via.placeholder.com/150"}
-        alt="Profile"
-        className="w-24 h-24 rounded-full shadow-md border-4 border-blue-500 object-cover"
-      />
+      <div className="w-24">
+        <ProfilePicture
+          src={user.profilePicture}
+          isCurrentUser={isCurrentUser}
+          onUpdatePicture={onUpdatePicture}
+        />
+      </div>
       <div className="flex-1">
         <div className="flex justify-between items-start">
           <div>
@@ -149,6 +295,15 @@ const ProfileInfo = ({
               onConnect={onConnect}
               onDisconnect={onDisconnect}
             />
+          )}
+          {isCurrentUser && (
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+            >
+              <EditIcon className="w-4 h-4" />
+              Edit Profile
+            </button>
           )}
         </div>
         <p className="text-gray-700 mt-3">{user.bio || "No bio available."}</p>
@@ -168,6 +323,102 @@ const ProfileInfo = ({
   </div>
 );
 
+const EditProfileForm = ({ user, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    fullName: user.fullName,
+    department: user.department,
+    bio: user.bio,
+    address: user.address,
+    phoneNumber: user.phoneNumber,
+    profilePicture: user.profilePicture,
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateUserProfile(formData);
+      onSave();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
+  };
+
+  return (
+    <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-gray-700">Full Name</label>
+          <input
+            type="text"
+            name="fullName"
+            value={formData.fullName}
+            onChange={handleChange}
+            className="mt-1 p-2 border rounded w-full"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Department</label>
+          <input
+            type="text"
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            className="mt-1 p-2 border rounded w-full"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Bio</label>
+          <textarea
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            className="mt-1 p-2 border rounded w-full"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Address</label>
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            className="mt-1 p-2 border rounded w-full"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Phone Number</label>
+          <input
+            type="text"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            className="mt-1 p-2 border rounded w-full"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
 const Profile = () => {
   const { id: userId } = useParams();
   const navigate = useNavigate();
@@ -184,6 +435,7 @@ const Profile = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [connections, setConnections] = useState(new Set());
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (userId === "undefined") navigate("/profile");
@@ -284,6 +536,26 @@ const Profile = () => {
     }
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    await loadData();
+    setIsEditing(false);
+  };
+
+  const handleUpdatePicture = (newPictureUrl) => {
+    setUser((prev) => ({
+      ...prev,
+      profilePicture: newPictureUrl,
+    }));
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} />;
   if (!user) return <ErrorMessage message="User not found" />;
@@ -292,13 +564,23 @@ const Profile = () => {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <Navbar />
       <div className="container mx-auto p-4 flex flex-col items-center">
-        <ProfileInfo
-          user={user}
-          isCurrentUser={isCurrentUser}
-          connectionStatus={connectionStatus}
-          onConnect={handleConnect}
-          onDisconnect={handleDisconnect}
-        />
+        {isEditing ? (
+          <EditProfileForm
+            user={user}
+            onSave={handleSaveEdit}
+            onCancel={handleCancelEdit}
+          />
+        ) : (
+          <ProfileInfo
+            user={user}
+            isCurrentUser={isCurrentUser}
+            connectionStatus={connectionStatus}
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
+            onEdit={handleEdit}
+            onUpdatePicture={handleUpdatePicture}
+          />
+        )}
 
         {isCurrentUser && (
           <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">

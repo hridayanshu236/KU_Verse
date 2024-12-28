@@ -43,6 +43,29 @@ export const updateUserProfile = async (updates) => {
     throw new Error("Failed to update profile. Please try again later.");
   }
 };
+export const updateProfilePicture = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/updateDp`, {
+      method: "PUT",
+      body: formData,
+      credentials: "include", 
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update profile picture");
+    }
+
+    const data = await response.json();
+    return data.profilePicture;
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    throw error;
+  }
+};
 
 export const updatePassword = async (passwords) => {
   try {

@@ -1,12 +1,73 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt=require("bcrypt");
-
+const getDataURI = require("../utilities/generateURL");
+const cloudinary = require("../utilities/cloudinary");
 const myProfile = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.user._id);
 
     res.json(user);
 })
+
+const updateProfilePicture = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded.",
+      });
+    }
+
+    
+    const fileURI = getDataURI(req.file);
+
+   
+    const cloudinaryResponse = await cloudinary.uploader.upload(
+      fileURI.content,
+      {
+        folder: "profile_pictures",
+        transformation: [
+          { width: 400, height: 400, crop: "fill" },
+          { quality: "auto" },
+        ],
+      }
+    );
+
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: cloudinaryResponse.secure_url },
+      { new: true }
+    ).select("profilePicture fullName");
+
+    if (!updatedUser) {
+      // Clean up the uploaded image if user update fails
+      await cloudinary.uploader.destroy(cloudinaryResponse.public_id);
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+   
+    res.status(200).json({
+      success: true,
+      message: "Profile picture updated successfully",
+      profilePicture: updatedUser.profilePicture,
+    });
+  } catch (error) {
+    console.error("Profile picture update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile picture",
+      error: error.message,
+    });
+  }
+});
+
 const viewUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id)
     .select("-password") // Exclude password from the response
@@ -144,5 +205,5 @@ const updatePassword = asyncHandler(async(req,res) =>{
     res.status(200).json({message:"Password updated successfully"});
 })
 
-module.exports = {myProfile,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword};
+module.exports = {myProfile,updateProfilePicture,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword};
 
