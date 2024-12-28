@@ -1,21 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  UserCircle,
-  UserPlus,
-  UserMinus,
-  UserCheck,
-  Search,
-  Camera,
-  X,
-  Plus,
-  BookOpen,
-  Briefcase,
-  Eye,
-  Edit as EditIcon,
-} from "lucide-react";
+import { Search, UserCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Posts from "../components/Posts";
+import ProfileInfo from "../components/Profile/ProfileInfo";
+import EditProfileForm from "../components/Profile/EditProfileForm";
+import SkillsAndClubs from "../components/Profile/SkillsAndClubs";
+import FriendCard from "../components/Profile/FriendCard";
+import ConfirmDialog from "../components/Profile/ConfirmDialog";
+import LoadingSpinner from "../components/Common/LoadingSpinner";
+import ErrorMessage from "../components/Common/ErrorMessage";
 import {
   fetchFriendList,
   fetchUserProfile,
@@ -23,7 +17,6 @@ import {
   updateUserProfile,
   removeFriend,
   addFriend,
-  updateProfilePicture,
 } from "../utils/userServices";
 import {
   fetchPosts,
@@ -32,625 +25,6 @@ import {
   commentOnPost,
 } from "../utils/postServices";
 
-const CustomAlert = ({ children }) => (
-  <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-    <div className="flex">
-      <div className="flex-1">
-        <p className="text-sm text-red-700">{children}</p>
-      </div>
-    </div>
-  </div>
-);
-
-const TagInput = ({ placeholder, onAdd, error }) => {
-  const [inputValue, setInputValue] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (inputValue.trim()) {
-      onAdd(inputValue.trim());
-      setInputValue("");
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex-1">
-      <input
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        placeholder={placeholder}
-        className={`w-full px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
-          error ? "border-red-500" : "border-gray-200"
-        }`}
-      />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
-    </form>
-  );
-};
-
-const TagSection = ({
-  title,
-  items = [],
-  onAdd,
-  onRemove,
-  icon: Icon,
-  emptyText,
-  error,
-  isCurrentUser
-}) => {
-  const [isAdding, setIsAdding] = useState(false);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-        </div>
-        {isCurrentUser && !isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add {title.toLowerCase()}</span>
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        {isAdding && (
-          <div className="flex gap-2">
-            <TagInput
-              placeholder={`Add new ${title.toLowerCase()}`}
-              onAdd={(value) => {
-                onAdd(value);
-                setIsAdding(false);
-              }}
-              error={error}
-            />
-            <button
-              onClick={() => setIsAdding(false)}
-              className="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {items.length === 0 && isCurrentUser ? (
-          
-          <p className="text-sm text-gray-500 italic">{emptyText}</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {items.map((item, index) => (
-              <div
-                key={index}
-                className="group flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm transition-all duration-200 hover:bg-blue-100"
-              >
-                <span>{item}</span>
-                {isCurrentUser && (
-                  <button
-                  onClick={() => onRemove(index)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                >
-                  <X className="w-3.5 h-3.5 text-blue-600 hover:text-blue-800" />
-                </button>)}
-                
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const SkillsAndClubs = ({ user, onUpdateUser, isCurrentUser }) => {
-  const [error, setError] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [localSkills, setLocalSkills] = useState(user.skills || []);
-  const [localClubs, setLocalClubs] = useState(user.clubs || []);
-
-  // Update local state when user prop changes
-  useEffect(() => {
-    setLocalSkills(user.skills || []);
-    setLocalClubs(user.clubs || []);
-  }, [user]);
-
-  const handleUpdate = async (updatedData) => {
-    setIsUpdating(true);
-    setError(null);
-    try {
-      await onUpdateUser(updatedData);
-    } catch (error) {
-      console.error("Update error:", error);
-      setError(
-        error.message || "Failed to update profile. Please try again later."
-      );
-      // Revert local state on error
-      setLocalSkills(user.skills || []);
-      setLocalClubs(user.clubs || []);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleAddSkill = (skill) => {
-    if (localSkills.length >= 20) {
-      setError("Maximum of 20 skills allowed");
-      return;
-    }
-
-    if (!localSkills.includes(skill)) {
-      const updatedSkills = [...localSkills, skill];
-      setLocalSkills(updatedSkills); // Update local state immediately
-      handleUpdate({
-        ...user,
-        skills: updatedSkills,
-      });
-    }
-  };
-
-  const handleRemoveSkill = (index) => {
-    const updatedSkills = [...localSkills];
-    updatedSkills.splice(index, 1);
-    setLocalSkills(updatedSkills); // Update local state immediately
-    handleUpdate({
-      ...user,
-      skills: updatedSkills,
-    });
-  };
-
-  const handleAddClub = (club) => {
-    if (localClubs.length >= 10) {
-      setError("Maximum of 10 clubs allowed");
-      return;
-    }
-
-    if (!localClubs.includes(club)) {
-      const updatedClubs = [...localClubs, club];
-      setLocalClubs(updatedClubs); // Update local state immediately
-      handleUpdate({
-        ...user,
-        clubs: updatedClubs,
-      });
-    }
-  };
-
-  const handleRemoveClub = (index) => {
-    const updatedClubs = [...localClubs];
-    updatedClubs.splice(index, 1);
-    setLocalClubs(updatedClubs); // Update local state immediately
-    handleUpdate({
-      ...user,
-      clubs: updatedClubs,
-    });
-  };
-
-  return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 space-y-6 mt-5">
-      {error && <CustomAlert>{error}</CustomAlert>}
-      {isUpdating && (
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm text-blue-600">Updating profile...</span>
-        </div>
-      )}
-
-      <div className="space-y-8">
-        <TagSection
-          title="Skills"
-          items={localSkills} // Use local state instead of user.skills
-          onAdd={handleAddSkill}
-          onRemove={handleRemoveSkill}
-          icon={Briefcase}
-          emptyText="No skills added yet. Add your professional and technical skills."
-          error={error}
-          isCurrentUser={isCurrentUser}
-        />
-        <TagSection
-          title="Clubs"
-          items={localClubs} 
-          onAdd={handleAddClub}
-          onRemove={handleRemoveClub}
-          icon={BookOpen}
-          emptyText="No clubs added yet. Add the clubs and organizations you're part of."
-          error={error}
-          isCurrentUser={isCurrentUser}
-        />
-      </div>
-    </div>
-  );
-};
-const ProfilePicture = ({ src, isCurrentUser, onUpdatePicture }) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setLoading(true);
-      const newProfilePicUrl = await updateProfilePicture(file);
-      onUpdatePicture(newProfilePicUrl);
-      setShowMenu(false);
-    } catch (error) {
-      console.error("Error updating profile picture:", error);
-      // You might want to show an error message to the user
-      alert("Failed to update profile picture: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const menuItems = isCurrentUser
-    ? [
-        {
-          icon: <Eye className="w-5 h-5" />,
-          label: "View",
-          angle: -45,
-          action: () => setShowModal(true),
-        },
-        {
-          icon: <Camera className="w-5 h-5" />,
-          label: "Update",
-          angle: 45,
-          action: () => fileInputRef.current?.click(),
-        },
-      ]
-    : [
-        {
-          icon: <Eye className="w-5 h-5" />,
-          label: "View",
-          angle: 0,
-          action: () => setShowModal(true),
-        },
-      ];
-
-  return (
-    <div className="relative group">
-      <div
-        className="relative w-24 h-24 rounded-full shadow-lg overflow-hidden cursor-pointer"
-        onMouseEnter={() => setShowMenu(true)}
-        onMouseLeave={() => setShowMenu(false)}
-      >
-        <img
-          src={src || "https://via.placeholder.com/150"}
-          alt="Profile"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-        />
-
-        {showMenu && (
-          <div className="absolute inset-0  flex items-center justify-center">
-            <div className="relative w-14 h-16">
-              {" "}
-              {menuItems.map((item, index) => {
-                const angle = item.angle;
-                const radian = (angle * Math.PI) / 180;
-                // Reduced radius from 32 to 24 to keep buttons more contained
-                const x = Math.cos(radian) * 24;
-                const y = Math.sin(radian) * 24;
-
-                return (
-                  <button
-                    key={item.label}
-                    onClick={item.action}
-                    className="absolute p-1.5 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2 hover:bg-blue-50 transition-colors duration-200 "
-                    style={{
-                      left: `50%`,
-                      top: `50%`,
-                      transform: `translate(${x}px, ${y}px)`,
-                    }}
-                  >
-                    <div className="w-4 h-4">{item.icon}</div>
-                    <span className="absolute hidden group-hover/item:block whitespace-nowrap bg-black text-white text-xs py-1 px-2 rounded -bottom-6 left-1/2 transform -translate-x-1/2">
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        )}
-      </div>
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        accept="image/*"
-      />
-
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
-          onClick={() => setShowModal(false)}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] mx-4">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute -top-12 right-0 text-white hover:text-blue-400 transition-colors"
-            >
-              <X className="w-8 h-8" />
-            </button>
-            <img
-              src={src || "https://via.placeholder.com/400"}
-              alt="Profile"
-              className="max-w-full max-h-[80vh] rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-sm w-full m-4">
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-gray-600 mb-4">{message}</p>
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const LoadingSpinner = () => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  </div>
-);
-
-const ErrorMessage = ({ message }) => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="text-red-500">{message}</div>
-  </div>
-);
-
-const ConnectionButton = ({ status, onConnect, onDisconnect }) => {
-  if (status === "NOT_CONNECTED") {
-    return (
-      <button
-        onClick={onConnect}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-      >
-        <UserPlus className="w-4 h-4" />
-        Connect
-      </button>
-    );
-  }
-
-  return (
-    <button
-      onClick={onDisconnect}
-      className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
-    >
-      <UserCheck className="w-4 h-4" />
-      Connected
-    </button>
-  );
-};
-
-const FriendCard = ({ friend, onNavigate, onRemove }) => (
-  <div
-    className="group relative bg-white rounded-xl border border-gray-100 p-4 transition-all duration-200 hover:shadow-md cursor-pointer"
-    onClick={() => onNavigate(friend._id)}
-  >
-    <div className="flex items-center space-x-4">
-      <img
-        src={friend.profilePicture || "https://via.placeholder.com/40"}
-        alt={friend.fullName}
-        className="w-12 h-12 rounded-full object-cover"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
-          {friend.fullName}
-        </p>
-        <p className="text-sm text-gray-500 truncate">
-          {friend.department || "No department"}
-        </p>
-      </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(friend);
-        }}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
-      >
-        <UserMinus className="w-4 h-4" />
-      </button>
-    </div>
-  </div>
-);
-
-const ProfileInfo = ({
-  user,
-  isCurrentUser,
-  connectionStatus,
-  onConnect,
-  onDisconnect,
-  onEdit,
-  onUpdatePicture,
-}) => (
-  <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
-    <div className="flex items-center gap-6">
-      <div className="w-24">
-        <ProfilePicture
-          src={user.profilePicture}
-          isCurrentUser={isCurrentUser}
-          onUpdatePicture={onUpdatePicture}
-        />
-      </div>
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-blue-600">
-              {user.fullName}
-            </h1>
-            <p className="text-md text-gray-600 font-medium mt-1">
-              {user.department}
-            </p>
-          </div>
-          {!isCurrentUser && (
-            <ConnectionButton
-              status={connectionStatus}
-              onConnect={onConnect}
-              onDisconnect={onDisconnect}
-            />
-          )}
-          {isCurrentUser && (
-            <button
-              onClick={onEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-            >
-              <EditIcon className="w-4 h-4" />
-              Edit Profile
-            </button>
-          )}
-        </div>
-        <p className="text-gray-700 mt-3">{user.bio || "No bio available."}</p>
-        <div className="space-y-2 mt-2">
-          <p className="text-gray-600">
-            <strong>Address:</strong> {user.address || "N/A"}
-          </p>
-          <p className="text-gray-600">
-            <strong>Phone:</strong> {user.phoneNumber || "N/A"}
-          </p>
-          <p className="text-gray-600">
-            <strong>Email:</strong> {user.email || "N/A"}
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const EditProfileForm = ({ user, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
-    fullName: user.fullName,
-    department: user.department,
-    bio: user.bio,
-    address: user.address,
-    phoneNumber: user.phoneNumber,
-    profilePicture: user.profilePicture,
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await updateUserProfile(formData);
-      onSave();
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-    }
-  };
-
-  return (
-    <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Department</label>
-          <input
-            type="text"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Bio</label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Address</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Phone Number</label>
-          <input
-            type="text"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
 const Profile = () => {
   const { id: userId } = useParams();
   const navigate = useNavigate();
@@ -676,20 +50,17 @@ const Profile = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load user data
       const userData = isCurrentUser
         ? await fetchUserProfile()
         : await fetchOtherUserProfile(userId);
       setUser(userData);
 
-      // Load and process friends list
       const friendData = await fetchFriendList();
       if (isCurrentUser) {
         setFriends(friendData);
         setFilteredFriends(friendData);
       }
 
-      // Update connections set and status
       const friendIds = new Set(friendData.map((friend) => friend._id));
       setConnections(friendIds);
       if (!isCurrentUser) {
@@ -698,7 +69,6 @@ const Profile = () => {
         );
       }
 
-      // Load posts
       const postList = await fetchPosts({
         type: isCurrentUser ? "myposts" : "friend",
         id: isCurrentUser ? undefined : userId,
@@ -768,14 +138,8 @@ const Profile = () => {
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-  };
-
+  const handleEdit = () => setIsEditing(true);
+  const handleCancelEdit = () => setIsEditing(false);
   const handleSaveEdit = async () => {
     await loadData();
     setIsEditing(false);
@@ -818,8 +182,6 @@ const Profile = () => {
           isCurrentUser={isCurrentUser}
           onUpdateUser={async (updatedData) => {
             try {
-              console.log("Updating user data:", updatedData);
-
               setUser((prev) => ({
                 ...prev,
                 skills: updatedData.skills || prev.skills || [],
@@ -831,7 +193,6 @@ const Profile = () => {
                 clubs: updatedData.clubs || [],
               });
 
-            
               if (updatedUser) {
                 setUser((prev) => ({
                   ...prev,
@@ -842,13 +203,13 @@ const Profile = () => {
 
               return updatedUser;
             } catch (error) {
-             
-              loadData(); 
+              loadData();
               console.error("Failed to update skills and clubs:", error);
               throw error;
             }
           }}
         />
+
         {isCurrentUser && (
           <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
             <div className="flex justify-between items-center mb-6">

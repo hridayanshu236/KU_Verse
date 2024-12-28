@@ -23,6 +23,7 @@ import ChatInfo from "../components/Chats/ChatInfo";
 import ChatList from "../components/Chats/ChatList";
 import Modal from "../components/Chats/Modal";
 import { io } from "socket.io-client";
+import LoadingSpinner from "../components/Common/LoadingSpinner";
 
 const SIDEBAR_ITEMS = [
   { icon: faMessage, label: "Messages" },
@@ -262,7 +263,7 @@ const Chats = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        Loading...
+        <LoadingSpinner />
       </div>
     );
   }

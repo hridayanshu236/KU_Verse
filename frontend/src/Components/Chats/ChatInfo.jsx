@@ -3,6 +3,7 @@ import { useUser } from "../../contexts/userContext";
 import Picker from "@emoji-mart/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { fetchChatMessages, sendMessage } from "../../utils/messageService";
+import LoadingSpinner from "../Common/LoadingSpinner";
 import {
   faPaperPlane,
   faSmile,
