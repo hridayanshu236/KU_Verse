@@ -58,17 +58,23 @@ io.on("connection", (socket) => {
     socket.join(chatId);
   });
 
-  socket.on("new message", (messageData) => {
-    console.log("Server received new message:", messageData);
-    // Broadcast to all clients in the chat room except sender
-    socket.to(messageData.chatId).emit("message received", {
-      ...messageData,
-      sender: {
-        _id: messageData.sender._id,
-        fullName: messageData.sender.fullName,
-      },
-    });
-  });
+socket.on("new message", (messageData) => {
+  console.log("Server received new message:", messageData);
+  // Make sure all necessary data is included in the emission
+  const messageToSend = {
+    _id: messageData._id,
+    message: messageData.message,
+    sender: {
+      _id: messageData.sender._id,
+      fullName: messageData.sender.fullName,
+    },
+    time: messageData.time,
+    chatId: messageData.chatId,
+  };
+
+  // Emit to all clients in the chat room
+  io.in(messageData.chatId).emit("message received", messageToSend);
+});
 
   // Typing event
 socket.on("typing", ({ chatId, userId, userName }) => {

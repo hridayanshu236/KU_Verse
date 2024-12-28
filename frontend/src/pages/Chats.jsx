@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchChats, createChat } from "../utils/chatService";
 import { useUser } from "../contexts/userContext";
@@ -18,14 +18,13 @@ import ChatList from "../components/Chats/ChatList";
 import Modal from "../components/Chats/Modal";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
-
 const SIDEBAR_ITEMS = [
   { icon: faMessage, label: "Messages" },
   { icon: faFileArchive, label: "Archive" },
 ];
 
 const Chats = () => {
+  const socketRef = useRef();
   const { user } = useUser();
   const navigate = useNavigate();
   const { chatId } = useParams();
@@ -42,6 +41,74 @@ const Chats = () => {
   const [friendSearchTerm, setFriendSearchTerm] = useState("");
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+
+  // Initialize socket connection
+  useEffect(() => {
+    socketRef.current = io("http://localhost:5000");
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected");
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Handle real-time message updates
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const handleNewMessage = (message) => {
+      console.log("New message received in chat list:", message);
+      setChats((prevChats) => {
+        const updatedChats = prevChats.map((chat) => {
+          if (chat._id === message.chatId) {
+            return {
+              ...chat,
+              lastMessage: {
+                _id: message._id,
+                message: message.message,
+                sender: message.sender,
+                time: message.time,
+                chatId: message.chatId,
+              },
+            };
+          }
+          return chat;
+        });
+
+        return updatedChats.sort((a, b) => {
+          const timeA = a.lastMessage?.time || a.createdAt;
+          const timeB = b.lastMessage?.time || b.createdAt;
+          return new Date(timeB) - new Date(timeA);
+        });
+      });
+    };
+
+    socketRef.current.on("message received", handleNewMessage);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("message received", handleNewMessage);
+      }
+    };
+  }, []);
+
+  // Socket join/leave chat room
+  useEffect(() => {
+    if (selectedChat?._id && socketRef.current) {
+      console.log("Joining chat room:", selectedChat._id);
+      socketRef.current.emit("join chat", selectedChat._id);
+
+      return () => {
+        console.log("Leaving chat room:", selectedChat._id);
+        socketRef.current.emit("leave chat", selectedChat._id);
+      };
+    }
+  }, [selectedChat?._id]);
 
   // Memoized values
   const filteredChats = useMemo(() => {
@@ -113,9 +180,21 @@ const Chats = () => {
   }, []);
 
   const updateChatWithNewMessage = useCallback((chatId, newMessage) => {
+    console.log("Updating chat with new message:", chatId, newMessage);
     setChats((prevChats) => {
       const updatedChats = prevChats.map((chat) =>
-        chat._id === chatId ? { ...chat, lastMessage: newMessage } : chat
+        chat._id === chatId
+          ? {
+              ...chat,
+              lastMessage: {
+                _id: newMessage._id,
+                message: newMessage.message,
+                sender: newMessage.sender,
+                time: newMessage.time,
+                chatId: chatId,
+              },
+            }
+          : chat
       );
       return updatedChats.sort((a, b) => {
         const timeA = a.lastMessage?.time || a.createdAt;
@@ -286,9 +365,11 @@ const Chats = () => {
                 <ChatInfo
                   selectedChat={selectedChat}
                   handleBackToChatList={handleBackToChatList}
-                  onMessageSent={(message) =>
-                    updateChatWithNewMessage(selectedChat._id, message)
-                  }
+                  onMessageSent={(message) => {
+                    console.log("Message sent, updating chat list:", message);
+                    updateChatWithNewMessage(selectedChat._id, message);
+                  }}
+                  socket={socketRef.current}
                 />
               </div>
             </>
@@ -305,6 +386,7 @@ const Chats = () => {
         onClose={() => toggleModal(false)}
         title="New Chat"
       >
+        {/* Modal content */}
         <div className="p-4">
           <h2 className="text-lg font-medium">Start a New Conversation</h2>
           <div className="relative mt-4">
@@ -372,6 +454,7 @@ const Chats = () => {
     </div>
   );
 };
+
 
 // PropTypes validation
 Chats.propTypes = {
