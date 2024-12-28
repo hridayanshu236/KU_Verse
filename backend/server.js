@@ -44,31 +44,34 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("Connected to socket.io");
-  console.log(socket.id);
+  console.log("New client connected:", socket.id);
 
-  // Join a chat room
-  socket.on("join chat", (room) => {
-    socket.join(room);
-    // console.log("User joined room: " + room);
+  socket.on("setup", (userId) => {
+    console.log(`User ${userId} has joined their user room.`);
+    socket.join(userId);
   });
 
-  // Handle typing indicators
-  socket.on("typing", (room) => socket.in(room).emit("typing"));
-  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+  socket.on("join chat", (chatId) => {
+    console.log(`User joined chat room: ${chatId}`);
+    socket.join(chatId);
+  });
 
-  // Handle new messages
-  socket.on("new message", (newMessageReceived) => {
-    const chat = newMessageReceived.chat;
-    if (!chat || !chat.users) return console.log("chat.users not defined");
+  socket.on("new message", (messageData) => {
+    console.log(`New message in chat ${messageData.chatId}:`, messageData);
+    socket.in(messageData.chatId).emit("message received", messageData);
+  });
 
-    chat.users.forEach(user => {
-      if (user._id == newMessageReceived.sender._id) return;
-      socket.in(user._id).emit("message received", newMessageReceived);
-    });
+  socket.on("typing", (chatId) => {
+    console.log(`User is typing in chat: ${chatId}`);
+    socket.in(chatId).emit("typing");
+  });
+
+  socket.on("stop typing", (chatId) => {
+    console.log(`User stopped typing in chat: ${chatId}`);
+    socket.in(chatId).emit("stop typing");
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log("Client disconnected:", socket.id);
   });
 });
