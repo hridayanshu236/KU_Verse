@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchChats, createChat } from "../utils/chatService";
 import { useUser } from "../contexts/userContext";
@@ -270,8 +276,10 @@ const Chats = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navbar />
+    <div className="flex flex-col h-screen relative">
+      {" "}
+      {/* Added relative positioning */}
+      <Navbar className="z-50" /> {/* Ensure Navbar has a high z-index */}
       <div className="flex flex-grow overflow-hidden">
         <aside className="hidden mdd:flex flex-col justify-between border text-[rgb(103,80,164)] text-center">
           <div className="p-3">
@@ -355,13 +363,15 @@ const Chats = () => {
         >
           {selectedChat ? (
             <>
-              <button
+              {/* <button
                 className="flex-shrink-0 flex mdd:hidden p-4"
                 onClick={handleBackToChatList}
               >
                 <FontAwesomeIcon icon={faArrowLeft} className="w-6 h-6" />
-              </button>
-              <div className="flex-grow flex flex-col min-h-full">
+              </button> */}
+              <div className="flex-grow flex flex-col min-h-full relative z-40">
+                {" "}
+                {/* Ensure ChatInfo has a lower z-index */}
                 <ChatInfo
                   selectedChat={selectedChat}
                   handleBackToChatList={handleBackToChatList}
@@ -384,7 +394,6 @@ const Chats = () => {
           )}
         </main>
       </div>
-
       <Modal
         isOpen={isModalOpen}
         onClose={() => toggleModal(false)}
@@ -458,7 +467,6 @@ const Chats = () => {
     </div>
   );
 };
-
 
 // PropTypes validation
 Chats.propTypes = {

@@ -7,10 +7,16 @@ import {
   faPaperPlane,
   faSmile,
   faBars,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { useSocket } from "../../Hooks/useSocket";
 
-const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
+const ChatInfo = ({
+  selectedChat,
+  onMessageSent,
+  handleNewMessage,
+  handleBackToChatList,
+}) => {
   const { user } = useUser();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
@@ -39,23 +45,16 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
   // Join chat when selected chat changes
   useEffect(() => {
     if (selectedChat?._id && user?._id) {
-      console.log("Joining chat:", selectedChat._id);
       joinChat(selectedChat._id);
       processedMessages.current.clear();
       setTypingUsers(new Set());
 
       return () => {
-        console.log("Leaving chat:", selectedChat._id);
         leaveChat(selectedChat._id);
       };
     }
   }, [selectedChat?._id, user?._id]);
 
-  useEffect(() => {
-    console.log("Current messages:", messages);
-  }, [messages]);
-
-  // Load initial messages
   useEffect(() => {
     const loadMessages = async () => {
       if (!selectedChat?._id || !user?._id) return;
@@ -69,7 +68,7 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
             senderId: msg.sender?._id || msg.senderId,
           }));
           setMessages(processedMessagesData);
-          scrollToBottom();
+          setTimeout(scrollToBottom, 100); // Ensure it scrolls to the bottom after messages are loaded
         }
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -84,7 +83,6 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
   // Handle socket events
   useEffect(() => {
     const handleReceivedMessage = (message) => {
-      console.log("Message received in ChatInfo:", message);
       if (message.chatId === selectedChat._id) {
         setMessages((prev) => {
           if (!prev.some((m) => m._id === message._id)) {
@@ -120,17 +118,13 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
       }
     };
 
-    // Set up socket event listeners if chat and user are available
     if (selectedChat?._id && user?._id) {
-      console.log("Setting up message listeners for chat:", selectedChat._id);
       onMessageReceived(handleReceivedMessage);
       onTyping(handleTypingStart);
       onStopTyping(handleTypingStop);
     }
 
-    // Cleanup function
     return () => {
-      console.log("Cleaning up message listeners");
       onMessageReceived(null);
       onTyping(null);
       onStopTyping(null);
@@ -152,7 +146,6 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
       time: new Date().toISOString(),
     };
 
-    // Clear typing indicators
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       emitStopTyping({
@@ -162,14 +155,11 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
       });
     }
 
-    // Clear input immediately
     setInputValue("");
 
     try {
-      // First save to database
       const savedMessage = await sendMessage(messageData);
 
-      // Update local state with saved message
       setMessages((prev) => [
         ...prev,
         {
@@ -178,7 +168,6 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
         },
       ]);
 
-      // Emit through socket with saved message ID
       emitMessage({
         ...savedMessage,
         chatId: selectedChat._id,
@@ -188,7 +177,6 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
         },
       });
 
-      // Update chat list
       if (onMessageSent) {
         onMessageSent(savedMessage);
       }
@@ -204,23 +192,17 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
 
     if (!selectedChat?._id || !user?._id) return;
 
-    // Log the typing event being emitted
-    console.log("Emitting typing event for chat:", selectedChat._id);
-
     emitTyping({
       chatId: selectedChat._id,
       userId: user._id,
       userName: user.fullName,
     });
 
-    // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set new timeout
     typingTimeoutRef.current = setTimeout(() => {
-      console.log("Emitting stop typing event for chat:", selectedChat._id);
       emitStopTyping({
         chatId: selectedChat._id,
         userId: user._id,
@@ -265,9 +247,17 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {" "}
+      {/* Added relative positioning */}
       <div className="flex flex-row justify-between p-2 border-b">
         <div className="flex flex-row items-center">
+          <button
+            className="mdd:hidden flex-shrink-0 p-2"
+            onClick={handleBackToChatList}
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="w-6 h-6" />
+          </button>
           <img
             src={displayInfo.displayPicture}
             alt="profile"
@@ -284,7 +274,6 @@ const ChatInfo = ({ selectedChat, onMessageSent, handleNewMessage }) => {
           icon={faBars}
         />
       </div>
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
