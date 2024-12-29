@@ -130,12 +130,8 @@ const getFeedPosts = asyncHandler(async (req, res) => {
   const user = await User.findById(userId).populate("friends");
   const friendsId = user?.friends.map((friend) => friend._id);
   console.log(`[Friends Count]: ${friendsId?.length || 0}`);
-  console.log(`[Friends IDs]: ${friendsId?.join(", ")}`);
 
   try {
-    const allUserPosts = await Post.find({ user: userId });
-    console.log(`[Debug] User's total posts: ${allUserPosts.length}`);
-
     const posts = await Post.aggregate([
       {
         $match: {
@@ -168,20 +164,45 @@ const getFeedPosts = asyncHandler(async (req, res) => {
       {
         $addFields: {
           timeScore: {
-            $cond: {
-              if: { $lte: ["$hoursSincePost", 24] },
-              then: {
-                $add: [
-                  2, // Base boost for recent posts
-                  {
-                    $multiply: [
-                      { $subtract: [1, { $divide: ["$hoursSincePost", 24] }] },
-                      3, // Decay factor for posts within 24 hours
+            $switch: {
+              branches: [
+                // Very recent posts (less than 1 hour)
+                {
+                  case: { $lte: ["$hoursSincePost", 1] },
+                  then: {
+                    $add: [
+                      5, // Highest base score for very recent posts
+                      {
+                        $multiply: [
+                          { $subtract: [1, "$hoursSincePost"] },
+                          2, // Additional boost for posts under 1 hour
+                        ],
+                      },
                     ],
                   },
-                ],
-              },
-              else: {
+                },
+                // Posts within 24 hours
+                {
+                  case: { $lte: ["$hoursSincePost", 24] },
+                  then: {
+                    $add: [
+                      3, // Base score for recent posts
+                      {
+                        $multiply: [
+                          {
+                            $subtract: [
+                              1,
+                              { $divide: ["$hoursSincePost", 24] },
+                            ],
+                          },
+                          2,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+              default: {
                 $divide: [
                   1,
                   { $add: [1, { $divide: ["$hoursSincePost", 24] }] },
@@ -193,15 +214,31 @@ const getFeedPosts = asyncHandler(async (req, res) => {
       },
       {
         $addFields: {
+          
           score: {
             $add: [
               "$timeScore",
-              { $multiply: [{ $size: "$upvotes" }, 0.1] },
-              { $multiply: [{ $size: "$commentt" }, 0.2] },
+              // Engagement factors with reduced weight
+              { $multiply: [{ $size: "$upvotes" }, 0.05] },
+              { $multiply: [{ $size: "$commentt" }, 0.1] },
+              // Extra boost for user's own recent posts
+              {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $eq: ["$user", userId] },
+                      { $lte: ["$hoursSincePost", 24] },
+                    ],
+                  },
+                  then: 2, // Significant boost for own recent posts
+                  else: 0,
+                },
+              },
+              // Friend boost with slightly reduced weight
               {
                 $cond: {
                   if: { $in: ["$user", friendsId] },
-                  then: 0.5,
+                  then: 0.3,
                   else: 0,
                 },
               },
@@ -248,11 +285,10 @@ const getFeedPosts = asyncHandler(async (req, res) => {
       });
     }
 
-    // Enhanced debug counts with time-based categories
     const debugCounts = {
       totalPosts: posts.length,
+      veryRecent: posts.filter((p) => p.hoursSincePost <= 1).length,
       last24Hours: posts.filter((p) => p.hoursSincePost <= 24).length,
-      last48Hours: posts.filter((p) => p.hoursSincePost <= 48).length,
       userPosts: posts.filter(
         (p) => p.user._id.toString() === userId.toString()
       ).length,
