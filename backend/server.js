@@ -22,6 +22,9 @@ app.use("/api/post", require("./routes/postRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
 app.use("/api/profileInfo", require("./routes/profileInfoRoutes"));
 app.use("/api/bookmarks", require("./routes/bookmarkRoutes"));
+app.use("/api/event", require("./routes/eventRoutes"));
+app.use("/api/profileInfo", require("./routes/profileInfoRoutes"));
+
 app.use(errorHandler);
 
 // Database connection

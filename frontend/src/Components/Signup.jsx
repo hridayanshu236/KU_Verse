@@ -42,7 +42,7 @@ const Signup = () => {
         submitFormData
       );
       console.log(response.data);
-      navigate("/login");
+      navigate("/otp-verification");
     } catch (error) {
       if (error.response) {
         console.error("Error response status:", error.response.status);
