@@ -26,7 +26,7 @@ export const BookmarkButton = ({ postId, onBookmark }) => {
     if (!newGroup.trim()) return;
     try {
       const response = await fetch(
-        "http://localhost:5000/api/bookmarks/groups",
+        "http://localhost:5000/api/bookmarks/bookmarks/groups",
         {
           method: "POST",
           headers: {
@@ -137,7 +137,7 @@ const SavedPosts = () => {
   const fetchBookmarkGroups = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/bookmarks/groups"
+        "http://localhost:5000/api/bookmarks/bookmarks/groups"
       );
       if (response.ok) {
         const groups = await response.json();

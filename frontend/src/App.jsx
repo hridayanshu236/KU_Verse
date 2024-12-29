@@ -13,7 +13,7 @@ import StoryCard from "./Components/StoryCard";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignUpPage";
 import LandingPage from "./pages/LandingPage";
-import OtpVerificationPage from "./pages/OtpVerificationPage";
+// import OtpVerificationPage from "./pages/OtpVerificationPage";
 function App() {
   return (
     <>
@@ -34,7 +34,7 @@ function App() {
           <Route element={<LandingPage />} path="/" />
           <Route element={<LoginPage />} path="/login" />
           <Route element={<SignupPage />} path="/signup" />
-          <Route  element={<OtpVerificationPage />} path="/otp-verification"/>
+          {/* <Route element={<OtpVerificationPage />} path="/otp-verification" /> */}
         </Route>
       </Routes>
     </>
