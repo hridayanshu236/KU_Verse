@@ -10,8 +10,8 @@ import {
   ArrowDownward,
   Comment,
   Share,
-  Bookmark,
 } from "@mui/icons-material";
+import { BookmarkButton } from "./SavedPosts";
 
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
@@ -77,8 +77,37 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   );
 };
 
-const Posts = ({ posts }) => {
-  const [localPosts, setLocalPosts] = useState(posts);
+const Posts = ({ posts: initialPosts }) => {
+  const [localPosts, setLocalPosts] = useState(
+    initialPosts.map((post) => ({
+      ...post,
+      voteCount:
+        post.voteCount || post.upvotes?.length - post.downvotes?.length || 0,
+    }))
+  );
+
+  const handleVote = async (postId, isUpvote) => {
+    const voteFunction = isUpvote ? upvotePost : downvotePost;
+
+    try {
+      const updatedPost = await voteFunction(postId);
+
+      setLocalPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                voteCount: updatedPost.voteCount,
+                upvotes: updatedPost.upvotes,
+                downvotes: updatedPost.downvotes,
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error(`Failed to ${isUpvote ? "upvote" : "downvote"}:`, error);
+    }
+  };
 
   const handleComment = async (postId, comment) => {
     try {
@@ -95,18 +124,16 @@ const Posts = ({ posts }) => {
     }
   };
 
-  const fetchComments = async (postId) => {
-    try {
-      const comments = await fetchCommentsByPostId(postId);
-      setLocalPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId ? { ...post, commentt: comments } : post
-        )
-      );
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
-    }
-  };
+  // Update localPosts when initialPosts changes
+  useEffect(() => {
+    setLocalPosts(
+      initialPosts.map((post) => ({
+        ...post,
+        voteCount:
+          post.voteCount || post.upvotes?.length - post.downvotes?.length || 0,
+      }))
+    );
+  }, [initialPosts]);
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -115,53 +142,28 @@ const Posts = ({ posts }) => {
       ) : (
         localPosts.map((post) => {
           const [showComments, setShowComments] = useState(false);
-          const [voteStatus, setVoteStatus] = useState(null);
-          const [voteCount, setVoteCount] = useState(
-            (post.upvotes?.length || 0) - (post.downvotes?.length || 0)
+          const userHasUpvoted = post.upvotes?.includes(
+            localStorage.getItem("userId")
           );
-          const [isVoting, setIsVoting] = useState(false);
-
-          const handleUpvote = async () => {
-            if (voteStatus === "upvoted" || isVoting) return;
-            setIsVoting(true);
-
-            setVoteCount((prev) => prev + 1);
-            setVoteStatus("upvoted");
-
-            try {
-              await upvotePost(post._id);
-            } catch (error) {
-              console.error("Failed to upvote:", error);
-              setVoteCount((prev) => prev - 1);
-              setVoteStatus(null);
-            } finally {
-              setIsVoting(false);
-            }
-          };
-
-          const handleDownvote = async () => {
-            if (voteStatus === "downvoted" || isVoting) return;
-            setIsVoting(true);
-
-            setVoteCount((prev) => prev - 1);
-            setVoteStatus("downvoted");
-
-            try {
-              await downvotePost(post._id);
-            } catch (error) {
-              console.error("Failed to downvote:", error);
-              setVoteCount((prev) => prev + 1);
-              setVoteStatus(null);
-            } finally {
-              setIsVoting(false);
-            }
-          };
+          const userHasDownvoted = post.downvotes?.includes(
+            localStorage.getItem("userId")
+          );
 
           useEffect(() => {
             if (showComments) {
-              fetchComments(post._id);
+              fetchCommentsByPostId(post._id)
+                .then((comments) => {
+                  setLocalPosts((prevPosts) =>
+                    prevPosts.map((p) =>
+                      p._id === post._id ? { ...p, commentt: comments } : p
+                    )
+                  );
+                })
+                .catch((error) =>
+                  console.error("Failed to fetch comments:", error)
+                );
             }
-          }, [showComments]);
+          }, [showComments, post._id]);
 
           return (
             <div
@@ -173,7 +175,7 @@ const Posts = ({ posts }) => {
                 <div className="bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-center">
                   <div className="items-center flex flex-col p-2 m-1 justify-center">
                     <img
-                      src={post.user.profilePicture}
+                      src={post.user.profilePicture || "/api/placeholder/70/70"}
                       className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-full"
                       alt="Profile_picture"
                     />
@@ -193,7 +195,6 @@ const Posts = ({ posts }) => {
 
                 {/* Post Content Section */}
                 <div className="flex-[2] flex items-center justify-center rounded-b-lg">
-                  {console.log(post)}
                   {post.image?.url ? (
                     <img
                       src={post.image.url}
@@ -211,20 +212,26 @@ const Posts = ({ posts }) => {
                 <div className="flex flex-row justify-between px-2 items-center">
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-                    onClick={handleUpvote}
+                    className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center ${
+                      userHasUpvoted ? "text-blue-500" : ""
+                    }`}
+                    onClick={() => handleVote(post._id, true)}
+                    disabled={userHasUpvoted}
                   >
                     <ArrowUpward className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
                   <span className="text-blue-500 font-semibold mx-2 text-sm md:text-base">
-                    {voteCount}
+                    {typeof post.voteCount === "number" ? post.voteCount : 0}
                   </span>
 
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-                    onClick={handleDownvote}
+                    className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center ${
+                      userHasDownvoted ? "text-red-500" : ""
+                    }`}
+                    onClick={() => handleVote(post._id, false)}
+                    disabled={userHasDownvoted}
                   >
                     <ArrowDownward className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
@@ -244,17 +251,12 @@ const Posts = ({ posts }) => {
                     <Share className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
-                  <button
-                    type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-                  >
-                    <Bookmark className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
+                  <BookmarkButton postId={post._id} onBookmark={() => {}} />
                 </div>
 
                 {showComments && (
                   <CommentSection
-                    userProfile={post.user || {}}
+                    userProfile={post.user}
                     postId={post._id}
                     comments={post.commentt || []}
                     onComment={handleComment}
