@@ -47,4 +47,52 @@ const createEvent = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Event Created Successfully", event });
 });
 
-module.exports = { createEvent };
+const getAllEvents = asyncHandler(async (req, res) => {
+  const events = await Event.find()
+    .populate("createdBy", "fullName userName profilePicture department")
+    .sort({ createdAt: -1 });
+
+  if (events.length <= 0) {
+    res.status(404);
+    throw new Error("No events found!");
+  }
+
+  res.json({ events });
+});
+
+const getEventById = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    res.status(400);
+    throw new Error("Invalid friend ID");
+  }
+
+  const events = await Event.find({ createdBy: userId })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .sort({ createdAt: -1 });
+
+  if (events.length <= 0) {
+    res.status(404);
+    throw new Error("No events found!");
+  }
+
+  res.status(200).json({ events });
+});
+
+const getMyEvents = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const events = await Event.find({ createdBy: userId })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .sort({ createdAt: -1 });
+
+  if (events.length <= 0) {
+    res.status(404);
+    throw new Error("No events found!");
+  }
+
+  res.json({ events });
+});
+
+module.exports = { createEvent, getAllEvents, getEventById, getMyEvents };
