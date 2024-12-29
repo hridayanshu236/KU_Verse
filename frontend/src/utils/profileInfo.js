@@ -12,3 +12,12 @@ export const fetchDepartments = async () => {
     throw error;
   }
 };
+export const fetchClubs = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/clubs`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching clubs:", error);
+    throw error;
+  }
+};

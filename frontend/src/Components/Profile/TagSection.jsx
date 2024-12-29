@@ -42,6 +42,7 @@ const TagSection = ({
                 setIsAdding(false);
               }}
               error={error}
+              type={title.toLowerCase() === "clubs" ? "club" : "text"}
             />
             <button
               onClick={() => setIsAdding(false)}
