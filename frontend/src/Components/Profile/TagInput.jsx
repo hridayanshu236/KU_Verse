@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import { fetchClubs } from "../../utils/profileInfo"; // Update the import path
+import { fetchClubs, fetchSkills } from "../../utils/profileInfo";
 
 const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
   const [inputValue, setInputValue] = useState("");
@@ -8,19 +8,47 @@ const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [clubs, setClubs] = useState([]);
+  const [skills, setSkills] = useState([]);
 
   useEffect(() => {
     if (type === "club") {
       loadClubs();
+    } else if (type === "skill") {
+      loadSkills();
     }
   }, [type]);
 
   const loadClubs = async () => {
     try {
+      setLoading(true);
       const response = await fetchClubs();
-      setClubs(response.clubs);
+      const clubsWithIds = (response.clubs || []).map((club, index) => ({
+        ...club,
+        _id: club._id || `club-${index}`,
+      }));
+      setClubs(clubsWithIds);
     } catch (err) {
       console.error("Error loading clubs:", err);
+      setClubs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSkills = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchSkills();
+      const skillsWithIds = (response.skills || []).map((skill, index) => ({
+        ...skill,
+        _id: skill._id || `skill-${index}`,
+      }));
+      setSkills(skillsWithIds);
+    } catch (err) {
+      console.error("Error loading skills:", err);
+      setSkills([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,10 +56,17 @@ const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
     const value = e.target.value;
     setInputValue(value);
 
-    if (type === "club" && value.length > 0) {
-      const filtered = clubs.filter((club) =>
-        club.name.toLowerCase().includes(value.toLowerCase())
-      );
+    if (value.length > 0) {
+      let filtered = [];
+      if (type === "club") {
+        filtered = clubs.filter((club) =>
+          club?.name?.toLowerCase().includes(value.toLowerCase())
+        );
+      } else if (type === "skill") {
+        filtered = skills.filter((skill) =>
+          skill?.name?.toLowerCase().includes(value.toLowerCase())
+        );
+      }
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
@@ -50,11 +85,19 @@ const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
     }
   };
 
-  const handleSuggestionClick = (club) => {
-    onAdd(club.name);
-    setInputValue("");
-    setSuggestions([]);
-    setShowSuggestions(false);
+  const handleSuggestionClick = (item) => {
+    if (item?.name) {
+      onAdd(item.name);
+      setInputValue("");
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
   };
 
   return (
@@ -66,8 +109,11 @@ const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
             value={inputValue}
             onChange={handleInputChange}
             onFocus={() =>
-              type === "club" && inputValue && setShowSuggestions(true)
+              (type === "club" || type === "skill") &&
+              inputValue &&
+              setShowSuggestions(true)
             }
+            onBlur={handleBlur}
             placeholder={placeholder}
             className={`w-full px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent ${
               error ? "border-red-500" : "border-gray-200"
@@ -82,19 +128,26 @@ const TagInput = ({ placeholder, onAdd, error, type = "text" }) => {
         </div>
       </form>
 
-      {/* Suggestions dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-          {suggestions.map((club) => (
-            <button
-              key={club._id}
-              type="button"
-              onClick={() => handleSuggestionClick(club)}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-            >
-              {club.name}
-            </button>
-          ))}
+          {suggestions.map(
+            (item, index) =>
+              item && (
+                <button
+                  key={item._id || `suggestion-${type}-${index}`}
+                  type="button"
+                  onClick={() => handleSuggestionClick(item)}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 focus:bg-blue-50 focus:outline-none flex items-center gap-2"
+                >
+                  <span>{item.name}</span>
+                  {item.category && (
+                    <span className="text-xs text-gray-500">
+                      ({item.category})
+                    </span>
+                  )}
+                </button>
+              )
+          )}
         </div>
       )}
 
