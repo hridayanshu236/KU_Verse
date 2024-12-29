@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Event = require("./eventModel");
 
 const userSchema = mongoose.Schema({
   email: {
@@ -76,6 +77,12 @@ const userSchema = mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
     },
+  ],
+  events:[
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+    }
   ],
   isVerified:{
     type:Boolean,

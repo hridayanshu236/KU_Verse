@@ -76,7 +76,20 @@ const getPostsById = asyncHandler(async (req, res) => {
 
   const posts = await Post.find({ user: friendId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPostsById] Retrieved ${posts.length} posts for user ID: ${friendId}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
@@ -85,26 +98,224 @@ const getPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const posts = await Post.find({ user: userId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPost] Retrieved ${posts.length} posts for current user: ${req.user.userName}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
 
 const getFeedPosts = asyncHandler(async (req, res) => {
+  const currentTime = new Date();
+  console.log(
+    `[Feed Request Started] - User: ${
+      req.user.userName
+    } - Time: ${currentTime.toISOString()}`
+  );
+
   const userId = req.user._id;
+  console.log(`[User ID]: ${userId}`);
+
   const user = await User.findById(userId).populate("friends");
-
   const friendsId = user?.friends.map((friend) => friend._id);
+  console.log(`[Friends Count]: ${friendsId?.length || 0}`);
 
-  const posts = await Post.find({
-    $or: [{ user: userId }, { user: { $in: friendsId } }],
-  })
-    .populate("user", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+  try {
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          $or: [
+            { user: userId },
+            { user: { $in: friendsId } },
+            { voteCount: { $gte: 5 } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $addFields: {
+          hoursSincePost: {
+            $divide: [
+              { $subtract: [currentTime, "$time"] },
+              1000 * 60 * 60, // Convert to hours
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          timeScore: {
+            $switch: {
+              branches: [
+                // Very recent posts (less than 1 hour)
+                {
+                  case: { $lte: ["$hoursSincePost", 1] },
+                  then: {
+                    $add: [
+                      5, // Highest base score for very recent posts
+                      {
+                        $multiply: [
+                          { $subtract: [1, "$hoursSincePost"] },
+                          2, // Additional boost for posts under 1 hour
+                        ],
+                      },
+                    ],
+                  },
+                },
+                // Posts within 24 hours
+                {
+                  case: { $lte: ["$hoursSincePost", 24] },
+                  then: {
+                    $add: [
+                      3, // Base score for recent posts
+                      {
+                        $multiply: [
+                          {
+                            $subtract: [
+                              1,
+                              { $divide: ["$hoursSincePost", 24] },
+                            ],
+                          },
+                          2,
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+              default: {
+                $divide: [
+                  1,
+                  { $add: [1, { $divide: ["$hoursSincePost", 24] }] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          
+          score: {
+            $add: [
+              "$timeScore",
+              // Engagement factors with reduced weight
+              { $multiply: [{ $size: "$upvotes" }, 0.05] },
+              { $multiply: [{ $size: "$commentt" }, 0.1] },
+              // Extra boost for user's own recent posts
+              {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $eq: ["$user", userId] },
+                      { $lte: ["$hoursSincePost", 24] },
+                    ],
+                  },
+                  then: 2, // Significant boost for own recent posts
+                  else: 0,
+                },
+              },
+              // Friend boost with slightly reduced weight
+              {
+                $cond: {
+                  if: { $in: ["$user", friendsId] },
+                  then: 0.3,
+                  else: 0,
+                },
+              },
+            ],
+          },
+        },
+      },
+      { $sort: { score: -1 } },
+      {
+        $project: {
+          _id: 1,
+          caption: 1,
+          image: 1,
+          time: 1,
+          upvotes: 1,
+          downvotes: 1,
+          commentt: 1,
+          voteCount: 1,
+          score: 1,
+          timeScore: 1,
+          hoursSincePost: 1,
+          user: {
+            _id: "$userDetails._id",
+            fullName: "$userDetails.fullName",
+            userName: "$userDetails.userName",
+            profilePicture: "$userDetails.profilePicture",
+            department: "$userDetails.department",
+          },
+        },
+      },
+    ]);
 
-  res.status(200).json({ posts, success: true });
+    console.log(`[Posts Retrieved]: ${posts.length}`);
+
+    if (posts.length > 0) {
+      console.log("[Sample Post]:", {
+        _id: posts[0]._id,
+        time: posts[0].time,
+        hoursSincePost: posts[0].hoursSincePost,
+        timeScore: posts[0].timeScore,
+        finalScore: posts[0].score,
+        userName: posts[0].user.userName,
+        voteCount: posts[0].voteCount,
+      });
+    }
+
+    const debugCounts = {
+      totalPosts: posts.length,
+      veryRecent: posts.filter((p) => p.hoursSincePost <= 1).length,
+      last24Hours: posts.filter((p) => p.hoursSincePost <= 24).length,
+      userPosts: posts.filter(
+        (p) => p.user._id.toString() === userId.toString()
+      ).length,
+      friendsPosts: posts.filter((p) =>
+        friendsId.some((id) => id.toString() === p.user._id.toString())
+      ).length,
+      highEngagementPosts: posts.filter((p) => p.voteCount >= 5).length,
+    };
+    console.log("[Debug Counts]:", debugCounts);
+
+    res.status(200).json({
+      posts,
+      success: true,
+      debug: debugCounts,
+    });
+  } catch (error) {
+    console.error("[Feed Error]:", {
+      message: error.message,
+      stack: error.stack,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch feed posts",
+    });
+  }
 });
-
 const upVote = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id);
 

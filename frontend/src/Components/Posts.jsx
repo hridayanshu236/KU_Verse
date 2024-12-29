@@ -5,6 +5,13 @@ import {
   commentOnPost,
   fetchCommentsByPostId,
 } from "../utils/postServices";
+import {
+  ArrowUpward,
+  ArrowDownward,
+  Comment,
+  Share,
+  Bookmark,
+} from "@mui/icons-material";
 
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
@@ -207,11 +214,7 @@ const Posts = ({ posts }) => {
                     className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                     onClick={handleUpvote}
                   >
-                    <img
-                      src="../src/Assets/Post_Components/circle-arrow-up.png"
-                      alt="Upvote"
-                      className="w-5 h-5 md:w-6 md:h-6"
-                    />
+                    <ArrowUpward className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
                   <span className="text-blue-500 font-semibold mx-2 text-sm md:text-base">
@@ -223,11 +226,7 @@ const Posts = ({ posts }) => {
                     className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                     onClick={handleDownvote}
                   >
-                    <img
-                      src="../src/Assets/Post_Components/circle-arrow-down.png"
-                      alt="Downvote"
-                      className="w-5 h-5 md:w-6 md:h-6"
-                    />
+                    <ArrowDownward className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
                   <button
@@ -235,33 +234,21 @@ const Posts = ({ posts }) => {
                     className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                     onClick={() => setShowComments(!showComments)}
                   >
-                    <img
-                      src="../src/Assets/Post_Components/message-circle.png"
-                      alt="Comment"
-                      className="w-5 h-5 md:w-6 md:h-6"
-                    />
+                    <Comment className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
                   <button
                     type="button"
                     className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                   >
-                    <img
-                      src="../src/Assets/Post_Components/share-2.png"
-                      alt="Share"
-                      className="w-5 h-5 md:w-6 md:h-6"
-                    />
+                    <Share className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
                   <button
                     type="button"
                     className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                   >
-                    <img
-                      src="../src/Assets/Post_Components/bookmark-plus.png"
-                      alt="Bookmark"
-                      className="w-5 h-5 md:w-6 md:h-6"
-                    />
+                    <Bookmark className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </div>
 
