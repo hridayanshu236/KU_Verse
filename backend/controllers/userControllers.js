@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const bcrypt=require("bcrypt");
 const getDataURI = require("../utilities/generateURL");
 const cloudinary = require("../utilities/cloudinary");
+const UserRecommendationSystem = require("../utilities/UserRecommendation");
 const myProfile = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.user._id);
 
@@ -205,5 +206,148 @@ const updatePassword = asyncHandler(async(req,res) =>{
     res.status(200).json({message:"Password updated successfully"});
 })
 
-module.exports = {myProfile,updateProfilePicture,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword};
+const recommendationSystem = new UserRecommendationSystem();
+
+const getRecommendations = asyncHandler(async (req, res) => {
+  try {
+    
+    const limit = parseInt(req.query.limit) || 10;
+
+    
+    const recommendations = await recommendationSystem.getRecommendations(
+      req.user._id,
+      limit
+    );
+
+    // Return recommendations
+    res.status(200).json({
+      success: true,
+      count: recommendations.length,
+      recommendations,
+    });
+  } catch (error) {
+    console.error("Recommendation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching recommendations",
+      error: error.message,
+    });
+  }
+});
+
+// Optional: Add an endpoint to update recommendation weights
+const updateRecommendationWeights = asyncHandler(async (req, res) => {
+  try {
+    const { department, skills } = req.body;
+
+    // Validate weights sum to 1
+    if (department + skills !== 1) {
+      res.status(400);
+      throw new Error("Weights must sum to 1");
+    }
+
+    // Update weights
+    recommendationSystem.updateWeights({
+      department,
+      skills,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Recommendation weights updated successfully",
+      weights: recommendationSystem.weights,
+    });
+  } catch (error) {
+    console.error("Weight update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating weights",
+      error: error.message,
+    });
+  }
+});
+const getMutualConnections = async (req, res) => {
+  try {
+    const { userId } = req.params; // ID of the user we're comparing with
+    const currentUserId = req.user._id; // Assuming you have user info in req.user from auth middleware
+
+    // Fetch both users' friends lists in parallel
+    const [currentUserFriends, otherUserFriends] = await Promise.all([
+      User.findById(currentUserId).select('friends').populate('friends', '_id'),
+      User.findById(userId).select('friends').populate('friends', '_id')
+    ]);
+
+    if (!currentUserFriends || !otherUserFriends) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Convert friends arrays to Sets of friend IDs
+    const currentUserFriendSet = new Set(
+      currentUserFriends.friends.map(friend => friend._id.toString())
+    );
+    const otherUserFriendSet = new Set(
+      otherUserFriends.friends.map(friend => friend._id.toString())
+    );
+
+    // Calculate mutual connections
+    let mutualCount = 0;
+    for (const friendId of currentUserFriendSet) {
+      if (otherUserFriendSet.has(friendId)) {
+        mutualCount++;
+      }
+    }
+
+    return res.json({ mutualConnections: mutualCount });
+  } catch (error) {
+    console.error('Error calculating mutual connections:', error);
+    return res.status(500).json({ 
+      message: 'Error calculating mutual connections',
+      error: error.message 
+    });
+  }
+};
+
+// If you also want to get the mutual friends' details:
+const getMutualFriends = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user._id;
+
+    const [currentUserFriends, otherUserFriends] = await Promise.all([
+      User.findById(currentUserId)
+        .select('friends')
+        .populate('friends', '_id fullName profilePicture department'),
+      User.findById(userId)
+        .select('friends')
+        .populate('friends', '_id fullName profilePicture department')
+    ]);
+
+    if (!currentUserFriends || !otherUserFriends) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Convert one user's friends to a Map for O(1) lookup
+    const currentUserFriendMap = new Map(
+      currentUserFriends.friends.map(friend => [friend._id.toString(), friend])
+    );
+
+    // Find mutual friends
+    const mutualFriends = otherUserFriends.friends.filter(friend => 
+      currentUserFriendMap.has(friend._id.toString())
+    );
+
+    return res.json({
+      mutualConnections: mutualFriends.length,
+      mutualFriends: mutualFriends
+    });
+  } catch (error) {
+    console.error('Error getting mutual friends:', error);
+    return res.status(500).json({ 
+      message: 'Error getting mutual friends',
+      error: error.message 
+    });
+  }
+};
+
+module.exports = {myProfile,updateProfilePicture,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword,getRecommendations,updateRecommendationWeights,getMutualConnections,getMutualFriends};
 

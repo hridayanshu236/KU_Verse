@@ -10,6 +10,8 @@ import FriendCard from "../components/Profile/FriendCard";
 import ConfirmDialog from "../components/Profile/ConfirmDialog";
 import LoadingSpinner from "../components/Common/LoadingSpinner";
 import ErrorMessage from "../components/Common/ErrorMessage";
+import {fetchMutualConnections,fetchMutualFriends} from "../utils/userServices";
+import RecommendedConnections from "../components/Profile/RecommendedConnection";
 import {
   fetchFriendList,
   fetchUserProfile,
@@ -29,7 +31,7 @@ const Profile = () => {
   const { id: userId } = useParams();
   const navigate = useNavigate();
   const isCurrentUser = !userId || userId === "undefined";
-
+const [profileMutualConnections, setProfileMutualConnections] = useState(0);
   const [user, setUser] = useState(null);
   const [friends, setFriends] = useState([]);
   const [filteredFriends, setFilteredFriends] = useState([]);
@@ -47,40 +49,53 @@ const Profile = () => {
     if (userId === "undefined") navigate("/profile");
   }, [userId, navigate]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const userData = isCurrentUser
-        ? await fetchUserProfile()
-        : await fetchOtherUserProfile(userId);
-      setUser(userData);
+ const loadData = async () => {
+   setLoading(true);
+   try {
+     const userData = isCurrentUser
+       ? await fetchUserProfile()
+       : await fetchOtherUserProfile(userId);
+     setUser(userData);
 
-      const friendData = await fetchFriendList();
-      if (isCurrentUser) {
-        setFriends(friendData);
-        setFilteredFriends(friendData);
-      }
+     const currentUserFriends = await fetchFriendList();
 
-      const friendIds = new Set(friendData.map((friend) => friend._id));
-      setConnections(friendIds);
-      if (!isCurrentUser) {
-        setConnectionStatus(
-          friendIds.has(userId) ? "CONNECTED" : "NOT_CONNECTED"
-        );
-      }
+     if (isCurrentUser) {
+       setFriends(currentUserFriends);
+       setFilteredFriends(currentUserFriends);
+       setConnections(new Set(currentUserFriends.map((friend) => friend._id)));
+     } else {
+       // For other user's profile
+       const userFriends = await fetchFriendList(userId);
 
-      const postList = await fetchPosts({
-        type: isCurrentUser ? "myposts" : "friend",
-        id: isCurrentUser ? undefined : userId,
-      });
-      setPosts(postList);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      setError("Failed to load profile data");
-    } finally {
-      setLoading(false);
-    }
-  };
+       // Get mutual connections for the profile we're viewing
+       const mutualCount = await fetchMutualConnections(userId);
+       setProfileMutualConnections(mutualCount);
+
+       setFriends(userFriends);
+       setFilteredFriends(userFriends);
+
+       const currentUserFriendIds = new Set(
+         currentUserFriends.map((friend) => friend._id)
+       );
+       setConnections(currentUserFriendIds);
+       setConnectionStatus(
+         currentUserFriendIds.has(userId) ? "CONNECTED" : "NOT_CONNECTED"
+       );
+     }
+
+     // Fetch posts
+     const postList = await fetchPosts({
+       type: isCurrentUser ? "myposts" : "friend",
+       id: isCurrentUser ? undefined : userId,
+     });
+     setPosts(postList);
+   } catch (error) {
+     console.error("Error loading data:", error);
+     setError("Failed to load profile data");
+   } finally {
+     setLoading(false);
+   }
+ };
 
   useEffect(() => {
     if (!userId || userId !== "undefined") {
@@ -137,7 +152,15 @@ const Profile = () => {
       }
     }
   };
-
+  const handleRecommendationConnect = async (userId) => {
+    try {
+      await addFriend(userId);
+      setConnections((prev) => new Set([...prev, userId]));
+      await loadData(); 
+    } catch (error) {
+      console.error("Failed to connect:", error);
+    }
+  };
   const handleEdit = () => setIsEditing(true);
   const handleCancelEdit = () => setIsEditing(false);
   const handleSaveEdit = async () => {
@@ -175,6 +198,7 @@ const Profile = () => {
             onDisconnect={handleDisconnect}
             onEdit={handleEdit}
             onUpdatePicture={handleUpdatePicture}
+            mutualConnections={profileMutualConnections}
           />
         )}
         <SkillsAndClubs
@@ -209,6 +233,14 @@ const Profile = () => {
             }
           }}
         />
+        {isCurrentUser && (
+          <>
+            <RecommendedConnections
+              onConnect={handleRecommendationConnect}
+              connections={connections}
+            />
+          </>
+        )}
 
         {isCurrentUser && (
           <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
@@ -244,6 +276,8 @@ const Profile = () => {
                       setSelectedFriend(friend);
                       setShowConfirmDialog(true);
                     }}
+                    isCurrentUserProfile={isCurrentUser}
+                    mutualConnections={friend.mutualConnections}
                   />
                 ))}
               </div>

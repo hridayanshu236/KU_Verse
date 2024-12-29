@@ -1,11 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import useAuthCheck from "./authCheck";
-
+import LoadingSpinner from "../components/Common/LoadingSpinner";
 const PublicRoute = () => {
   const { isAuthenticated, loading } = useAuthCheck();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><LoadingSpinner/></div>;
   }
 
  

@@ -11,6 +11,7 @@ const ProfileInfo = ({
   onDisconnect,
   onEdit,
   onUpdatePicture,
+  mutualConnections,
 }) => (
   <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
     <div className="flex items-center gap-6">
@@ -59,6 +60,13 @@ const ProfileInfo = ({
           <p className="text-gray-600">
             <strong>Email:</strong> {user.email || "N/A"}
           </p>
+          
+          {!isCurrentUser && mutualConnections > 0 && (
+            <p className="text-sm text-gray-600 mt-1 flex items-center font-bold">
+              {mutualConnections} mutual connection
+              {mutualConnections > 1 ? "s" : ""}
+            </p>
+          )}
         </div>
       </div>
     </div>
