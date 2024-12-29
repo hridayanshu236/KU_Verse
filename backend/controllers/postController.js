@@ -76,7 +76,20 @@ const getPostsById = asyncHandler(async (req, res) => {
 
   const posts = await Post.find({ user: friendId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPostsById] Retrieved ${posts.length} posts for user ID: ${friendId}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
@@ -85,7 +98,20 @@ const getPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const posts = await Post.find({ user: userId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPost] Retrieved ${posts.length} posts for current user: ${req.user.userName}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
