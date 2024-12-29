@@ -8,7 +8,7 @@ const {
 } = require("../controllers/bookmarkController");
 const { isAuth } = require("../middleware/isAuthenticated");
 router.post("/bookmarks", isAuth, addPostToGroup);
-router.get("/bookmarks/groups", isAuth, getBookmarkGroups);
+router.get("/bookmarks/getgroups", isAuth, getBookmarkGroups);
 router.post("/bookmarks/groups", isAuth, createBookmarkGroup);
 router.get("/bookmarks/groups/:groupId/posts", isAuth, getGroupPosts);
 

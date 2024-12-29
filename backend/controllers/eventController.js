@@ -47,6 +47,34 @@ const createEvent = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Event Created Successfully", event });
 });
 
+const registerEvent = asyncHandler(async(req,res)=>{
+  const userId = req.user._id;
+  const currentUser= await User.findById(userId);
+  const eventId = req.params.id;
+  const event = await Event.findById(eventId);
+  
+  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    res.status(400);
+    throw new Error("Invalid event ID");
+  }
+  if(!event){
+    res.status(404);
+    throw new Error("No events found");
+  }
+  if(event.createdBy.toString() === userId){
+    res.status(403);
+    throw new Error("Cannot participate in your own event!");
+  }
+  
+  event.attendance.push(userId);
+  currentUser.registeredEvents.push(eventId);
+
+  await event.save();
+  await currentUser.save();
+
+  res.json({message:"Registered succesfully to the event", event});
+})
+
 const getAllEvents = asyncHandler(async (req, res) => {
   const events = await Event.find()
     .populate("createdBy", "fullName userName profilePicture department")
@@ -65,7 +93,7 @@ const getEventById = asyncHandler(async (req, res) => {
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     res.status(400);
-    throw new Error("Invalid friend ID");
+    throw new Error("Invalid user ID");
   }
 
   const events = await Event.find({ createdBy: userId })
@@ -95,4 +123,4 @@ const getMyEvents = asyncHandler(async (req, res) => {
   res.json({ events });
 });
 
-module.exports = { createEvent, getAllEvents, getEventById, getMyEvents };
+module.exports = { createEvent,registerEvent, getAllEvents, getEventById, getMyEvents };
