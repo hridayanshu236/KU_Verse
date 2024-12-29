@@ -1,0 +1,640 @@
+{
+  "skills": [
+    {
+      "id": "javascript",
+      "name": "JavaScript"
+    },
+    {
+      "id": "python",
+      "name": "Python"
+    },
+    {
+      "id": "java",
+      "name": "Java"
+    },
+    {
+      "id": "cpp",
+      "name": "C++"
+    },
+    {
+      "id": "sql",
+      "name": "SQL"
+    },
+    {
+      "id": "html",
+      "name": "HTML"
+    },
+    {
+      "id": "css",
+      "name": "CSS"
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby"
+    },
+    {
+      "id": "php",
+      "name": "PHP"
+    },
+    {
+      "id": "swift",
+      "name": "Swift"
+    },
+    {
+      "id": "kotlin",
+      "name": "Kotlin"
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript"
+    },
+    {
+      "id": "go",
+      "name": "Go"
+    },
+    {
+      "id": "r",
+      "name": "R"
+    },
+    {
+      "id": "matlab",
+      "name": "MATLAB"
+    },
+    {
+      "id": "scala",
+      "name": "Scala"
+    },
+    {
+      "id": "perl",
+      "name": "Perl"
+    },
+    {
+      "id": "dart",
+      "name": "Dart"
+    },
+    {
+      "id": "rust",
+      "name": "Rust"
+    },
+    {
+      "id": "shell-scripting",
+      "name": "Shell Scripting"
+    },
+    {
+      "id": "haskell",
+      "name": "Haskell"
+    },
+    {
+      "id": "data-analysis",
+      "name": "Data Analysis"
+    },
+    {
+      "id": "data-visualization",
+      "name": "Data Visualization"
+    },
+    {
+      "id": "machine-learning",
+      "name": "Machine Learning"
+    },
+    {
+      "id": "deep-learning",
+      "name": "Deep Learning"
+    },
+    {
+      "id": "natural-language-processing",
+      "name": "Natural Language Processing"
+    },
+    {
+      "id": "artificial-intelligence",
+      "name": "Artificial Intelligence"
+    },
+    {
+      "id": "big-data",
+      "name": "Big Data"
+    },
+    {
+      "id": "data-engineering",
+      "name": "Data Engineering"
+    },
+    {
+      "id": "cloud-computing",
+      "name": "Cloud Computing"
+    },
+    {
+      "id": "aws",
+      "name": "AWS"
+    },
+    {
+      "id": "azure",
+      "name": "Azure"
+    },
+    {
+      "id": "google-cloud-platform",
+      "name": "Google Cloud Platform"
+    },
+    {
+      "id": "devops",
+      "name": "DevOps"
+    },
+    {
+      "id": "ci-cd",
+      "name": "CI/CD"
+    },
+    {
+      "id": "docker",
+      "name": "Docker"
+    },
+    {
+      "id": "kubernetes",
+      "name": "Kubernetes"
+    },
+    {
+      "id": "microservices",
+      "name": "Microservices"
+    },
+    {
+      "id": "blockchain",
+      "name": "Blockchain"
+    },
+    {
+      "id": "cybersecurity",
+      "name": "Cybersecurity"
+    },
+    {
+      "id": "penetration-testing",
+      "name": "Penetration Testing"
+    },
+    {
+      "id": "cryptography",
+      "name": "Cryptography"
+    },
+    {
+      "id": "network-security",
+      "name": "Network Security"
+    },
+    {
+      "id": "ui-ux-design",
+      "name": "UI/UX Design"
+    },
+    {
+      "id": "graphic-design",
+      "name": "Graphic Design"
+    },
+    {
+      "id": "figma",
+      "name": "Figma"
+    },
+    {
+      "id": "adobe-xd",
+      "name": "Adobe XD"
+    },
+    {
+      "id": "adobe-photoshop",
+      "name": "Adobe Photoshop"
+    },
+    {
+      "id": "adobe-illustrator",
+      "name": "Adobe Illustrator"
+    },
+    {
+      "id": "project-management",
+      "name": "Project Management"
+    },
+    {
+      "id": "agile-methodology",
+      "name": "Agile Methodology"
+    },
+    {
+      "id": "scrum",
+      "name": "Scrum"
+    },
+    {
+      "id": "kanban",
+      "name": "Kanban"
+    },
+    {
+      "id": "product-management",
+      "name": "Product Management"
+    },
+    {
+      "id": "digital-marketing",
+      "name": "Digital Marketing"
+    },
+    {
+      "id": "seo",
+      "name": "SEO"
+    },
+    {
+      "id": "content-marketing",
+      "name": "Content Marketing"
+    },
+    {
+      "id": "social-media-marketing",
+      "name": "Social Media Marketing"
+    },
+    {
+      "id": "ppc-advertising",
+      "name": "PPC Advertising"
+    },
+    {
+      "id": "email-marketing",
+      "name": "Email Marketing"
+    },
+    {
+      "id": "copywriting",
+      "name": "Copywriting"
+    },
+    {
+      "id": "technical-writing",
+      "name": "Technical Writing"
+    },
+    {
+      "id": "grant-writing",
+      "name": "Grant Writing"
+    },
+    {
+      "id": "video-editing",
+      "name": "Video Editing"
+    },
+    {
+      "id": "animation",
+      "name": "Animation"
+    },
+    {
+      "id": "3d-modeling",
+      "name": "3D Modeling"
+    },
+    {
+      "id": "autodesk-maya",
+      "name": "Autodesk Maya"
+    },
+    {
+      "id": "blender",
+      "name": "Blender"
+    },
+    {
+      "id": "cinema-4d",
+      "name": "Cinema 4D"
+    },
+    {
+      "id": "cad-design",
+      "name": "CAD Design"
+    },
+    {
+      "id": "solidworks",
+      "name": "SolidWorks"
+    },
+    {
+      "id": "prototyping",
+      "name": "Prototyping"
+    },
+    {
+      "id": "embedded-systems",
+      "name": "Embedded Systems"
+    },
+    {
+      "id": "iot",
+      "name": "IoT"
+    },
+    {
+      "id": "electronics-design",
+      "name": "Electronics Design"
+    },
+    {
+      "id": "pcb-design",
+      "name": "PCB Design"
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics"
+    },
+    {
+      "id": "control-systems",
+      "name": "Control Systems"
+    },
+    {
+      "id": "simulation",
+      "name": "Simulation"
+    },
+    {
+      "id": "business-analysis",
+      "name": "Business Analysis"
+    },
+    {
+      "id": "financial-analysis",
+      "name": "Financial Analysis"
+    },
+    {
+      "id": "accounting",
+      "name": "Accounting"
+    },
+    {
+      "id": "taxation",
+      "name": "Taxation"
+    },
+    {
+      "id": "investment-analysis",
+      "name": "Investment Analysis"
+    },
+    {
+      "id": "risk-management",
+      "name": "Risk Management"
+    },
+    {
+      "id": "supply-chain-management",
+      "name": "Supply Chain Management"
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics"
+    },
+    {
+      "id": "operations-management",
+      "name": "Operations Management"
+    },
+    {
+      "id": "negotiation",
+      "name": "Negotiation"
+    },
+    {
+      "id": "sales",
+      "name": "Sales"
+    },
+    {
+      "id": "customer-relationship-management",
+      "name": "Customer Relationship Management"
+    },
+    {
+      "id": "public-speaking",
+      "name": "Public Speaking"
+    },
+    {
+      "id": "leadership",
+      "name": "Leadership"
+    },
+    {
+      "id": "team-management",
+      "name": "Team Management"
+    },
+    {
+      "id": "conflict-resolution",
+      "name": "Conflict Resolution"
+    },
+    {
+      "id": "time-management",
+      "name": "Time Management"
+    },
+    {
+      "id": "critical-thinking",
+      "name": "Critical Thinking"
+    },
+    {
+      "id": "problem-solving",
+      "name": "Problem-Solving"
+    },
+    {
+      "id": "research",
+      "name": "Research"
+    },
+    {
+      "id": "academic-writing",
+      "name": "Academic Writing"
+    },
+    {
+      "id": "editing",
+      "name": "Editing"
+    },
+    {
+      "id": "proofreading",
+      "name": "Proofreading"
+    },
+    {
+      "id": "language-translation",
+      "name": "Language Translation"
+    },
+    {
+      "id": "machine-translation",
+      "name": "Machine Translation"
+    },
+    {
+      "id": "game-development",
+      "name": "Game Development"
+    },
+    {
+      "id": "unity",
+      "name": "Unity"
+    },
+    {
+      "id": "unreal-engine",
+      "name": "Unreal Engine"
+    },
+    {
+      "id": "game-design",
+      "name": "Game Design"
+    },
+    {
+      "id": "game-testing",
+      "name": "Game Testing"
+    },
+    {
+      "id": "quality-assurance",
+      "name": "Quality Assurance"
+    },
+    {
+      "id": "software-testing",
+      "name": "Software Testing"
+    },
+    {
+      "id": "test-automation",
+      "name": "Test Automation"
+    },
+    {
+      "id": "mobile-app-development",
+      "name": "Mobile App Development"
+    },
+    {
+      "id": "react-native",
+      "name": "React Native"
+    },
+    {
+      "id": "flutter",
+      "name": "Flutter"
+    },
+    {
+      "id": "augmented-reality",
+      "name": "Augmented Reality"
+    },
+    {
+      "id": "virtual-reality",
+      "name": "Virtual Reality"
+    },
+    {
+      "id": "e-commerce",
+      "name": "E-commerce"
+    },
+    {
+      "id": "shopify",
+      "name": "Shopify"
+    },
+    {
+      "id": "wordpress",
+      "name": "WordPress"
+    },
+    {
+      "id": "joomla",
+      "name": "Joomla"
+    },
+    {
+      "id": "drupal",
+      "name": "Drupal"
+    },
+    {
+      "id": "database-design",
+      "name": "Database Design"
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB"
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL"
+    },
+    {
+      "id": "oracle-database",
+      "name": "Oracle Database"
+    },
+    {
+      "id": "firebase",
+      "name": "Firebase"
+    },
+    {
+      "id": "redis",
+      "name": "Redis"
+    },
+    {
+      "id": "machine-learning-operations",
+      "name": "Machine Learning Operations (MLOps)"
+    },
+    {
+      "id": "data-warehousing",
+      "name": "Data Warehousing"
+    },
+    {
+      "id": "etl-pipelines",
+      "name": "ETL Pipelines"
+    },
+    {
+      "id": "apache-spark",
+      "name": "Apache Spark"
+    },
+    {
+      "id": "hadoop",
+      "name": "Hadoop"
+    },
+    {
+      "id": "tableau",
+      "name": "Tableau"
+    },
+    {
+      "id": "power-bi",
+      "name": "Power BI"
+    },
+    {
+      "id": "qlikview",
+      "name": "QlikView"
+    },
+    {
+      "id": "data-mining",
+      "name": "Data Mining"
+    },
+    {
+      "id": "web-development",
+      "name": "Web Development"
+    },
+    {
+      "id": "frontend-development",
+      "name": "Frontend Development"
+    },
+    {
+      "id": "backend-development",
+      "name": "Backend Development"
+    },
+    {
+      "id": "full-stack-development",
+      "name": "Full Stack Development"
+    },
+    {
+      "id": "api-development",
+      "name": "API Development"
+    },
+    {
+      "id": "graphql",
+      "name": "GraphQL"
+    },
+    {
+      "id": "gis",
+      "name": "Geographic Information Systems (GIS)"
+    },
+    {
+      "id": "cartography",
+      "name": "Cartography"
+    },
+    {
+      "id": "teaching",
+      "name": "Teaching"
+    },
+    {
+      "id": "curriculum-development",
+      "name": "Curriculum Development"
+    },
+    {
+      "id": "instructional-design",
+      "name": "Instructional Design"
+    },
+    {
+      "id": "educational-technology",
+      "name": "Educational Technology"
+    },
+    {
+      "id": "counseling",
+      "name": "Counseling"
+    },
+    {
+      "id": "psychotherapy",
+      "name": "Psychotherapy"
+    },
+    {
+      "id": "coaching",
+      "name": "Coaching"
+    },
+    {
+      "id": "mentoring",
+      "name": "Mentoring"
+    },
+    {
+      "id": "event-planning",
+      "name": "Event Planning"
+    },
+    {
+      "id": "hospitality-management",
+      "name": "Hospitality Management"
+    },
+    {
+      "id": "catering",
+      "name": "Catering"
+    },
+    {
+      "id": "food-safety",
+      "name": "Food Safety"
+    },
+    {
+      "id": "tourism",
+      "name": "Tourism"
+    },
+    {
+      "id": "travel-planning",
+      "name": "Travel Planning"
+    }
+  ]
+}

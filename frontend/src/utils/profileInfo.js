@@ -21,3 +21,13 @@ export const fetchClubs = async () => {
     throw error;
   }
 };
+
+export const fetchSkills = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/skills`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching skills:", error);
+    throw error;
+  }
+};
