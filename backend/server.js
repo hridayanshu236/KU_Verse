@@ -4,7 +4,6 @@ const cors = require("cors");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const errorHandler = require("./middleware/errorHandler");
-
 const app = express();
 const PORT = process.env.PORT;
 
@@ -21,6 +20,7 @@ app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/post", require("./routes/postRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
+app.use("/api/profileInfo",require("./routes/profileInfoRoutes"));  
 
 app.use(errorHandler);
 

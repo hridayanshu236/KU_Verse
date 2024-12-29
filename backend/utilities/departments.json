@@ -1,0 +1,60 @@
+{
+  "departments": [
+    {
+      "id": "cs",
+      "name": "Computer Science"
+    },
+    {
+      "id": "ce",
+      "name": "Computer Engineering"
+    },
+    {
+      "id": "ec",
+      "name": "Electronics and Communication"
+    },
+    {
+      "id": "ee",
+      "name": "Electrical Engineering"
+    },
+    {
+      "id": "me",
+      "name": "Mechanical Engineering"
+    },
+    {
+      "id": "ce",
+      "name": "Civil Engineering"
+    },
+    {
+      "id": "it",
+      "name": "Information Technology"
+    },
+    {
+      "id": "se",
+      "name": "Software Engineering"
+    },
+    {
+      "id": "be",
+      "name": "Biomedical Engineering"
+    },
+    {
+      "id": "ar",
+      "name": "Architecture"
+    },
+    {
+      "id": "env",
+      "name": "Environmental Engineering"
+    },
+    {
+      "id": "ge",
+      "name": "Geotechnical Engineering"
+    },
+    {
+      "id": "ag",
+      "name": "Agricultural Engineering"
+    },
+    {
+      "id": "ch",
+      "name": "Chemical Engineering"
+    }
+  ]
+}

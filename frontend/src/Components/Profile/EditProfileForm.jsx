@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { updateUserProfile } from "../../utils/userServices";
+import DepartmentSelect from "./DepartmentSelect"; // Add this import
 
 const EditProfileForm = ({ user, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,10 @@ const EditProfileForm = ({ user, onSave, onCancel }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDepartmentChange = (department) => {
+    setFormData((prev) => ({ ...prev, department }));
   };
 
   const handleSubmit = async (e) => {
@@ -41,12 +46,9 @@ const EditProfileForm = ({ user, onSave, onCancel }) => {
         </div>
         <div className="mb-4">
           <label className="block text-gray-700">Department</label>
-          <input
-            type="text"
-            name="department"
+          <DepartmentSelect
             value={formData.department}
-            onChange={handleChange}
-            className="mt-1 p-2 border rounded w-full"
+            onChange={handleDepartmentChange}
           />
         </div>
         <div className="mb-4">
