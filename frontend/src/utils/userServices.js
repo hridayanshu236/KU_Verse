@@ -36,11 +36,44 @@ export const fetchOtherUserProfile = async (userId) => {
 
 export const updateUserProfile = async (updates) => {
   try {
-    await axios.put(`${API_BASE_URL}/updateprofile`, updates, {
+    const response = await axios.put(`${API_BASE_URL}/updateprofile`, updates, {
       withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+
+    // Return the response data
+    return response.data;
   } catch (error) {
-    throw new Error("Failed to update profile. Please try again later.");
+    console.error("Update profile error:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to update profile. Please try again later."
+    );
+  }
+};
+export const updateProfilePicture = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/updateDp`, {
+      method: "PUT",
+      body: formData,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update profile picture");
+    }
+
+    const data = await response.json();
+    return data.profilePicture;
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    throw error;
   }
 };
 
@@ -81,5 +114,70 @@ export const removeFriend = async (friendId) => {
     return response.data;
   } catch (error) {
     throw new Error("Failed to remove friend. Please try again later.");
+  }
+};
+
+export const fetchRecommendations = async (limit = 10) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/recommendations`, {
+      params: { limit },
+      withCredentials: true,
+    });
+    return response.data.recommendations;
+  } catch (error) {
+    console.error("Recommendation error:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to fetch recommendations. Please try again later."
+    );
+  }
+};
+
+// Optional: Function to update recommendation weights
+export const updateRecommendationWeights = async (weights) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/recommendations/weights`,
+      weights,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Weight update error:", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Failed to update recommendation weights. Please try again later."
+    );
+  }
+};
+
+export const fetchMutualConnections = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/mutual-connections/${userId}`,
+      { withCredentials: true }
+    );
+    return response.data.mutualConnections;
+  } catch (error) {
+    console.error("Error fetching mutual connections:", error);
+    throw new Error("Failed to fetch mutual connections");
+  }
+};
+
+export const fetchMutualFriends = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/mutual-friends/${userId}`,
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching mutual friends:", error);
+    throw new Error("Failed to fetch mutual friends");
   }
 };

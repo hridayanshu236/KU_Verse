@@ -75,8 +75,21 @@ const getPostsById = asyncHandler(async (req, res) => {
   }
 
   const posts = await Post.find({ user: friendId })
-    .populate("user", "fullName userName profilePicture")
-    .sort({ createdAt: -1 });
+    .populate("user", "fullName userName profilePicture department")
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPostsById] Retrieved ${posts.length} posts for user ID: ${friendId}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
@@ -84,27 +97,189 @@ const getPostsById = asyncHandler(async (req, res) => {
 const getPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const posts = await Post.find({ user: userId })
-    .populate("user", "fullName userName profilePicture")
-    .sort({ createdAt: -1 });
+    .populate("user", "fullName userName profilePicture department")
+    .sort({ time: -1 }); 
+
+  console.log(
+    `[GetPost] Retrieved ${posts.length} posts for current user: ${req.user.userName}`
+  );
+
+  
+  if (posts.length > 0) {
+    console.log("[Sample Post Time]:", {
+      userName: posts[0].user.userName,
+      postTime: posts[0].time,
+      currentTime: new Date(),
+    });
+  }
 
   res.status(200).json({ posts, success: true });
 });
 
 const getFeedPosts = asyncHandler(async (req, res) => {
+  const currentTime = new Date();
+  console.log(
+    `[Feed Request Started] - User: ${
+      req.user.userName
+    } - Time: ${currentTime.toISOString()}`
+  );
+
   const userId = req.user._id;
+  console.log(`[User ID]: ${userId}`);
+
   const user = await User.findById(userId).populate("friends");
-
   const friendsId = user?.friends.map((friend) => friend._id);
+  console.log(`[Friends Count]: ${friendsId?.length || 0}`);
+  console.log(`[Friends IDs]: ${friendsId?.join(", ")}`);
 
-  const posts = await Post.find({
-    $or: [{ user: userId }, { user: { $in: friendsId } }],
-  })
-    .populate("user", "fullName userName profilePicture")
-    .sort({ createdAt: -1 });
+  try {
+    const allUserPosts = await Post.find({ user: userId });
+    console.log(`[Debug] User's total posts: ${allUserPosts.length}`);
 
-  res.status(200).json({ posts, success: true });
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          $or: [
+            { user: userId },
+            { user: { $in: friendsId } },
+            { voteCount: { $gte: 5 } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      { $unwind: "$userDetails" },
+      {
+        $addFields: {
+          hoursSincePost: {
+            $divide: [
+              { $subtract: [currentTime, "$time"] },
+              1000 * 60 * 60, // Convert to hours
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          timeScore: {
+            $cond: {
+              if: { $lte: ["$hoursSincePost", 24] },
+              then: {
+                $add: [
+                  2, // Base boost for recent posts
+                  {
+                    $multiply: [
+                      { $subtract: [1, { $divide: ["$hoursSincePost", 24] }] },
+                      3, // Decay factor for posts within 24 hours
+                    ],
+                  },
+                ],
+              },
+              else: {
+                $divide: [
+                  1,
+                  { $add: [1, { $divide: ["$hoursSincePost", 24] }] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          score: {
+            $add: [
+              "$timeScore",
+              { $multiply: [{ $size: "$upvotes" }, 0.1] },
+              { $multiply: [{ $size: "$commentt" }, 0.2] },
+              {
+                $cond: {
+                  if: { $in: ["$user", friendsId] },
+                  then: 0.5,
+                  else: 0,
+                },
+              },
+            ],
+          },
+        },
+      },
+      { $sort: { score: -1 } },
+      {
+        $project: {
+          _id: 1,
+          caption: 1,
+          image: 1,
+          time: 1,
+          upvotes: 1,
+          downvotes: 1,
+          commentt: 1,
+          voteCount: 1,
+          score: 1,
+          timeScore: 1,
+          hoursSincePost: 1,
+          user: {
+            _id: "$userDetails._id",
+            fullName: "$userDetails.fullName",
+            userName: "$userDetails.userName",
+            profilePicture: "$userDetails.profilePicture",
+            department: "$userDetails.department",
+          },
+        },
+      },
+    ]);
+
+    console.log(`[Posts Retrieved]: ${posts.length}`);
+
+    if (posts.length > 0) {
+      console.log("[Sample Post]:", {
+        _id: posts[0]._id,
+        time: posts[0].time,
+        hoursSincePost: posts[0].hoursSincePost,
+        timeScore: posts[0].timeScore,
+        finalScore: posts[0].score,
+        userName: posts[0].user.userName,
+        voteCount: posts[0].voteCount,
+      });
+    }
+
+    // Enhanced debug counts with time-based categories
+    const debugCounts = {
+      totalPosts: posts.length,
+      last24Hours: posts.filter((p) => p.hoursSincePost <= 24).length,
+      last48Hours: posts.filter((p) => p.hoursSincePost <= 48).length,
+      userPosts: posts.filter(
+        (p) => p.user._id.toString() === userId.toString()
+      ).length,
+      friendsPosts: posts.filter((p) =>
+        friendsId.some((id) => id.toString() === p.user._id.toString())
+      ).length,
+      highEngagementPosts: posts.filter((p) => p.voteCount >= 5).length,
+    };
+    console.log("[Debug Counts]:", debugCounts);
+
+    res.status(200).json({
+      posts,
+      success: true,
+      debug: debugCounts,
+    });
+  } catch (error) {
+    console.error("[Feed Error]:", {
+      message: error.message,
+      stack: error.stack,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch feed posts",
+    });
+  }
 });
-
 const upVote = asyncHandler(async (req, res) => {
   const post = await Post.findById(req.params.id);
 
@@ -118,16 +293,20 @@ const upVote = asyncHandler(async (req, res) => {
     throw new Error("Post already upvoted");
   }
 
+  const wasDownvoted = post.downvotes.includes(req.user._id);
+
   // Remove from downvotes if present
-  if (post.downvotes.includes(req.user._id)) {
-    const indexDownvote = post.downvotes.indexOf(req.user._id);
-    post.downvotes.splice(indexDownvote, 1);
+  if (wasDownvoted) {
+    post.downvotes = post.downvotes.filter((id) => !id.equals(req.user._id));
   }
 
   post.upvotes.push(req.user._id);
-
+  post.voteCount += 1;
+  
   const updatedPost = await post.save();
-  res.status(200).json(updatedPost); // Return full updated post
+  console.log('Current vote count:', updatedPost.voteCount);
+  
+  res.status(200).json(updatedPost);
 });
 
 const downVote = asyncHandler(async (req, res) => {
@@ -144,15 +323,19 @@ const downVote = asyncHandler(async (req, res) => {
   }
 
   // Remove from upvotes if present
-  if (post.upvotes.includes(req.user._id)) {
-    const indexUpvote = post.upvotes.indexOf(req.user._id);
-    post.upvotes.splice(indexUpvote, 1);
+  const wasUpvoted = post.upvotes.includes(req.user._id);
+  
+  if (wasUpvoted) {
+    post.upvotes = post.upvotes.filter(id => !id.equals(req.user._id));
   }
 
   post.downvotes.push(req.user._id);
-
+  post.voteCount -= 1;
+  
   const updatedPost = await post.save();
-  res.status(200).json(updatedPost); // Return full updated post
+  console.log('Current vote count:', updatedPost.voteCount);
+  
+  res.status(200).json(updatedPost);
 });
 
 const commentPost = asyncHandler(async (req, res) => {

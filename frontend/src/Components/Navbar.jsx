@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import {
   faBell,
@@ -10,7 +10,6 @@ import {
   faSignOutAlt,
   faHome,
 } from "@fortawesome/free-solid-svg-icons";
-import { NavLink } from "react-router-dom";
 import Notification from "./Notification";
 import { useUser } from "../contexts/userContext";
 
@@ -43,7 +42,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center">
+    <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center relative z-50">
       <div className="flex items-center">
         <div>
           <h1 className="text-lg font-bold text-[rgb(103,80,164)]">KU-Verse</h1>
@@ -79,7 +78,7 @@ const Navbar = () => {
             onClick={() => setNotificationDropDown(!NotificationDropDown)}
           />
           {NotificationDropDown && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-lg text-[rgb(103,80,164)] mdd:text-xl text-sm p-5 rounded-lg cursor-pointer">
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-lg text-[rgb(103,80,164)] mdd:text-xl text-sm p-5 rounded-lg cursor-pointer z-50">
               <Notification />
             </div>
           )}
@@ -100,7 +99,7 @@ const Navbar = () => {
         </div>
       </div>
       {profileDropDown && (
-        <div className="absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg">
+        <div className="absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg z-50">
           <ul className="flex flex-col">
             <NavLink to="/profile">
               <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">

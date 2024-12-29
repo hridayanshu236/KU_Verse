@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useUser } from "../../contexts/userContext";
-import { format } from "date-fns";
+import { format, isToday, isYesterday, isThisWeek, isThisYear } from "date-fns";
 
 const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
   const { user } = useUser();
@@ -12,70 +12,96 @@ const ChatList = ({ chatData, selectedChat, setSelectedChat }) => {
   if (!chatData || !Array.isArray(chatData) || chatData.length === 0) {
     return <p>No chats available</p>;
   }
+   const formatMessageTime = (date) => {
+     if (!date) return "";
+     const messageDate = new Date(date);
 
-  return (
-    <ul>
-      {chatData.map((chat) => {
-        let displayName;
-        let displayPicture;
+     if (isToday(messageDate)) {
+       return format(messageDate, "p"); // e.g., "4:30 PM"
+     }
+     if (isYesterday(messageDate)) {
+       return "Yesterday";
+     }
+     if (isThisWeek(messageDate)) {
+       return format(messageDate, "EEEE"); // e.g., "Monday"
+     }
+     if (isThisYear(messageDate)) {
+       return format(messageDate, "MMM d"); // e.g., "Jan 5"
+     }
+     return format(messageDate, "MMM d, yyyy"); // e.g., "Jan 5, 2023"
+   };
 
-        if (chat.isGroupChat) {
-          displayName = chat.chatName || "Unnamed Group";
-          displayPicture = chat.groupPicture || "default_group_avatar_url";
-        } else {
-          if (user && Array.isArray(chat.participants)) {
-            const otherParticipant = chat.participants.find(
-              (participant) => participant._id !== user._id
+
+    return (
+      <ul>
+        {chatData.map((chat) => {
+          let displayName;
+          let displayPicture;
+
+          if (chat.isGroupChat) {
+            displayName = chat.chatName || "Unnamed Group";
+            displayPicture = chat.groupPicture || "/default_group_avatar.png";
+          } else {
+            const otherParticipant = chat.participants?.find(
+              (participant) => participant._id !== user?._id
             );
-
             displayName = otherParticipant?.fullName || "Unknown";
             displayPicture =
-              otherParticipant?.profilePicture || "default_avatar_url";
-          } else {
-            displayName = "Unknown";
-            displayPicture = "default_avatar_url";
+              otherParticipant?.profilePicture || "/default_avatar.png";
           }
-        }
 
-        return (
-          <li
-            key={chat._id}
-            onClick={() => setSelectedChat(chat)}
-            className={`flex justify-between items-center p-4 cursor-pointer border
+          const lastMessageTime = chat.lastMessage?.time || chat.createdAt;
+
+          return (
+            <li
+              key={chat._id}
+              onClick={() => setSelectedChat(chat)}
+              className={`flex justify-between items-center p-4 cursor-pointer border
               ${
                 chat._id === selectedChat?._id
                   ? "bg-[rgb(237,231,240)]"
                   : "bg-white hover:bg-[rgb(237,231,240)]"
               }
             `}
-          >
-            <div className="flex items-center">
-              <img
-                src={displayPicture}
-                alt="profile"
-                className="w-12 h-12 rounded-full"
-              />
-              <div className="pl-3">
-                <h1 className="text-lg">{displayName}</h1>
-                <p className="text-sm truncate">
-                  {chat.lastMessage
-                    ? chat.lastMessage.message
-                    : "No messages yet"}
-                </p>
+            >
+              <div className="flex items-center flex-1">
+                <img
+                  src={displayPicture}
+                  alt="profile"
+                  className="w-12 h-12 rounded-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/default_avatar.png";
+                  }}
+                />
+                <div className="pl-3 flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline">
+                    <h1 className="text-lg font-medium truncate">
+                      {displayName}
+                    </h1>
+                    <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
+                      {formatMessageTime(lastMessageTime)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 truncate">
+                    {chat.lastMessage ? (
+                      <>
+                        {chat.lastMessage.sender?._id === user?._id
+                          ? "You: "
+                          : ""}
+                        {chat.lastMessage.message}
+                      </>
+                    ) : (
+                      "No messages yet"
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col items-center">
-              <p className="text-sm">
-                {chat.lastMessage
-                  ? format(new Date(chat.lastMessage.time), "p")
-                  : ""}
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
+            </li>
+          );
+        })}
+      </ul>
+    );
 };
 
 export default ChatList;

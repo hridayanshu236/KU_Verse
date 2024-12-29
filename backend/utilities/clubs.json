@@ -1,0 +1,84 @@
+{
+  "clubs": [
+    {
+      "id": "eclub",
+      "name": "Electronics Club"
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics Club"
+    },
+    {
+      "id": "csit",
+      "name": "Computer Science and IT Club"
+    },
+    {
+      "id": "eco",
+      "name": "Eco Club"
+    },
+    {
+      "id": "literature",
+      "name": "Literature Club"
+    },
+    {
+      "id": "sports",
+      "name": "Sports Club"
+    },
+    {
+      "id": "music",
+      "name": "Music and Arts Club"
+    },
+    {
+      "id": "dramatics",
+      "name": "Dramatics Club"
+    },
+    {
+      "id": "photography",
+      "name": "Photography Club"
+    },
+    {
+      "id": "entrepreneurship",
+      "name": "Entrepreneurship Club"
+    },
+    {
+      "id": "dance",
+      "name": "Dance Club"
+    },
+    {
+      "id": "socialservice",
+      "name": "Social Service Club"
+    },
+    {
+      "id": "debate",
+      "name": "Debate Club"
+    },
+    {
+      "id": "meditation",
+      "name": "Meditation and Wellness Club"
+    },
+    {
+      "id": "astronomy",
+      "name": "Astronomy Club"
+    },
+    {
+      "id": "film",
+      "name": "Film Club"
+    },
+    {
+      "id": "design",
+      "name": "Design and Innovation Club"
+    },
+    {
+      "id": "hiking",
+      "name": "Hiking Club"
+    },
+    {
+      "id": "alumni",
+      "name": "Alumni Club"
+    },
+    {
+      "id": "women",
+      "name": "Women in STEM Club"
+    }
+  ]
+}
