@@ -47,33 +47,58 @@ const createEvent = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Event Created Successfully", event });
 });
 
-const registerEvent = asyncHandler(async(req,res)=>{
+const registerEvent = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const currentUser= await User.findById(userId);
+  const currentUser = await User.findById(userId);
   const eventId = req.params.id;
   const event = await Event.findById(eventId);
-  
+
   if (!mongoose.Types.ObjectId.isValid(eventId)) {
     res.status(400);
     throw new Error("Invalid event ID");
   }
-  if(!event){
+  if (!event) {
     res.status(404);
     throw new Error("No events found");
   }
-  if(event.createdBy.toString() === userId){
+  if (event.createdBy.toString() === userId.toString()) {
     res.status(403);
     throw new Error("Cannot participate in your own event!");
   }
-  
+  if (currentUser.registeredEvents.includes(eventId)) {
+    res.status(400);
+    throw new Error("Already registered to the event.");
+  }
+
   event.attendance.push(userId);
   currentUser.registeredEvents.push(eventId);
 
   await event.save();
   await currentUser.save();
 
-  res.json({message:"Registered succesfully to the event", event});
-})
+  res.json({ message: "Registered succesfully to the event", event });
+});
+
+const getFeedEvents = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const user = await User.findById(currentUserId);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  const friendsIds = user.friends;
+  console.log(friendsIds);
+
+  const events = await Event.find({
+    $or: [
+      { createdBy: currentUserId }, 
+      { createdBy: { $in: friendsIds } }, 
+    ],
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({events});
+});
 
 const getAllEvents = asyncHandler(async (req, res) => {
   const events = await Event.find()
@@ -123,4 +148,11 @@ const getMyEvents = asyncHandler(async (req, res) => {
   res.json({ events });
 });
 
-module.exports = { createEvent,registerEvent, getAllEvents, getEventById, getMyEvents };
+module.exports = {
+  createEvent,
+  registerEvent,
+  getFeedEvents,
+  getAllEvents,
+  getEventById,
+  getMyEvents,
+};
