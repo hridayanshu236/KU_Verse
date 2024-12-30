@@ -2,7 +2,12 @@ const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const generate_jwt = require("../utilities/generateToken");
 const bcrypt = require("bcrypt");
-const { sendVerificationEmail } = require("../utilities/emailUtility");
+const crypto = require("crypto");
+const {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetSuccessEmail,
+} = require("../utilities/emailUtility");
 const getDataURI = require("../utilities/generateURL");
 const cloudinary = require("../utilities/cloudinary");
 
@@ -113,6 +118,56 @@ const verifyEmail = asyncHandler(async (req, res) => {
     .json({ success: true, message: "Email verified successfully" });
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    res.status(404);
+    throw new Error("No user found!");
+  }
+
+  const resetPasswordToken = crypto.randomBytes(25).toString("hex");
+  const resetPasswordTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
+
+  user.resetPasswordToken = resetPasswordToken;
+  user.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;
+
+  await user.save();
+  await sendPasswordResetEmail(
+    user.email,
+    `${process.env.CLIENT_URL}/reset-password/${resetPasswordToken}`
+  );
+
+  res.status(200).json({ message: "Password reset email sent succesfully." });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordTokenExpiresAt: { $gt: Date.now() },
+  });
+
+  if(!user){
+    res.status(403);
+    throw new Error("Invalid or expired token!");
+  }
+
+  const hashedPassword = await bcrypt.hash(password,10);
+  user.password= hashedPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordTokenExpiresAt = undefined;
+
+  await user.save();
+
+  await sendPasswordResetSuccessEmail(user.email);
+
+  res.status(200).json({message:"Password reset succesfully."});
+});
+
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -149,4 +204,11 @@ const logoutUser = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { registerUser, loginUser, logoutUser, verifyEmail };
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  verifyEmail,
+  forgotPassword,
+  resetPassword,
+};
