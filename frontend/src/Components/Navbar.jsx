@@ -4,18 +4,17 @@ import axios from "axios";
 import { useNavigate, NavLink } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import {
-  faBell,
   faCommentDots,
   faCog,
   faSignOutAlt,
   faHome,
+  faCalendarAlt, // Added for events
+  faBookmark, // Added for saved posts
 } from "@fortawesome/free-solid-svg-icons";
-import Notification from "./Notification";
 import { useUser } from "../contexts/userContext";
 
 const Navbar = () => {
   const [profileDropDown, setProfileDropDown] = useState(false);
-  const [NotificationDropDown, setNotificationDropDown] = useState(false);
   const { user, fetchUserDetails } = useUser();
   const navigate = useNavigate();
 
@@ -65,39 +64,50 @@ const Navbar = () => {
       </div>
 
       <div className="mdd:flex flex justify-center px-4 text-[rgb(103,80,164)]">
+        {/* Home Icon */}
         <NavLink to="/feed">
           <FontAwesomeIcon
             icon={faHome}
-            className="w-6 h-6 cursor-pointer px-4 py-2"
+            className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
         </NavLink>
-        <div className="relative">
+
+        {/* Events Icon */}
+        <NavLink to="/events">
           <FontAwesomeIcon
-            icon={faBell}
-            className="w-6 h-6 cursor-pointer px-4 py-2"
-            onClick={() => setNotificationDropDown(!NotificationDropDown)}
+            icon={faCalendarAlt}
+            className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
-          {NotificationDropDown && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-lg text-[rgb(103,80,164)] mdd:text-xl text-sm p-5 rounded-lg cursor-pointer z-50">
-              <Notification />
-            </div>
-          )}
-        </div>
+        </NavLink>
+
+        {/* Messages Icon */}
         <NavLink to="/chats">
           <FontAwesomeIcon
             icon={faCommentDots}
-            className="w-6 h-6 cursor-pointer px-4 py-2"
+            className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
         </NavLink>
+
+        {/* Saved Posts Icon */}
+        <NavLink to="/saved-posts">
+          <FontAwesomeIcon
+            icon={faBookmark}
+            className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
+          />
+        </NavLink>
+
+        {/* Profile Picture */}
         <div className="mdd:flex hidden px-3 py-1">
           <img
             src={user?.profilePicture || "default_avatar_url"}
             alt="profile"
-            className="w-8 h-8 object-cover rounded-full cursor-pointer"
+            className="w-8 h-8 object-cover rounded-full cursor-pointer hover:ring-2 hover:ring-purple-600 transition-all"
             onClick={() => setProfileDropDown(!profileDropDown)}
           />
         </div>
       </div>
+
+      {/* Profile Dropdown */}
       {profileDropDown && (
         <div className="absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg z-50">
           <ul className="flex flex-col">
