@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Camera, Video, School, X, Loader2 } from "lucide-react";
 import axios from "axios";
-
-const PostInput = ({ onPostCreated, user }) => {
+import { useUser } from "../contexts/userContext";
+const PostInput = ({ onPostCreated}) => {
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -96,7 +96,7 @@ const PostInput = ({ onPostCreated, user }) => {
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-4 m-2">
       <div className="flex items-center gap-3 mb-4">
         <img
-          src={user.profilePicture} 
+          src={"../Assets/parth.png"} // Updated image path
           alt="Profile"
           className="w-10 h-10 rounded-full bg-emerald-100 flex-shrink-0"
         />

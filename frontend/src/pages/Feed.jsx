@@ -131,7 +131,7 @@ const Feed = () => {
 
         {/* Main Feed Section */}
         <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
-          <PostInput onPostCreate={handleCreatePost} user={user} className="mb-6" />
+          <PostInput onPostCreate={handleCreatePost} className="mb-6" />
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
