@@ -60,7 +60,7 @@ const TagSection = ({
             {items.map((item, index) => (
               <div
                 key={index}
-                className="group flex items-center gap-2 px-3 py-1.5 cursor-pointer bg-blue-50 text-purple-800 rounded-lg text-sm transition-all duration-200 hover:bg-purple-100"
+                className="group flex items-center gap-2 px-3 py-1.5 cursor-pointer bg-purple-50 text-purple-800 rounded-lg text-sm transition-all duration-200 hover:bg-purple-100"
               >
                 <span>{item}</span>
                 {isCurrentUser && (

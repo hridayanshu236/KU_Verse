@@ -75,7 +75,7 @@ const RecommendedConnections = ({ onConnect, connections }) => {
     return (
       <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
         <div className="flex items-center justify-center py-8">
-          <Loader className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader className="h-8 w-8 animate-spin text-purple-800" />
           <span className="ml-2 text-gray-600">Finding connections...</span>
         </div>
       </div>
@@ -88,7 +88,7 @@ const RecommendedConnections = ({ onConnect, connections }) => {
     <div className="w-full md:w-3/5 lg:w-1/2 bg-white rounded-lg shadow-lg p-6 mt-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <Users className="h-6 w-6 text-blue-500" />
+          <Users className="h-6 w-6 text-purple-700" />
           <h2 className="text-xl font-semibold text-gray-800">
             People You May be interested in.
           </h2>
@@ -145,7 +145,7 @@ const RecommendedConnections = ({ onConnect, connections }) => {
                       <button
                         onClick={() => handleConnect(user._id)}
                         disabled={connecting.has(user._id)}
-                        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-purple-800 bg-purple-50 rounded-full hover:bg-purple-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                       >
                         {connecting.has(user._id) ? (
                           <>
