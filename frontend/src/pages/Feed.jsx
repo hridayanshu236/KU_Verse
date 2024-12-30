@@ -11,11 +11,12 @@ import ChatInterface from "../Components/ChatInterface";
 import { fetchPosts, createPost } from "../utils/postServices";
 import EventsForYou from "../components/EventsForYou";
 import UpcomingEvents from "../components/UpcomingEvent";
+import { useUser } from "../contexts/userContext";
 import SidebarRecommendations from "../components/SidebarRecommendation";
 const Feed = () => {
   const [chats, setChats] = useState([]);
   const [chatLoading, setChatLoading] = useState(true);
-
+  const { user } = useUser();
   useEffect(() => {
     loadChats();
   }, []);
@@ -130,7 +131,7 @@ const Feed = () => {
 
         {/* Main Feed Section */}
         <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
-          <PostInput onPostCreate={handleCreatePost} className="mb-6" />
+          <PostInput onPostCreate={handleCreatePost} user={user} className="mb-6" />
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
