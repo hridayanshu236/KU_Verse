@@ -1,8 +1,10 @@
 import React, { useState, useRef } from "react";
 import { Camera, Video, School, X, Loader2 } from "lucide-react";
 import axios from "axios";
+import { useUser } from "../contexts/userContext";
 
 const PostInput = ({ onPostCreated }) => {
+  const { user } = useUser();
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -92,11 +94,14 @@ const PostInput = ({ onPostCreated }) => {
     }
   };
 
+  // Add a default avatar URL or placeholder
+  const defaultAvatar = "/api/placeholder/40/40"; // Using the placeholder API for default avatar
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-4 m-2">
       <div className="flex items-center gap-3 mb-4">
         <img
-          src={"../Assets/parth.png"} // Updated image path
+          src={user?.profilePicture || defaultAvatar}
           alt="Profile"
           className="w-10 h-10 rounded-full bg-emerald-100 flex-shrink-0"
         />
@@ -134,13 +139,11 @@ const PostInput = ({ onPostCreated }) => {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="text-red-500 text-sm mb-4 text-center">{error}</div>
       )}
 
       <div className="flex flex-row justify-between pt-2 border-t border-emerald-100">
-        {/* Placeholder Buttons */}
         <button
           className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-emerald-50 transition-colors"
           onClick={() => {}}

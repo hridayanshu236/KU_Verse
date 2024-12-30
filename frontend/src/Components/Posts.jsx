@@ -12,7 +12,7 @@ import {
   Share,
 } from "@mui/icons-material";
 import BookmarkButton from "./BookmarkButton";
-
+import { useUser } from "../contexts/userContext";
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
 
@@ -23,12 +23,12 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
       setComment("");
     }
   };
-
+  const { user } = useUser();
   return (
     <div className="bg-white rounded-lg p-4 mt-2 border-t border-gray-200">
       <div className="flex gap-3 mb-4">
         <img
-          src={userProfile.profilePicture || "/api/placeholder/32/32"}
+          src={user.profilePicture || "/api/placeholder/32/32"}
           alt="Profile"
           className="w-8 h-8 rounded-full"
         />
@@ -164,14 +164,13 @@ const Posts = ({ posts: initialPosts }) => {
                 );
             }
           }, [showComments, post._id]);
-
           return (
             <div
               key={post._id}
               className="flex justify-center my-2 w-full px-2 md:px-4 min-w-[400px]"
             >
               <div className="flex flex-col h-auto w-full max-w-[640px] min-w-[280px] rounded p-2 border border-gray-200 shadow-sm">
-                {/* User Info Section */}
+                {/* User Info Section - Keep as is */}
                 <div className="bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-center">
                   <div className="items-center flex flex-col p-2 m-1 justify-center">
                     <img
@@ -190,26 +189,29 @@ const Posts = ({ posts: initialPosts }) => {
                         ? new Date(post.time).toLocaleString()
                         : "Time unavailable"}
                     </span>
+                    {post.caption && (
+                      <div className="border-t border-green-100 pt-2">
+                        <p className="text-gray-800 text-center font-semibold  text-sm md:text-base leading-relaxed">
+                          {post.caption}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Post Content Section */}
                 <div className="flex-[2] flex items-center justify-center rounded-b-lg">
-                  {post.image?.url ? (
+                  {post.image?.url && (
                     <img
                       src={post.image.url}
                       alt="Post content"
                       className="min-h-[300px] min-w-[300px] max-h-[500px] w-full h-auto object-contain"
                     />
-                  ) : (
-                    <div className="font-sans font-medium text-justify p-4 leading-8">
-                      <p>{post.caption || "No content available"}</p>
-                    </div>
                   )}
                 </div>
 
-                {/* Action Buttons Section */}
-                <div className="flex flex-row justify-between px-2 items-center">
+                {/* Action Buttons Section - Keep as is */}
+                <div className="flex flex-row justify-between px-2 items-center mt-2">
                   <button
                     type="button"
                     className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center ${
@@ -238,7 +240,7 @@ const Posts = ({ posts: initialPosts }) => {
 
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w/[50px] md:h/[50px] flex items-center justify-center"
+                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                     onClick={() => setShowComments(!showComments)}
                   >
                     <Comment className="w-5 h-5 md:w-6 md:h-6" />
@@ -246,7 +248,7 @@ const Posts = ({ posts: initialPosts }) => {
 
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w/[50px] md:h/[50px] flex items-center justify-center"
+                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
                   >
                     <Share className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
@@ -254,6 +256,7 @@ const Posts = ({ posts: initialPosts }) => {
                   <BookmarkButton postId={post._id} onBookmark={() => {}} />
                 </div>
 
+                {/* Comments Section - Keep as is */}
                 {showComments && (
                   <CommentSection
                     userProfile={post.user}
