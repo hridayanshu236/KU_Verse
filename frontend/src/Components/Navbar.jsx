@@ -8,20 +8,33 @@ import {
   faCog,
   faSignOutAlt,
   faHome,
-  faCalendarAlt, // Added for events
-  faBookmark, // Added for saved posts
+  faCalendarAlt,
+  faBookmark,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../contexts/userContext";
 
 const Navbar = () => {
   const [profileDropDown, setProfileDropDown] = useState(false);
-  const { user, fetchUserDetails } = useUser();
+  const { user, setUser, fetchUserDetails } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      fetchUserDetails();
-    }
+    const loadUserData = async () => {
+      if (!user) {
+        await fetchUserDetails();
+      }
+    };
+    loadUserData();
+
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".profile-dropdown")) {
+        setProfileDropDown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [user, fetchUserDetails]);
 
   const handleLogout = async () => {
@@ -29,11 +42,10 @@ const Navbar = () => {
       await axios.post(
         "http://localhost:5000/api/auth/logout",
         {},
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-      console.log("Logout successful");
+      setUser(null);
+      setProfileDropDown(false);
       navigate("/login");
     } catch (error) {
       console.error("Error during logout", error);
@@ -42,10 +54,12 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-md px-4 py-3 mdd:flex justify-between items-center relative z-50">
+      {/* Left Section */}
       <div className="flex items-center">
         <div>
           <h1 className="text-lg font-bold text-[rgb(103,80,164)]">KU-Verse</h1>
         </div>
+        {/* Mobile Search and Profile */}
         <div className="mdd:hidden flex ml-auto w-1/3">
           <SearchModal />
         </div>
@@ -59,37 +73,35 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Desktop Search */}
       <div className="mdd:flex hidden w-1/3">
         <SearchModal />
       </div>
 
+      {/* Navigation Icons */}
       <div className="mdd:flex flex justify-center px-4 text-[rgb(103,80,164)]">
-        {/* Home Icon */}
-        <NavLink to="/feed">
+        <NavLink to="/feed" className="relative group">
           <FontAwesomeIcon
             icon={faHome}
             className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
         </NavLink>
 
-        {/* Events Icon */}
-        <NavLink to="/events">
+        <NavLink to="/events" className="relative group">
           <FontAwesomeIcon
             icon={faCalendarAlt}
             className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
         </NavLink>
 
-        {/* Messages Icon */}
-        <NavLink to="/chats">
+        <NavLink to="/chats" className="relative group">
           <FontAwesomeIcon
             icon={faCommentDots}
             className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
           />
         </NavLink>
 
-        {/* Saved Posts Icon */}
-        <NavLink to="/saved-posts">
+        <NavLink to="/saved-posts" className="relative group">
           <FontAwesomeIcon
             icon={faBookmark}
             className="w-6 h-6 cursor-pointer px-4 py-2 hover:text-purple-800 transition-colors"
@@ -99,7 +111,7 @@ const Navbar = () => {
         {/* Profile Picture */}
         <div className="mdd:flex hidden px-3 py-1">
           <img
-            src={user?.profilePicture || "default_avatar_url"}
+            src={user?.profilePicture}
             alt="profile"
             className="w-8 h-8 object-cover rounded-full cursor-pointer hover:ring-2 hover:ring-purple-600 transition-all"
             onClick={() => setProfileDropDown(!profileDropDown)}
@@ -109,18 +121,16 @@ const Navbar = () => {
 
       {/* Profile Dropdown */}
       {profileDropDown && (
-        <div className="absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg z-50">
+        <div className="profile-dropdown absolute right-8 top-14 text-[rgb(103,80,164)] bg-white mdd:text-xl text-sm shadow-lg p-5 rounded-lg z-50">
           <ul className="flex flex-col">
             <NavLink to="/profile">
               <li className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer">
                 <img
-                  src={user?.profilePicture || "default_avatar_url"}
+                  src={user?.profilePicture}
                   alt="profile"
                   className="w-8 h-8 rounded-full"
                 />
-                <h1 className="pl-4 font-bold">
-                  {user?.fullName || "Profile Name"}
-                </h1>
+                <h1 className="pl-4 font-bold">{user?.fullName}</h1>
               </li>
             </NavLink>
             <NavLink to="/settings">
@@ -131,7 +141,7 @@ const Navbar = () => {
             </NavLink>
             <li
               className="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer"
-              onClick={() => handleLogout()}
+              onClick={handleLogout}
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
               <h1 className="pl-4 font-bold">Logout</h1>
