@@ -144,53 +144,67 @@ const SavedPosts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-      <div className="fixed top-0 w-full z-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-purple-50 to-white">
+      <div className="fixed top-0 w-full z-50 shadow-sm">
         <Navbar />
       </div>
 
-      <div className="pt-16 pb-8">
-        {" "}
+      <div className="pt-20 pb-12 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-800">
+    
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-bold text-purple-800 mb-3">
               Your Saved Posts
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-purple-600 text-lg">
               Organize and manage your bookmarked content
             </p>
           </div>
 
+          {/* Error message */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-3xl mx-auto">
-              {error}
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-8 mx-auto">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {error}
+              </div>
             </div>
           )}
 
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar - Groups */}
-            <div className="md:w-80 flex-shrink-0">
-              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+          <div className="flex flex-col lg:flex-row gap-8 w-full">
+            {/* Sidebar */}
+            <div className="lg:w-1/4 w-full">
+              <div className="bg-white rounded-xl shadow-md p-6 sticky top-24 border border-purple-100">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800">
+                  <h3 className="text-xl font-semibold text-purple-800">
                     Collections
                   </h3>
-                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <span className="bg-purple-100 text-purple-800 text-sm font-medium px-3 py-1 rounded-full">
                     {bookmarkGroups.length}
                   </span>
                 </div>
 
-                <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto">
+                <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
                   {bookmarkGroups.length > 0 ? (
                     bookmarkGroups.map((group) => (
                       <button
                         key={group._id}
                         onClick={() => setSelectedGroup(group)}
-                        className={`w-full px-4 py-3 text-left rounded-lg transition-all duration-200 flex items-center gap-3
+                        className={`w-full px-5 py-4 text-left rounded-xl transition-all duration-200 flex items-center gap-3
                           ${
                             selectedGroup?._id === group._id
-                              ? "bg-green-500 text-white shadow-md"
-                              : "hover:bg-green-50 text-gray-700 hover:text-green-700"
+                              ? "bg-purple-600 text-white shadow-lg"
+                              : "hover:bg-purple-50 text-gray-700 hover:text-purple-800 hover:shadow-sm"
                           }`}
                       >
                         <BookmarkAdd className="w-5 h-5" />
@@ -198,10 +212,12 @@ const SavedPosts = () => {
                       </button>
                     ))
                   ) : (
-                    <div className="text-center py-8 bg-green-50 rounded-lg">
-                      <BookmarkAdd className="w-12 h-12 text-green-300 mx-auto mb-2" />
-                      <p className="text-gray-500">No collections yet</p>
-                      <p className="text-sm text-gray-400">
+                    <div className="text-center py-10 bg-purple-50 rounded-xl px-6">
+                      <BookmarkAdd className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                      <p className="text-purple-800 font-medium mb-2">
+                        No collections yet
+                      </p>
+                      <p className="text-sm text-purple-600">
                         Bookmark posts to create collections
                       </p>
                     </div>
@@ -211,35 +227,37 @@ const SavedPosts = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 min-w-0">
+            <div className="lg:w-3/4 w-full">
               {selectedGroup ? (
                 loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
+                  <div className="flex items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-                      <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                    <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                      <h2 className="text-2xl font-semibold text-purple-800 mb-2">
                         {selectedGroup.name}
                       </h2>
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-purple-600">
                         {posts.length} saved{" "}
                         {posts.length === 1 ? "post" : "posts"}
                       </p>
                     </div>
-                    <Posts posts={posts} onPostRemoved={handlePostRemoved} />
+                    <div className="bg-white rounded-xl shadow-md">
+                      <Posts posts={posts} onPostRemoved={handlePostRemoved} />
+                    </div>
                   </div>
                 )
               ) : (
-                <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                  <BookmarkAdd className="w-16 h-16 text-green-200 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                <div className="bg-white rounded-xl shadow-md p-12 text-center">
+                  <BookmarkAdd className="w-20 h-20 text-purple-200 mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold text-purple-800 mb-3">
                     {bookmarkGroups.length > 0
                       ? "Select a collection to view posts"
                       : "Start Your First Collection"}
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-purple-600 text-lg max-w-md mx-auto">
                     {bookmarkGroups.length > 0
                       ? "Choose a collection from the sidebar to view your saved posts"
                       : "Bookmark posts to create and organize your collections"}
