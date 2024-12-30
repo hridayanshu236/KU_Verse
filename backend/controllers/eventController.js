@@ -12,6 +12,7 @@ const createEvent = asyncHandler(async (req, res) => {
   const userID = req.user._id;
   const currentUser = await User.findById(userID);
   let cloudData = null;
+
   if (req.file) {
     console.log("Processing file upload");
     try {
@@ -39,9 +40,11 @@ const createEvent = asyncHandler(async (req, res) => {
     organizer,
     createdBy: userID,
     photo: cloudData?.secure_url,
+    attendance: [userID], 
   });
 
   currentUser.events.push(event._id);
+  currentUser.registeredEvents.push(event._id); 
   await currentUser.save();
 
   res.status(200).json({ message: "Event Created Successfully", event });
@@ -51,7 +54,10 @@ const registerEvent = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const currentUser = await User.findById(userId);
   const eventId = req.params.id;
-  const event = await Event.findById(eventId);
+  const event = await Event.findById(eventId).populate(
+    "attendance",
+    "fullName userName profilePicture"
+  );
 
   if (!mongoose.Types.ObjectId.isValid(eventId)) {
     res.status(400);
@@ -76,61 +82,58 @@ const registerEvent = asyncHandler(async (req, res) => {
   await event.save();
   await currentUser.save();
 
-  res.json({ message: "Registered succesfully to the event", event });
-});
+  // Populate the updated event
+  const updatedEvent = await Event.findById(eventId)
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture");
 
-const getFeedEvents = asyncHandler(async (req, res) => {
-  const currentUserId = req.user._id;
-  const user = await User.findById(currentUserId);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  const friendsIds = user.friends;
-  console.log(friendsIds);
-
-  const events = await Event.find({
-    $or: [
-      { createdBy: currentUserId }, 
-      { createdBy: { $in: friendsIds } }, 
-    ],
-  }).sort({ createdAt: -1 });
-
-  res.status(200).json({events});
+  res.json({
+    message: "Registered successfully to the event",
+    event: updatedEvent,
+  });
 });
 
 const getAllEvents = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const currentUser = await User.findById(currentUserId).select("friends");
+
   const events = await Event.find()
     .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
     .sort({ createdAt: -1 });
 
-  if (events.length <= 0) {
-    res.status(404);
-    throw new Error("No events found!");
+  if (!events.length) {
+    return res.status(200).json({ events: [] });
   }
 
-  res.json({ events });
-});
+  const transformedEvents = events.map((event) => {
+    const eventObj = event.toObject();
+    const isCreator =
+      eventObj.createdBy._id.toString() === currentUserId.toString();
 
-const getEventById = asyncHandler(async (req, res) => {
-  const userId = req.params.id;
+    if (isCreator) {
+      return {
+        ...eventObj,
+        attendees: eventObj.attendance,
+        totalAttendees: eventObj.attendance.length,
+        isCreator: true,
+      };
+    }
 
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    res.status(400);
-    throw new Error("Invalid user ID");
-  }
+    const friendsAttending = eventObj.attendance.filter((attendee) =>
+      currentUser.friends.includes(attendee._id)
+    );
 
-  const events = await Event.find({ createdBy: userId })
-    .populate("createdBy", "fullName userName profilePicture department")
-    .sort({ createdAt: -1 });
+    return {
+      ...eventObj,
+      attendees: friendsAttending,
+      totalAttendees: eventObj.attendance.length,
+      friendsCount: friendsAttending.length,
+      isCreator: false,
+    };
+  });
 
-  if (events.length <= 0) {
-    res.status(404);
-    throw new Error("No events found!");
-  }
-
-  res.status(200).json({ events });
+  res.json({ events: transformedEvents });
 });
 
 const getMyEvents = asyncHandler(async (req, res) => {
@@ -138,14 +141,159 @@ const getMyEvents = asyncHandler(async (req, res) => {
 
   const events = await Event.find({ createdBy: userId })
     .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
     .sort({ createdAt: -1 });
 
-  if (events.length <= 0) {
-    res.status(404);
-    throw new Error("No events found!");
+  if (!events.length) {
+    return res.status(200).json({ events: [] });
   }
 
-  res.json({ events });
+  const transformedEvents = events.map((event) => {
+    const eventObj = event.toObject();
+    return {
+      ...eventObj,
+      attendees: eventObj.attendance,
+      totalAttendees: eventObj.attendance.length,
+      isCreator: true,
+    };
+  });
+
+  res.json({ events: transformedEvents });
+});
+
+const getRegisteredEvents = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const currentUser = await User.findById(userId).select(
+    "friends registeredEvents"
+  );
+
+  if (!currentUser) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  const events = await Event.find({
+    _id: { $in: currentUser.registeredEvents },
+  })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
+    .sort({ createdAt: -1 });
+
+  const transformedEvents = events.map((event) => {
+    const eventObj = event.toObject();
+    const isCreator = eventObj.createdBy._id.toString() === userId.toString();
+
+    if (isCreator) {
+      return {
+        ...eventObj,
+        attendees: eventObj.attendance,
+        totalAttendees: eventObj.attendance.length,
+        isCreator: true,
+      };
+    }
+
+    const friendsAttending = eventObj.attendance.filter((attendee) =>
+      currentUser.friends.includes(attendee._id)
+    );
+
+    return {
+      ...eventObj,
+      attendees: friendsAttending,
+      totalAttendees: eventObj.attendance.length,
+      friendsCount: friendsAttending.length,
+      isCreator: false,
+    };
+  });
+
+  res.status(200).json({ events: transformedEvents });
+});
+
+const getFeedEvents = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const user = await User.findById(currentUserId).select("friends");
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  const events = await Event.find({
+    $or: [{ createdBy: currentUserId }, { createdBy: { $in: user.friends } }],
+  })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
+    .sort({ createdAt: -1 });
+
+  const transformedEvents = events.map((event) => {
+    const eventObj = event.toObject();
+    const isCreator =
+      eventObj.createdBy._id.toString() === currentUserId.toString();
+
+    if (isCreator) {
+      return {
+        ...eventObj,
+        attendees: eventObj.attendance,
+        totalAttendees: eventObj.attendance.length,
+        isCreator: true,
+      };
+    }
+
+    const friendsAttending = eventObj.attendance.filter((attendee) =>
+      user.friends.includes(attendee._id)
+    );
+
+    return {
+      ...eventObj,
+      attendees: friendsAttending,
+      totalAttendees: eventObj.attendance.length,
+      friendsCount: friendsAttending.length,
+      isCreator: false,
+    };
+  });
+
+  res.status(200).json({ events: transformedEvents });
+});
+
+const getEventById = asyncHandler(async (req, res) => {
+  const eventId = req.params.id;
+  const currentUserId = req.user._id;
+  const currentUser = await User.findById(currentUserId).select("friends");
+
+  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    res.status(400);
+    throw new Error("Invalid event ID");
+  }
+
+  const event = await Event.findById(eventId)
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture");
+
+  if (!event) {
+    res.status(404);
+    throw new Error("Event not found!");
+  }
+
+  const eventObj = event.toObject();
+  const isCreator =
+    eventObj.createdBy._id.toString() === currentUserId.toString();
+
+  const transformedEvent = {
+    ...eventObj,
+    attendees: isCreator
+      ? eventObj.attendance
+      : eventObj.attendance.filter((attendee) =>
+          currentUser.friends.includes(attendee._id)
+        ),
+    totalAttendees: eventObj.attendance.length,
+    friendsCount: !isCreator
+      ? eventObj.attendance.filter((attendee) =>
+          currentUser.friends.includes(attendee._id)
+        ).length
+      : undefined,
+    isCreator,
+  };
+
+  res.status(200).json({ event: transformedEvent });
 });
 
 module.exports = {
@@ -155,4 +303,5 @@ module.exports = {
   getAllEvents,
   getEventById,
   getMyEvents,
+  getRegisteredEvents,
 };

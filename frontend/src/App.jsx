@@ -13,6 +13,7 @@ import StoryCard from "./Components/StoryCard";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignUpPage";
 import LandingPage from "./pages/LandingPage";
+import Events from "./pages/Event";
 // import OtpVerificationPage from "./pages/OtpVerificationPage";
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route element={<Feed />} path="/feed" />
           <Route element={<Chats />} path="/chats" />
           <Route element={<Chats />} path="/chats/:chatId" />
+          <Route element={<Events />} path="/events" />
           <Route
             path="/posts"
             element={<Posts textOnly={false} captionPresent={true} />}

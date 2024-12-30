@@ -64,7 +64,7 @@ const Feed = () => {
     }
   };
 
-  return (
+    return (
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="sticky top-0 z-10">
         <Navbar />
@@ -72,7 +72,7 @@ const Feed = () => {
 
       <div className="flex flex-row flex-grow overflow-hidden">
         {/* Left Sidebar */}
-        <div className="flex flex-[0.7] flex-col border-r border-gray-200 p-2 min-w-[420px]">
+        <div className="hidden mdd:flex mdd:flex-[0.7] flex-col border-r border-gray-200 p-2 min-w-[420px]">
           <div className="flex flex-1 flex-col gap-4 py-2 pr-2 mb-6 min-w-[150px]">
             <AchievementCard />
             <AchievementCard />
@@ -97,8 +97,9 @@ const Feed = () => {
             />
           </div>
         </div>
+
         {/* Main Feed Section */}
-        <div className="flex-[2] w-full min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
+        <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
           <PostInput onPostCreate={handleCreatePost} className="mb-6" />
           {loading ? (
             <div>Loading...</div>
@@ -106,8 +107,9 @@ const Feed = () => {
             <Posts key={posts._id} posts={posts} />
           )}
         </div>
+
         {/* Right Sidebar */}
-        <div className="flex flex-[0.8] flex-col pl-4">
+        <div className="hidden mdd:flex mdd:flex-[0.8] flex-col pl-4">
           <div className="flex flex-col h-full">
             <div className="flex flex-col gap-4 py-2 pl-10 mb-6 min-w-[150px] h-[50%] overflow-y-auto scrollbar-hide sticky top-[8px]">
               <StoryCard />
@@ -119,16 +121,16 @@ const Feed = () => {
               <div className="flex flex-col gap-6 min-w-[80px]">
                 {chatUsers.map((user) => (
                   <button
-                    key={user.id} // Add unique key prop here
+                    key={user.id}
                     post_id={user.id}
                     className="min-w-[50px]"
                     onClick={() => handleChatClick(user)}
                   >
                     <img
                       className="w-[50px] h-[50px] min-w-[50px] max-w-[60px] 
-                rounded-full transform transition-transform 
-                duration-200 ease-in-out hover:scale-110 
-                hover:shadow-2xl"
+                      rounded-full transform transition-transform 
+                      duration-200 ease-in-out hover:scale-110 
+                      hover:shadow-2xl"
                       src={user.avatar}
                       alt={`${user.name}'s avatar`}
                     />
@@ -139,18 +141,22 @@ const Feed = () => {
           </div>
         </div>
 
-        {chatUsers.map((user) => (
-          <ChatInterface
-            key={user.id} // Add unique key prop here
-            isOpen={activeChatState.activeUserId === user.id}
-            onClose={handleChatClose}
-            recipient={user}
-            chatState={activeChatState.chatStates[user.id]}
-          />
-        ))}
+        {/* Chat Interfaces */}
+        <div className="hidden mdd:block">
+          {chatUsers.map((user) => (
+            <ChatInterface
+              key={user.id}
+              isOpen={activeChatState.activeUserId === user.id}
+              onClose={handleChatClose}
+              recipient={user}
+              chatState={activeChatState.chatStates[user.id]}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 };
+ 
 
 export default Feed;
