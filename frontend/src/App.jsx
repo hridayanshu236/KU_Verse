@@ -13,7 +13,8 @@ import StoryCard from "./Components/StoryCard";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignUpPage";
 import LandingPage from "./pages/LandingPage";
-// import OtpVerificationPage from "./pages/OtpVerificationPage";
+import SavedPosts from "./Components/SavedPosts"; // Correct import
+
 function App() {
   return (
     <>
@@ -22,13 +23,11 @@ function App() {
           <Route element={<Feed />} path="/feed" />
           <Route element={<Chats />} path="/chats" />
           <Route element={<Chats />} path="/chats/:chatId" />
-          <Route
-            path="/posts"
-            element={<Posts textOnly={false} captionPresent={true} />}
-          />
+          <Route element={<Posts />} path="/posts" />
           <Route element={<Profile />} path="/profile" />
           <Route element={<Profile />} path="/profile/:id" />
           <Route element={<Settings />} path="/settings" />
+          <Route element={<SavedPosts />} path="/saved-posts" />{" "}
         </Route>
         <Route element={<PublicRoute />}>
           <Route element={<LandingPage />} path="/" />

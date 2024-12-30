@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Bookmark = require("../models/bookmarkModel");
 
+// Create a new bookmark group
 const createBookmarkGroup = asyncHandler(async (req, res) => {
   const { name } = req.body;
   const userId = req.user._id;
@@ -9,6 +10,7 @@ const createBookmarkGroup = asyncHandler(async (req, res) => {
   res.status(201).json(group);
 });
 
+// Get all bookmark groups for the authenticated user
 const getBookmarkGroups = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
@@ -19,6 +21,7 @@ const getBookmarkGroups = asyncHandler(async (req, res) => {
   res.json(groups);
 });
 
+// Add a post to a bookmark group
 const addPostToGroup = asyncHandler(async (req, res) => {
   const { postId, groupName } = req.body;
   const userId = req.user._id;
@@ -32,7 +35,7 @@ const addPostToGroup = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if post is already in the group
+  // Check if the post is already in the group
   if (!group.posts.some((p) => p.post.toString() === postId)) {
     group.posts.push({ post: postId });
     await group.save();
@@ -41,6 +44,7 @@ const addPostToGroup = asyncHandler(async (req, res) => {
   res.json(group);
 });
 
+// Get all posts in a bookmark group
 const getGroupPosts = asyncHandler(async (req, res) => {
   const { groupId } = req.params;
   const userId = req.user._id;

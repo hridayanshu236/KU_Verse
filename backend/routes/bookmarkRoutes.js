@@ -1,15 +1,15 @@
 const express = require("express");
-const router = express.Router();
 const {
   createBookmarkGroup,
   getBookmarkGroups,
   addPostToGroup,
   getGroupPosts,
 } = require("../controllers/bookmarkController");
+const router = express.Router();
 const { isAuth } = require("../middleware/isAuthenticated");
-router.post("/bookmarks", isAuth, addPostToGroup);
-router.get("/bookmarks/getgroups", isAuth, getBookmarkGroups);
-router.post("/bookmarks/groups", isAuth, createBookmarkGroup);
-router.get("/bookmarks/groups/:groupId/posts", isAuth, getGroupPosts);
+router.get("/groups", isAuth, getBookmarkGroups);
+router.post("/groups", isAuth, createBookmarkGroup);
+router.get("/groups/:groupId/posts", isAuth, getGroupPosts);
+router.post("/", isAuth, addPostToGroup);
 
 module.exports = router;

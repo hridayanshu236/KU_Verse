@@ -11,7 +11,7 @@ import {
   Comment,
   Share,
 } from "@mui/icons-material";
-import { BookmarkButton } from "./SavedPosts";
+import BookmarkButton from "./BookmarkButton";
 
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
@@ -137,7 +137,7 @@ const Posts = ({ posts: initialPosts }) => {
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {!localPosts || localPosts.length === 0 ? (
+      {localPosts.length === 0 ? (
         <div className="text-center text-gray-500">No posts available</div>
       ) : (
         localPosts.map((post) => {
@@ -238,7 +238,7 @@ const Posts = ({ posts: initialPosts }) => {
 
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w/[50px] md:h/[50px] flex items-center justify-center"
                     onClick={() => setShowComments(!showComments)}
                   >
                     <Comment className="w-5 h-5 md:w-6 md:h-6" />
@@ -246,7 +246,7 @@ const Posts = ({ posts: initialPosts }) => {
 
                   <button
                     type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w/[50px] md:h/[50px] flex items-center justify-center"
                   >
                     <Share className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
