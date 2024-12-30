@@ -1,111 +1,148 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const OtpVerification = () => {
-  const [otp, setOtp] = useState(""); // Stores the OTP entered by the user
-  const [success, setSuccess] = useState(""); // Stores success messages
-  const [error, setError] = useState(""); // Stores error messages
-  const [buttonHovered, setButtonHovered] = useState(false); // Button hover state
+  const [otp, setOtp] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [buttonHovered, setButtonHovered] = useState(false);
   const navigate = useNavigate();
 
-  const verifyOtp = async () => {
-    if (!otp) {
-      setError("Please enter the OTP");
-      setSuccess("");
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("userEmail");
+    if (!storedEmail) {
+      setErrorMessage("Session expired. Please register again.");
+      setTimeout(() => navigate("/signup"), 2000);
+      return;
+    }
+    setEmail(storedEmail);
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      setErrorMessage("OTP must be 6 digits.");
       return;
     }
 
     try {
-      const response = await axios.post(
-        "/api/auth/verifyemail",
-        { code: otp },
-        {
-          headers: {
-            "Content-Type": "application/json"},
-        }
-      );
+      const response = await axios.post("http://localhost:5000/api/auth/verifyemail", { email, code: otp });
+      setSuccessMessage(response.data.message || "Email verified successfully!");
+      setErrorMessage("");
+      localStorage.removeItem("userEmail");
+      setTimeout(() => navigate("/login"), 2000);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Verification failed. Please try again.");
+      setSuccessMessage("");
+    }
+  };
 
-      if (response.data.success) {
-        setSuccess("OTP verified successfully. Redirecting to login...");
-        setError("");
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to verify OTP");
-      setSuccess("");
+  const resendOtp = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/resend-otp", { email });
+      setSuccessMessage("A new OTP has been sent to your email.");
+      setErrorMessage("");
+    } catch {
+      setErrorMessage("Failed to resend OTP. Please try again.");
+      setSuccessMessage("");
     }
   };
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        verifyOtp();
-      }}
-      style={{
-        maxWidth: "400px",
-        margin: "50px auto",
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "15px",
-        borderRadius: "8px",
-        backgroundColor: "#fff",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        fontFamily: "Arial, sans-serif",
-      }}
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: "15px", marginTop: "50px", alignItems: "center" }}
     >
-      <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#333", textAlign: "center" }}>
+      <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "#6A1B9A", marginBottom: "20px" }}>
         OTP Verification
       </h2>
-      <p style={{ fontSize: "14px", color: "#555", textAlign: "center" }}>
-        Please enter the OTP sent to your email to verify your account.
+      <p style={{ color: "#555", fontSize: "14px" }}>
+        Please enter the OTP sent to your email: <strong>{email}</strong>
       </p>
-      {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
-      {success && <p style={{ color: "green", fontSize: "14px" }}>{success}</p>}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <label htmlFor="otp" style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}>
-          Enter OTP
-        </label>
-        <input
-          type="text"
-          id="otp"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter your OTP"
-          style={{
-            padding: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ddd",
-            fontSize: "14px",
-            width: "100%",
-            marginBottom: "15px",
-          }}
-        />
-      </div>
-      <button
+      {errorMessage && <p style={{ color: "red", fontSize: "14px" }}>{errorMessage}</p>}
+      {successMessage && <p style={{ color: "green", fontSize: "14px" }}>{successMessage}</p>}
+      <input
+        type="text"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+        placeholder="Enter OTP"
+        required
         style={{
-          backgroundColor: "#D0A9F5", // Lavender button color
-          color: "#fff", // White text color
+          padding: "10px",
+          borderRadius: "5px",
+          border: "1px solid #ddd",
+          fontSize: "14px",
+          textAlign: "center",
+          width: "100%",
+          maxWidth: "300px",
+          marginBottom: "15px",
+        }}
+      />
+      <button
+        type="submit"
+        style={{
+          backgroundColor: "#D0A9F5",
+          color: "#fff",
           padding: "12px 20px",
           border: "none",
           borderRadius: "6px",
           fontSize: "16px",
           fontWeight: "600",
           cursor: "pointer",
-          transition: "background-color 0.3s ease, transform 0.2s ease",
-          ...(buttonHovered ? { backgroundColor: "#B80BF1", transform: "scale(1.02)" } : {}),
+          width: "100%", // Match the input's width
+          maxWidth: "300px", // Match the input's maxWidth
+          
+          ...(buttonHovered ? { backgroundColor: "#B80BF1", transform: "scale(1.1)" } : {}),
         }}
         onMouseEnter={() => setButtonHovered(true)}
         onMouseLeave={() => setButtonHovered(false)}
-        type="submit"
       >
-        Verify OTP
+        Verify
       </button>
+      <div style={{ marginTop: "15px", display: "flex", justifyContent: "space-between", width: "100%", maxWidth: "300px" }}>
+  <span
+    onClick={resendOtp}
+    style={{
+      color: "#6A1B9A",
+      fontSize: "12px",
+      textDecoration: "none",
+      cursor: "pointer",
+     
+    }}
+    onMouseEnter={(e) => {
+      e.target.style.textDecoration = "underline";
+      e.target.style.transform = "scale(1.05)";
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.textDecoration = "none";
+      e.target.style.transform = "scale(1)";
+    }}
+  >
+    Resend OTP
+  </span>
+  <span
+    onClick={() => navigate("/signup")}
+    style={{
+      color: "#6A1B9A",
+      fontSize: "12px",
+      textDecoration: "none",
+      cursor: "pointer",
+      
+    }}
+    onMouseEnter={(e) => {
+      e.target.style.textDecoration = "underline";
+      e.target.style.transform = "scale(1.05)";
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.textDecoration = "none";
+      e.target.style.transform = "scale(1)";
+    }}
+  >
+    Back to Sign Up
+  </span>
+</div>
     </form>
   );
 };

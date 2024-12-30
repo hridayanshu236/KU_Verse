@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
+import { Navigate, NavLink } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -41,11 +41,25 @@ const Login = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-      {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>} {/* Smaller error text */}
-      
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <label htmlFor="email" style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}>Email</label> {/* Smaller label text */}
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+    >
+      {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+      >
+        <label
+          htmlFor="email"
+          style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}
+        >
+          Email
+        </label>
         <input
           type="email"
           name="email"
@@ -58,15 +72,26 @@ const Login = () => {
             padding: "10px",
             borderRadius: "5px",
             border: "1px solid #ddd",
-            fontSize: "14px", // Smaller input text size
+            fontSize: "14px",
             width: "100%",
             marginBottom: "15px",
           }}
         />
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <label htmlFor="password" style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}>Password</label> {/* Smaller label text */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+      >
+        <label
+          htmlFor="password"
+          style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}
+        >
+          Password
+        </label>
         <input
           type="password"
           name="password"
@@ -79,7 +104,7 @@ const Login = () => {
             padding: "10px",
             borderRadius: "5px",
             border: "1px solid #ddd",
-            fontSize: "14px", // Smaller input text size
+            fontSize: "14px",
             width: "100%",
             marginBottom: "20px",
           }}
@@ -88,16 +113,18 @@ const Login = () => {
 
       <button
         style={{
-          backgroundColor: "#D0A9F5", // Lavender button color
-          color: "#fff", // White text color
-          padding: "12px 20px", // Padding for button
+          backgroundColor: "#D0A9F5",
+          color: "#fff",
+          padding: "12px 20px",
           border: "none",
           borderRadius: "6px",
-          fontSize: "16px", // Button font size slightly larger
+          fontSize: "16px",
           fontWeight: "600",
           cursor: "pointer",
           transition: "background-color 0.3s ease, transform 0.2s ease",
-          ...(buttonHovered ? { backgroundColor: "#B80BF1", transform: "scale(1.07)" } : {}),
+          ...(buttonHovered
+            ? { backgroundColor: "#B80BF1", transform: "scale(1.07)" }
+            : {}),
         }}
         onMouseEnter={() => setButtonHovered(true)}
         onMouseLeave={() => setButtonHovered(false)}
@@ -105,6 +132,19 @@ const Login = () => {
       >
         Login
       </button>
+
+      <NavLink
+        to="/forgot-password"
+        style={{
+          color: "#666",
+          textAlign: "center",
+          marginTop: "10px",
+          fontSize: "14px",
+          textDecoration: "underline",
+        }}
+      >
+        Forgot Password?
+      </NavLink>
     </form>
   );
 };

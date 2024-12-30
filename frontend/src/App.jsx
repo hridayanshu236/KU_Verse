@@ -17,7 +17,9 @@ import SavedPosts from "./Components/SavedPosts"; // Correct import
 
 import Events from "./pages/Event";
 import EventDetails from "./pages/EventDetail";
-// import OtpVerificationPage from "./pages/OtpVerificationPage";
+ import OtpVerificationPage from "./pages/OtpVerificationPage";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 function App() {
   return (
     <>
@@ -41,8 +43,10 @@ function App() {
         <Route element={<PublicRoute />}>
           <Route element={<LandingPage />} path="/" />
           <Route element={<LoginPage />} path="/login" />
+          {<Route element={<ResetPassword />} path="/reset-password/:token" />}
+          <Route element={<ForgotPassword />} path="/forgot-password" />
           <Route element={<SignupPage />} path="/signup" />
-          {/* <Route element={<OtpVerificationPage />} path="/otp-verification" /> */}
+          {<Route element={<OtpVerificationPage />} path="/otp-verification" />}
         </Route>
       </Routes>
     </>

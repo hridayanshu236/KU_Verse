@@ -1,3 +1,4 @@
+// userContext.jsx
 import { useContext, createContext, useState, useCallback } from "react";
 import axios from "axios";
 
@@ -11,23 +12,34 @@ export const UserProvider = ({ children }) => {
       const response = await axios.get(
         "http://localhost:5000/api/user/myprofile",
         {
-          withCredentials: true, 
+          withCredentials: true,
         }
       );
       setUser(response.data);
       console.log("User data fetched successfully", response.data);
     } catch (error) {
       console.log("Error fetching user data", error);
+      setUser(null); 
     }
-  }, []); // Empty dependency array means it won't change
+  }, []);
+
+  const clearUser = useCallback(() => {
+    setUser(null);
+  }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, fetchUserDetails }}>
+    <UserContext.Provider
+      value={{ user, setUser, fetchUserDetails, clearUser }}
+    >
       {children}
     </UserContext.Provider>
   );
 };
 
 export const useUser = () => {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
 };

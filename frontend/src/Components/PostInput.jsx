@@ -2,6 +2,8 @@ import React, { useState, useRef } from "react";
 import { Camera, Video, School, X, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "../contexts/userContext";
+const PostInput = ({ onPostCreated}) => {
+import { useUser } from "../contexts/userContext";
 
 const PostInput = ({ onPostCreated }) => {
   const { user } = useUser();

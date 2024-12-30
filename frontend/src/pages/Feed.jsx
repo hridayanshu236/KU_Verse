@@ -5,19 +5,64 @@ import PostInput from "../Components/PostInput";
 import Posts from "../Components/Posts";
 import AchievementCard from "../Components/AchievementCard";
 import EventCard from "../Components/EventCard";
+import ChatBubble from "../components/ChatBubble";
+import {fetchChats} from "../utils/chatService";
 import ChatInterface from "../Components/ChatInterface";
 import { fetchPosts, createPost } from "../utils/postServices";
 import EventsForYou from "../components/EventsForYou";
 import UpcomingEvents from "../components/UpcomingEvent";
-
+import { useUser } from "../contexts/userContext";
+import SidebarRecommendations from "../components/SidebarRecommendation";
 const Feed = () => {
+  const [chats, setChats] = useState([]);
+  const [chatLoading, setChatLoading] = useState(true);
+  const { user } = useUser();
+  useEffect(() => {
+    loadChats();
+  }, []);
   const [activeChatState, setActiveChatState] = useState({
     activeUserId: null,
     chatStates: {},
   });
+   const loadChats = async () => {
+     try {
+       setChatLoading(true);
+       const userChats = await fetchChats();
+       // Sort chats by last message timestamp
+       const sortedChats = userChats
+         .filter(
+           (chat) =>
+             chat &&
+             chat._id &&
+             Array.isArray(chat.participants) &&
+             chat.participants.length > 0
+         )
+         .sort((a, b) => {
+           const dateA = a.lastMessage?.time
+             ? new Date(a.lastMessage.time)
+             : new Date(0);
+           const dateB = b.lastMessage?.time
+             ? new Date(b.lastMessage.time)
+             : new Date(0);
+           return dateB - dateA; // Sort descending (newest first)
+         });
+       setChats(sortedChats);
+     } catch (error) {
+       console.error("Failed to load chats:", error);
+       setChats([]);
+     } finally {
+       setChatLoading(false);
+     }
+   };
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const handleSidebarConnect = async (userId) => {
+    try {
+      console.log("Connected with user:", userId);
+    } catch (error) {
+      console.error("Failed to connect:", error);
+    }
+  };
   const chatUsers = [
     { id: 1, name: "Parth", avatar: "../src/Assets/parth.png" },
     { id: 2, name: "Profile", avatar: "../src/Assets/profile.png" },
@@ -66,9 +111,10 @@ const Feed = () => {
     }
   };
 
-    return (
+  return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <div className="sticky top-0 z-10">
+      {/* Increased z-index for navbar and added shadow */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm">
         <Navbar />
       </div>
 
@@ -76,10 +122,10 @@ const Feed = () => {
         {/* Left Sidebar */}
         <div className="hidden mdd:flex mdd:flex-[0.7] flex-col border-r border-gray-200 p-2 min-w-[420px]">
           <div className="flex flex-1 flex-col gap-4 py-2 pr-2 mb-6 min-w-[150px]">
-            <EventsForYou/>
+            <EventsForYou />
           </div>
           <div className="flex flex-1 flex-col gap-4 py-2 pr-2 mb-6 min-w-[150px] overflow-auto scrollbar-hide">
-           <UpcomingEvents/>
+            <UpcomingEvents />
           </div>
         </div>
 
@@ -87,61 +133,42 @@ const Feed = () => {
         <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
           <PostInput onPostCreate={handleCreatePost} className="mb-6" />
           {loading ? (
-            <div>Loading...</div>
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            </div>
           ) : (
             <Posts key={posts._id} posts={posts} />
           )}
         </div>
 
-        {/* Right Sidebar */}
         <div className="hidden mdd:flex mdd:flex-[0.8] flex-col pl-4">
           <div className="flex flex-col h-full">
-            <div className="flex flex-col gap-4 py-2 pl-10 mb-6 min-w-[150px] h-[50%] overflow-y-auto scrollbar-hide sticky top-[8px]">
-              <StoryCard />
-              <StoryCard />
-              <StoryCard />
-              <StoryCard />
+            <div className="sticky top-[20px] z-40">
+              {" "}
+              <SidebarRecommendations onConnect={handleSidebarConnect} />
             </div>
-            <div className="flex flex-col gap-6 items-end min-w-[120px] max-h-[50%] overflow-y-auto scrollbar-hide pt-6 pr-10">
-              <div className="flex flex-col gap-6 min-w-[80px]">
-                {chatUsers.map((user) => (
-                  <button
-                    key={user.id}
-                    post_id={user.id}
-                    className="min-w-[50px]"
-                    onClick={() => handleChatClick(user)}
-                  >
-                    <img
-                      className="w-[50px] h-[50px] min-w-[50px] max-w-[60px] 
-                      rounded-full transform transition-transform 
-                      duration-200 ease-in-out hover:scale-110 
-                      hover:shadow-2xl"
-                      src={user.avatar}
-                      alt={`${user.name}'s avatar`}
-                    />
-                  </button>
-                ))}
+
+            {/* Chat Bubbles Section */}
+            <div className="flex flex-col gap-6 items-end min-w-[120px] overflow-y-auto scrollbar-hide pt-6 pr-10 mt-4">
+              <div className="flex flex-col gap-6 min-w-[80px] relative z-[50]">
+                {chatLoading ? (
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  </div>
+                ) : chats.length > 0 ? (
+                  chats.map((chat) => <ChatBubble key={chat._id} chat={chat} />)
+                ) : (
+                  <div className="text-center text-gray-500 text-sm">
+                    No recent chats
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Chat Interfaces */}
-        <div className="hidden mdd:block">
-          {chatUsers.map((user) => (
-            <ChatInterface
-              key={user.id}
-              isOpen={activeChatState.activeUserId === user.id}
-              onClose={handleChatClose}
-              recipient={user}
-              chatState={activeChatState.chatStates[user.id]}
-            />
-          ))}
         </div>
       </div>
     </div>
   );
 };
- 
 
 export default Feed;

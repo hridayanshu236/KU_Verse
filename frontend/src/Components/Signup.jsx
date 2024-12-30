@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { fetchDepartments } from "../utils/profileInfo";
+import FileUpload from "./FileUpload";
 
 const Signup = () => {
-  const [isHovered, setIsHovered] = useState(false); // Track hover state
-
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [passwordError, setPasswordError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     userName: "",
     fullName: "",
     phoneNumber: "",
@@ -15,198 +21,247 @@ const Signup = () => {
     address: "",
     department: "",
   });
-
   const [file, setFile] = useState();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const data = await fetchDepartments();
+        setDepartments(data.departments);
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+    loadDepartments();
+  }, []);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-  const changeFileHandler = (e) => {
-    setFile(e.target.files[0]);
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordError(
+        value !==
+          (name === "password" ? formData.confirmPassword : formData.password)
+          ? "Passwords do not match"
+          : ""
+      );
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
 
     const submitFormData = new FormData();
-    Object.keys(formData).forEach((key) => {
-      submitFormData.append(key, formData[key]);
+    const { confirmPassword, ...dataToSubmit } = formData;
+    Object.entries(dataToSubmit).forEach(([key, value]) => {
+      submitFormData.append(key, value);
     });
-    if (file) {
-      submitFormData.append("file", file);
-    }
+    if (file) submitFormData.append("file", file);
+
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         submitFormData
       );
-      console.log(response.data);
+      localStorage.setItem("userEmail", formData.email);
+      if (response.data.user._id)
+        localStorage.setItem("userId", response.data.user._id);
       navigate("/otp-verification");
     } catch (error) {
-      if (error.response) {
-        console.error("Error response status:", error.response.status);
-        console.error("Error response data:", error.response.data);
-      } else {
-        console.error("Error message:", error.message);
-      }
+      console.error("Error:", error);
     }
   };
 
-  const buttonStyle = {
+  const inputStyle = {
     padding: "10px",
-    background: isHovered ? "#6A1B9A" : "#E1BEE7", // Dark purple on hover, light purple otherwise
-    color: "#fff",
-    border: "none",
     borderRadius: "5px",
+    border: "1px solid #ddd",
+    fontSize: "14px",
+    width: "100%",
+    marginBottom: "15px",
+  };
+
+  const columnContainerStyle = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "15px",
+  };
+
+  const passwordContainerStyle = {
+    position: "relative",
+    width: "100%",
+  };
+
+  const togglePasswordStyle = {
+    position: "absolute",
+    right: "10px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    border: "none",
+    background: "none",
     cursor: "pointer",
-    fontWeight: "bold",
-    fontSize: "16px",
-    transition: "background-color 0.3s ease", // Smooth transition for hover effect
-    transform: isHovered ? "scale(1.05)" : "scale(1)",
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "15px",
-        textAlign: "center",
-      }}
-    >
-      <input
-        type="email"
-        name="email"
-        placeholder="Enter your email"
-        value={formData.email}
-        onChange={handleChange}
-        required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Enter your password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
-      />
+    <form onSubmit={handleSubmit} style={columnContainerStyle}>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email address"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          style={inputStyle}
+        />
+      </div>
+
+      <div style={passwordContainerStyle}>
+        <input
+          type={showPassword ? "text" : "password"}
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          style={inputStyle}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          style={togglePasswordStyle}
+        >
+          {showPassword ? "🙈" : "👁️"}
+        </button>
+      </div>
+
+      <div style={passwordContainerStyle}>
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          name="confirmPassword"
+          placeholder="Confirm password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+          style={inputStyle}
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          style={togglePasswordStyle}
+        >
+          {showConfirmPassword ? "🙈" : "👁️"}
+        </button>
+      </div>
+
+      {passwordError && (
+        <div
+          style={{
+            gridColumn: "1 / -1",
+            color: "red",
+            fontSize: "12px",
+            marginTop: "-10px",
+            marginBottom: "15px",
+          }}
+        >
+          {passwordError}
+        </div>
+      )}
+
       <input
         type="text"
         name="userName"
-        placeholder="Enter your username"
+        placeholder="Username"
         value={formData.userName}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        style={inputStyle}
       />
+
       <input
         type="text"
         name="fullName"
-        placeholder="Enter your full name"
+        placeholder="Full name"
         value={formData.fullName}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        style={inputStyle}
       />
+
       <input
         type="tel"
         name="phoneNumber"
-        placeholder="Enter your phone number"
+        placeholder="Phone number"
         value={formData.phoneNumber}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        style={inputStyle}
       />
+
       <input
         type="date"
         name="dateofBirth"
-        placeholder="YYYY-MM-DD"
         value={formData.dateofBirth}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        style={inputStyle}
       />
+
       <input
         type="text"
         name="address"
-        placeholder="Enter your address"
+        placeholder="Address"
         value={formData.address}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
+        style={inputStyle}
       />
-      <input
-        type="text"
+
+      <select
         name="department"
-        placeholder="Enter your department"
         value={formData.department}
         onChange={handleChange}
         required
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
-      />
-      <input
-        accept="image/*"
-        type="file"
-        id="picture"
-        onChange={changeFileHandler}
-        style={{
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-          fontSize: "14px",
-        }}
-      />
+        style={inputStyle}
+      >
+        <option value="">Select Department</option>
+        {departments.map((dept) => (
+          <option key={dept._id} value={dept._id}>
+            {dept.name}
+          </option>
+        ))}
+      </select>
+
+      <div style={{ gridColumn: "1 / -1" }}>
+        <FileUpload onChange={(e) => setFile(e.target.files[0])} />
+      </div>
+
       <button
         type="submit"
-        style={buttonStyle}
-        onMouseEnter={() => setIsHovered(true)} // Set hover state to true
-        onMouseLeave={() => setIsHovered(false)} // Reset hover state
+        style={{
+          gridColumn: "1 / -1",
+          padding: "12px",
+          background: isHovered ? "#6A1B9A" : "#E1BEE7",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          fontSize: "16px",
+          transition: "all 0.3s ease",
+          transform: isHovered ? "scale(1.02)" : "scale(1)",
+          marginTop: "15px",
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        Signup
+        Sign Up
       </button>
     </form>
   );
