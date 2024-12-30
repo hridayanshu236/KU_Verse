@@ -136,7 +136,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   await user.save();
   await sendPasswordResetEmail(
     user.email,
-    `${process.env.CLIENT_URL}/reset-password/${resetPasswordToken}`
+    `http://localhost:5173/reset-password/${resetPasswordToken}`
   );
 
   res.status(200).json({ message: "Password reset email sent succesfully." });
