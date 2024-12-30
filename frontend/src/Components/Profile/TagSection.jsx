@@ -18,13 +18,13 @@ const TagSection = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-blue-600" />
+          <Icon className="w-5 h-5 text-purple-600" />
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
         </div>
         {isCurrentUser && !isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200"
+            className="flex items-center gap-1 text-sm text-purple-800 hover:text-purple-600 transition-colors duration-200"
           >
             <Plus className="w-4 h-4" />
             <span>Add {title.toLowerCase()}</span>
@@ -60,7 +60,7 @@ const TagSection = ({
             {items.map((item, index) => (
               <div
                 key={index}
-                className="group flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm transition-all duration-200 hover:bg-blue-100"
+                className="group flex items-center gap-2 px-3 py-1.5 cursor-pointer bg-blue-50 text-purple-800 rounded-lg text-sm transition-all duration-200 hover:bg-purple-100"
               >
                 <span>{item}</span>
                 {isCurrentUser && (
@@ -68,7 +68,7 @@ const TagSection = ({
                     onClick={() => onRemove(index)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   >
-                    <X className="w-3.5 h-3.5 text-blue-600 hover:text-blue-800" />
+                    <X className="w-3.5 h-3.5 text-purple-600 hover:text-purple-700" />
                   </button>
                 )}
               </div>

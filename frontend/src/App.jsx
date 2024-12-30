@@ -15,6 +15,9 @@ import SignupPage from "./pages/SignUpPage";
 import LandingPage from "./pages/LandingPage";
 import SavedPosts from "./Components/SavedPosts"; // Correct import
 
+import Events from "./pages/Event";
+import EventDetails from "./pages/EventDetail";
+// import OtpVerificationPage from "./pages/OtpVerificationPage";
 function App() {
   return (
     <>
@@ -23,6 +26,12 @@ function App() {
           <Route element={<Feed />} path="/feed" />
           <Route element={<Chats />} path="/chats" />
           <Route element={<Chats />} path="/chats/:chatId" />
+          <Route element={<Events />} path="/events" />
+          <Route element={<EventDetails />} path="/events/:eventId" />
+          <Route
+            path="/posts"
+            element={<Posts textOnly={false} captionPresent={true} />}
+          />
           <Route element={<Posts />} path="/posts" />
           <Route element={<Profile />} path="/profile" />
           <Route element={<Profile />} path="/profile/:id" />
