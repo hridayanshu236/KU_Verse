@@ -50,6 +50,77 @@ const createEvent = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Event Created Successfully", event });
 });
 
+const getEventsForYou = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const currentUser = await User.findById(currentUserId);
+  const currentDate = new Date();
+
+  // Get all upcoming events
+  const events = await Event.find({ date: { $gte: currentDate } })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
+    .sort({ createdAt: -1 });
+
+  if (!events.length) {
+    return res.status(200).json({ events: [] });
+  }
+
+  
+  const scoredEvents = events.map((event) => {
+    const eventObj = event.toObject();
+    let relevanceScore = 0;
+
+    
+    if (
+      event.eventType === "department" &&
+      event.organizer === currentUser.department
+    ) {
+      relevanceScore += 100;
+    }
+
+   
+    if (
+      event.eventType === "club" &&
+      currentUser.clubs.includes(event.organizer)
+    ) {
+      relevanceScore += 75;
+    }
+
+    
+    const friendsAttending = event.attendance.filter((attendee) =>
+      currentUser.friends.includes(attendee._id)
+    );
+    relevanceScore += Math.min(friendsAttending.length * 10, 50);
+
+   
+    relevanceScore += Math.min(event.attendance.length * 2, 25);
+
+    
+    const daysUntilEvent = Math.floor(
+      (new Date(event.date) - currentDate) / (1000 * 60 * 60 * 24)
+    );
+    if (daysUntilEvent <= 7) {
+      relevanceScore += 50;
+    } else if (daysUntilEvent <= 30) {
+      relevanceScore += 25;
+    }
+
+    return {
+      ...eventObj,
+      attendees: friendsAttending,
+      totalAttendees: event.attendance.length,
+      friendsCount: friendsAttending.length,
+      isCreator: event.createdBy._id.toString() === currentUserId.toString(),
+      relevanceScore,
+    };
+  });
+
+ 
+  scoredEvents.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+  res.json({ events: scoredEvents });
+});
+
 const registerEvent = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const currentUser = await User.findById(userId);
@@ -96,8 +167,9 @@ const registerEvent = asyncHandler(async (req, res) => {
 const getAllEvents = asyncHandler(async (req, res) => {
   const currentUserId = req.user._id;
   const currentUser = await User.findById(currentUserId).select("friends");
+  const currentDate = new Date();
 
-  const events = await Event.find()
+  const events = await Event.find({ date: { $gte: currentDate } })
     .populate("createdBy", "fullName userName profilePicture department")
     .populate("attendance", "fullName userName profilePicture")
     .sort({ createdAt: -1 });
@@ -155,6 +227,7 @@ const getMyEvents = asyncHandler(async (req, res) => {
       attendees: eventObj.attendance,
       totalAttendees: eventObj.attendance.length,
       isCreator: true,
+      isPastEvent: new Date(event.date) < new Date(),
     };
   });
 
@@ -166,6 +239,7 @@ const getRegisteredEvents = asyncHandler(async (req, res) => {
   const currentUser = await User.findById(userId).select(
     "friends registeredEvents"
   );
+  const currentDate = new Date();
 
   if (!currentUser) {
     res.status(404);
@@ -174,6 +248,7 @@ const getRegisteredEvents = asyncHandler(async (req, res) => {
 
   const events = await Event.find({
     _id: { $in: currentUser.registeredEvents },
+    date: { $gte: currentDate },
   })
     .populate("createdBy", "fullName userName profilePicture department")
     .populate("attendance", "fullName userName profilePicture")
@@ -277,21 +352,25 @@ const getEventById = asyncHandler(async (req, res) => {
   const isCreator =
     eventObj.createdBy._id.toString() === currentUserId.toString();
 
-  const transformedEvent = {
-    ...eventObj,
-    attendees: isCreator
-      ? eventObj.attendance
-      : eventObj.attendance.filter((attendee) =>
-          currentUser.friends.includes(attendee._id)
-        ),
-    totalAttendees: eventObj.attendance.length,
-    friendsCount: !isCreator
-      ? eventObj.attendance.filter((attendee) =>
-          currentUser.friends.includes(attendee._id)
-        ).length
-      : undefined,
-    isCreator,
-  };
+ const transformedEvent = {
+   ...eventObj,
+   attendees: isCreator
+     ? eventObj.attendance
+     : eventObj.attendance.filter((attendee) =>
+         currentUser.friends.includes(attendee._id)
+       ),
+   totalAttendees: eventObj.attendance.length,
+   friendsCount: !isCreator
+     ? eventObj.attendance.filter((attendee) =>
+         currentUser.friends.includes(attendee._id)
+       ).length
+     : undefined,
+   isCreator,
+   isRegistered: eventObj.attendance.some(
+     (attendee) => attendee._id.toString() === currentUserId.toString()
+   ),
+   currentUserId: currentUserId, 
+ };
 
   res.status(200).json({ event: transformedEvent });
 });
@@ -304,4 +383,5 @@ module.exports = {
   getEventById,
   getMyEvents,
   getRegisteredEvents,
+  getEventsForYou
 };

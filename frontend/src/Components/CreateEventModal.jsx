@@ -57,7 +57,7 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      // Reset organizer when event type changes
+      
       ...(name === "eventType" && { organizer: "" }),
     }));
   };
@@ -65,10 +65,10 @@ const CreateEventModal = ({ isOpen, onClose, onEventCreated }) => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size (5MB limit)
+      
       if (file.size > 5 * 1024 * 1024) {
         setError("File size should be less than 5MB");
-        e.target.value = null; // Reset file input
+        e.target.value = null; 
         return;
       }
       setFormData((prev) => ({

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Tab } from "@headlessui/react";
 import { format, isValid } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -22,18 +23,27 @@ import {
   getMyEvents,
   registerForEvent,
   getRegisteredEvents,
+  getEventsForYou,
 } from "../utils/eventServices";
 import { useUser } from "../contexts/userContext";
 
 const Events = () => {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [error, setError] = useState("");
   const { user } = useUser();
-
-  const tabs = ["All Events", "My Events", "Registered Events"];
+  const handleEventClick = (eventId) => {
+    navigate(`/events/${eventId}`);
+  };
+  const tabs = [
+    "Events For You",
+    "All Events",
+    "My Events",
+    "Registered Events",
+  ];
 
   useEffect(() => {
     loadEvents();
@@ -45,13 +55,16 @@ const Events = () => {
     try {
       let eventsData;
       switch (activeTab) {
-        case 0:
+        case 0: // Events For You
+          eventsData = await getEventsForYou();
+          break;
+        case 1: // All Events
           eventsData = await getAllEvents();
           break;
-        case 1:
+        case 2:
           eventsData = await getMyEvents();
           break;
-        case 2:
+        case 3:
           eventsData = await getRegisteredEvents();
           break;
         default:
@@ -136,7 +149,8 @@ const Events = () => {
       (attendee) => attendee._id === user?._id
     );
 
-    const handleAttendance = async (eventId) => {
+    const handleAttendance = async (e, eventId) => {
+      e.stopPropagation(); // Prevent event bubbling to parent click handler
       if (isRegistering) return;
       setIsRegistering(true);
       try {
@@ -173,7 +187,10 @@ const Events = () => {
     };
 
     return (
-      <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02] duration-300">
+      <div
+        onClick={() => handleEventClick(event._id)}
+        className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-[1.02] duration-300 cursor-pointer"
+      >
         {event.photo && (
           <div className="h-40 overflow-hidden">
             <img
@@ -231,9 +248,13 @@ const Events = () => {
 
           {renderAttendees()}
 
+          {/* Prevent event propagation for buttons */}
           {!isCreator && (
             <button
-              onClick={() => handleAttendance(event._id)}
+              onClick={(e) => {
+                e.stopPropagation(); // Stop click event from bubbling up
+                handleAttendance(e, event._id);
+              }}
               disabled={isRegistering}
               className={`flex items-center justify-center w-full py-2 px-4 rounded-lg transition-colors duration-200 ${
                 isRegistered
@@ -260,7 +281,10 @@ const Events = () => {
           )}
 
           {isCreator && (
-            <div className="flex items-center justify-center w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg">
+            <div
+              onClick={(e) => e.stopPropagation()} // Stop propagation for creator badge
+              className="flex items-center justify-center w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg"
+            >
               <FontAwesomeIcon icon={faUser} className="w-4 h-4 mr-2" />
               Your Event
             </div>
@@ -330,9 +354,11 @@ const Events = () => {
                       icon={faCalendar}
                       className="w-16 h-16 mx-auto mb-4 text-gray-400"
                     />
-                    <h3 className="text-lg font-medium mb-2">No events found</h3>
+                    <h3 className="text-lg font-medium mb-2">
+                      No events found
+                    </h3>
                     <p>There are no events to display at this time.</p>
-                    </div>
+                  </div>
                 )}
               </Tab.Panel>
             ))}

@@ -7,6 +7,8 @@ import AchievementCard from "../Components/AchievementCard";
 import EventCard from "../Components/EventCard";
 import ChatInterface from "../Components/ChatInterface";
 import { fetchPosts, createPost } from "../utils/postServices";
+import EventsForYou from "../components/EventsForYou";
+import UpcomingEvents from "../components/UpcomingEvent";
 
 const Feed = () => {
   const [activeChatState, setActiveChatState] = useState({
@@ -74,27 +76,10 @@ const Feed = () => {
         {/* Left Sidebar */}
         <div className="hidden mdd:flex mdd:flex-[0.7] flex-col border-r border-gray-200 p-2 min-w-[420px]">
           <div className="flex flex-1 flex-col gap-4 py-2 pr-2 mb-6 min-w-[150px]">
-            <AchievementCard />
-            <AchievementCard />
-            <AchievementCard />
+            <EventsForYou/>
           </div>
           <div className="flex flex-1 flex-col gap-4 py-2 pr-2 mb-6 min-w-[150px] overflow-auto scrollbar-hide">
-            <EventCard
-              title="AI Research Symposium 2024"
-              department="Department of Mathematics"
-              faculty="Faculty of Science"
-              date="2024-12-19"
-              location="Main Auditorium"
-              description="Join us for our flagship annual symposium featuring cutting-edge research presentations."
-            />
-            <EventCard
-              title="Kadel - 'Ma ta Ready ho' "
-              department="Department of Haawagiri"
-              faculty="Faculty of Guffadi"
-              date="2024-12-19"
-              location="Any place"
-              description="Join us for Joshheko Kadel."
-            />
+           <UpcomingEvents/>
           </div>
         </div>
 
