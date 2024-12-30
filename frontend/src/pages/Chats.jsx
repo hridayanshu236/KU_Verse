@@ -26,8 +26,7 @@ import { io } from "socket.io-client";
 import LoadingSpinner from "../components/Common/LoadingSpinner";
 
 const SIDEBAR_ITEMS = [
-  { icon: faMessage, label: "Messages" },
-  { icon: faFileArchive, label: "Archive" },
+  { icon: faMessage, label: "Messages" }
 ];
 
 const Chats = () => {
@@ -280,7 +279,7 @@ const Chats = () => {
     <div className="flex flex-col h-screen relative">
       {" "}
       {/* Added relative positioning */}
-      <Navbar className="z-50" /> {/* Ensure Navbar has a high z-index */}
+      <Navbar className="z-50" /> 
       <div className="flex flex-grow overflow-hidden">
         <aside className="hidden mdd:flex flex-col justify-between border text-[rgb(103,80,164)] text-center">
           <div className="p-3">

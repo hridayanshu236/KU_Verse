@@ -374,6 +374,60 @@ const getEventById = asyncHandler(async (req, res) => {
 
   res.status(200).json({ event: transformedEvent });
 });
+// In your eventController.js
+const searchEvents = asyncHandler(async (req, res) => {
+  try {
+    const searchQuery = req.query.search;
+    
+    if (!searchQuery) {
+      return res.status(200).json({ events: [] });
+    }
+
+    const events = await Event.find({
+      $or: [
+        { eventName: { $regex: searchQuery, $options: "i" } },
+        { description: { $regex: searchQuery, $options: "i" } },
+        { eventType: { $regex: searchQuery, $options: "i" } },
+        { organizer: { $regex: searchQuery, $options: "i" } }
+      ]
+    })
+    .populate("createdBy", "fullName userName profilePicture department")
+    .populate("attendance", "fullName userName profilePicture")
+    .sort({ date: 1 })
+    .limit(10);
+
+    const currentUserId = req.user._id;
+    const currentUser = await User.findById(currentUserId).select("friends");
+
+    const transformedEvents = events.map(event => {
+      const eventObj = event.toObject();
+      const isCreator = eventObj.createdBy._id.toString() === currentUserId.toString();
+
+      return {
+        ...eventObj,
+        attendees: isCreator ? eventObj.attendance : 
+          eventObj.attendance.filter(attendee => 
+            currentUser.friends.includes(attendee._id)
+          ),
+        totalAttendees: eventObj.attendance.length,
+        friendsCount: !isCreator ? 
+          eventObj.attendance.filter(attendee => 
+            currentUser.friends.includes(attendee._id)
+          ).length : 
+          undefined,
+        isCreator,
+        isRegistered: eventObj.attendance.some(
+          attendee => attendee._id.toString() === currentUserId.toString()
+        )
+      };
+    });
+
+    res.status(200).json({ events: transformedEvents });
+  } catch (error) {
+    console.error("Search events error:", error);
+    res.status(500).json({ message: "Error searching events", error: error.message });
+  }
+});
 
 module.exports = {
   createEvent,
@@ -383,5 +437,6 @@ module.exports = {
   getEventById,
   getMyEvents,
   getRegisteredEvents,
-  getEventsForYou
+  getEventsForYou,
+  searchEvents
 };
