@@ -1,112 +1,192 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const OtpVerification = () => {
-  const [otp, setOtp] = useState(""); // Stores the OTP entered by the user
-  const [success, setSuccess] = useState(""); // Stores success messages
-  const [error, setError] = useState(""); // Stores error messages
-  const [buttonHovered, setButtonHovered] = useState(false); // Button hover state
+  const [otp, setOtp] = useState("");
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const storedEmail = localStorage.getItem("userEmail");
+      const authToken = localStorage.getItem("authToken");
+
+      if (!storedEmail) {
+        setError("Session expired. Please register again.");
+        setTimeout(() => navigate("/signup"), 2000);
+        return false;
+      }
+
+      setEmail(storedEmail);
+      return true;
+    };
+
+    checkAuthStatus();
+  }, [navigate]);
+
+  const api = axios.create({
+    baseURL: "http://localhost:5000",
+    withCredentials: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  api.interceptors.request.use(
+    (config) => {
+      const authToken = localStorage.getItem("authToken");
+      if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Add response interceptor
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Handle unauthorized
+        localStorage.removeItem("authToken");
+        navigate("/login");
+      }
+      return Promise.reject(error);
+    }
+  );
+
   const verifyOtp = async () => {
-    if (!otp) {
-      setError("Please enter the OTP");
-      setSuccess("");
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
       return;
     }
 
     try {
-      const response = await axios.post(
-        "/api/auth/verifyemail",
-        { code: otp },
-        {
-          headers: {
-            "Content-Type": "application/json"},
-        }
-      );
-
+      setLoading(true);
+      const response = await api.post("/api/auth/verifyemail", {
+        email,
+        code: otp,
+      });
       if (response.data.success) {
-        setSuccess("OTP verified successfully. Redirecting to login...");
-        setError("");
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setSuccess("Email verified successfully!");
+        localStorage.removeItem("userEmail");
+        setTimeout(() => navigate("/login"), 2000);
+      } else {
+        setError("Verification failed. Please try again.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to verify OTP");
-      setSuccess("");
+      console.error("Verification error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Verification failed.");
+      setOtp(""); // Clear invalid OTP
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      await api.post("/api/auth/resend-otp", { email });
+
+      setSuccess("New OTP has been sent to your email");
+    } catch (err) {
+      setError("Failed to resend OTP. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        verifyOtp();
-      }}
-      style={{
-        maxWidth: "400px",
-        margin: "50px auto",
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "15px",
-        borderRadius: "8px",
-        backgroundColor: "#fff",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#333", textAlign: "center" }}>
-        OTP Verification
-      </h2>
-      <p style={{ fontSize: "14px", color: "#555", textAlign: "center" }}>
-        Please enter the OTP sent to your email to verify your account.
-      </p>
-      {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
-      {success && <p style={{ color: "green", fontSize: "14px" }}>{success}</p>}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <label htmlFor="otp" style={{ marginBottom: "5px", fontWeight: "600", fontSize: "14px" }}>
-          Enter OTP
-        </label>
-        <input
-          type="text"
-          id="otp"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter your OTP"
-          style={{
-            padding: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ddd",
-            fontSize: "14px",
-            width: "100%",
-            marginBottom: "15px",
-          }}
-        />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Email Verification
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Please enter the 6-digit OTP sent to
+            <br />
+            <span className="font-medium">{email}</span>
+          </p>
+        </div>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+            {success}
+          </div>
+        )}
+
+        <div className="mt-8 space-y-6">
+          <div>
+            <label
+              htmlFor="otp"
+              className="block text-sm font-medium text-gray-700"
+            >
+              OTP Code
+            </label>
+            <input
+              id="otp"
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              placeholder="Enter 6-digit OTP"
+              maxLength={6}
+              disabled={loading}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+            />
+          </div>
+
+          <div className="flex flex-col space-y-4">
+            <button
+              onClick={verifyOtp}
+              disabled={loading}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                ${
+                  loading
+                    ? "bg-purple-400"
+                    : "bg-purple-600 hover:bg-purple-700"
+                } 
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+            >
+              {loading ? "Verifying..." : "Verify Email"}
+            </button>
+
+            <div className="flex justify-between items-center">
+              <button
+                onClick={resendOtp}
+                disabled={loading}
+                className="text-sm text-purple-600 hover:text-purple-500"
+              >
+                Resend OTP
+              </button>
+
+              <button
+                onClick={() => navigate("/signup")}
+                disabled={loading}
+                className="text-sm text-purple-600 hover:text-purple-500"
+              >
+                Back to Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <button
-        style={{
-          backgroundColor: "#D0A9F5", // Lavender button color
-          color: "#fff", // White text color
-          padding: "12px 20px",
-          border: "none",
-          borderRadius: "6px",
-          fontSize: "16px",
-          fontWeight: "600",
-          cursor: "pointer",
-          transition: "background-color 0.3s ease, transform 0.2s ease",
-          ...(buttonHovered ? { backgroundColor: "#B80BF1", transform: "scale(1.02)" } : {}),
-        }}
-        onMouseEnter={() => setButtonHovered(true)}
-        onMouseLeave={() => setButtonHovered(false)}
-        type="submit"
-      >
-        Verify OTP
-      </button>
-    </form>
+    </div>
   );
 };
 

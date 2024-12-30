@@ -86,8 +86,14 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  const { code } = req.body;
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({
+      message: "All fields are mandatory",
+    });
+  }
   const user = await User.findOne({
+    email,
     verificationToken: code,
     verificationTokenExpiresAt: { $gt: Date.now() },
   });

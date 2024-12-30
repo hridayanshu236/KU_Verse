@@ -41,7 +41,14 @@ const Signup = () => {
         "http://localhost:5000/api/auth/register",
         submitFormData
       );
-      console.log(response.data);
+
+      // Store both email and token
+      localStorage.setItem("userEmail", formData.email);
+      if (response.data.user._id) {
+        localStorage.setItem("userId", response.data.user._id);
+      }
+
+      // Get token from cookies (since your backend uses httpOnly cookies)
       navigate("/otp-verification");
     } catch (error) {
       if (error.response) {
@@ -52,7 +59,6 @@ const Signup = () => {
       }
     }
   };
-
   const buttonStyle = {
     padding: "10px",
     background: isHovered ? "#6A1B9A" : "#E1BEE7", // Dark purple on hover, light purple otherwise
@@ -203,8 +209,8 @@ const Signup = () => {
       <button
         type="submit"
         style={buttonStyle}
-        onMouseEnter={() => setIsHovered(true)} // Set hover state to true
-        onMouseLeave={() => setIsHovered(false)} // Reset hover state
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         Signup
       </button>
