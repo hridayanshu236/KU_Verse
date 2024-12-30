@@ -78,17 +78,23 @@ const userSchema = mongoose.Schema({
       ref: "Comment",
     },
   ],
-  events:[
+  events: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
-    }
+    },
   ],
-  isVerified:{
-    type:Boolean,
-    default:false
+  registeredEvents: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+    },
+  ],
+  isVerified: {
+    type: Boolean,
+    default: false,
   },
-  verificationToken:String,
+  verificationToken: String,
   verificationTokenExpiresAt: Date,
 });
 

@@ -39,6 +39,6 @@ const eventSchema = mongoose.Schema({
   photo: {
     type:String,
   },
-});
+},{timestamps:true});
 
 module.exports = mongoose.model("Event", eventSchema);
