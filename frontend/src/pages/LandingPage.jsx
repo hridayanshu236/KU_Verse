@@ -14,6 +14,7 @@ import sachinImage from "../Assets/sachin.png";
 import parthImage from "../Assets/parth.png";
 import BhishmaImage from "../Assets/bhisma.png";
 import Harimage from "../Assets/profile.png";
+import Footerlanding from "../Components/Footerlanding";
 const LandingPage = () => {
   const teamMembers = [
     {
@@ -80,7 +81,7 @@ const LandingPage = () => {
             <Tilt
               key={index}
               className="overflow-hidden rounded-lg"
-              perspective={1000}
+              perspective={1300}
               glareEnable={true}
               glareMaxOpacity={0.45}
               scale={1.05}
@@ -131,6 +132,7 @@ const LandingPage = () => {
           ))}
         </div>
       </section>
+      <Footerlanding />
     </>
   );
 };

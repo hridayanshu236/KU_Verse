@@ -101,7 +101,6 @@ export const upvotePost = async (postId) => {
   }
 };
 
-// Downvote Post
 export const downvotePost = async (postId) => {
   try {
     const response = await axios.post(
@@ -117,7 +116,6 @@ export const downvotePost = async (postId) => {
     throw new Error("Failed to downvote. Try again.");
   }
 };
-
 // Comment on Post
 export const commentOnPost = async (postId, commentText) => {
   try {

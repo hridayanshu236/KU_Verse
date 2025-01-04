@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaSignInAlt,
   FaUserPlus,
-  FaInfoCircle,
+  FaHome,
   FaBars,
   FaTimes,
 } from "react-icons/fa";
@@ -25,6 +25,13 @@ const NavbarLanding = () => {
         </div>
         <div className="hidden mdd:flex space-x-6 items-center">
           <Link
+            to="/"
+            className="flex items-center hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
+          >
+            <FaHome className="mr-2" />
+            Home
+          </Link>
+          <Link
             to="/login"
             className="flex items-center hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
           >
@@ -37,13 +44,6 @@ const NavbarLanding = () => {
           >
             <FaUserPlus className="mr-2" />
             Signup
-          </Link>
-          <Link
-            to="/about"
-            className="flex items-center hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
-          >
-            <FaInfoCircle className="mr-2" />
-            About Us
           </Link>
         </div>
         <div className="mdd:hidden flex items-center">
@@ -61,7 +61,7 @@ const NavbarLanding = () => {
           <div className="px-4 py-2">
             <Link
               to="/login"
-              className="flex items-center py-2 hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
+              className="flex items-center  hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
               onClick={toggleMenu}
             >
               <FaSignInAlt className="mr-2" />
@@ -69,7 +69,7 @@ const NavbarLanding = () => {
             </Link>
             <Link
               to="/signup"
-              className="flex items-center py-2 hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
+              className="flex items-center  hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
               onClick={toggleMenu}
             >
               <FaUserPlus className="mr-2" />
@@ -77,7 +77,7 @@ const NavbarLanding = () => {
             </Link>
             <Link
               to="/about"
-              className="flex items-center py-2 hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
+              className="flex items-center  hover:text-purple-800 transition-colors font-semibold rounded-md px-3 py-2"
               onClick={toggleMenu}
             >
               <FaInfoCircle className="mr-2" />

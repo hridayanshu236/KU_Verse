@@ -76,13 +76,12 @@ const getPostsById = asyncHandler(async (req, res) => {
 
   const posts = await Post.find({ user: friendId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ time: -1 }); 
+    .sort({ time: -1 });
 
   console.log(
     `[GetPostsById] Retrieved ${posts.length} posts for user ID: ${friendId}`
   );
 
-  
   if (posts.length > 0) {
     console.log("[Sample Post Time]:", {
       userName: posts[0].user.userName,
@@ -98,13 +97,12 @@ const getPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const posts = await Post.find({ user: userId })
     .populate("user", "fullName userName profilePicture department")
-    .sort({ time: -1 }); 
+    .sort({ time: -1 });
 
   console.log(
     `[GetPost] Retrieved ${posts.length} posts for current user: ${req.user.userName}`
   );
 
-  
   if (posts.length > 0) {
     console.log("[Sample Post Time]:", {
       userName: posts[0].user.userName,
@@ -214,7 +212,6 @@ const getFeedPosts = asyncHandler(async (req, res) => {
       },
       {
         $addFields: {
-          
           score: {
             $add: [
               "$timeScore",
@@ -324,24 +321,26 @@ const upVote = asyncHandler(async (req, res) => {
     throw new Error("No post found");
   }
 
-  if (post.upvotes.includes(req.user._id)) {
-    res.status(403);
-    throw new Error("Post already upvoted");
+  const userId = req.user._id;
+  const hasUpvoted = post.upvotes.includes(userId);
+  const hasDownvoted = post.downvotes.includes(userId);
+
+  if (hasUpvoted) {
+    post.upvotes = post.upvotes.filter((id) => !id.equals(userId));
+    post.voteCount -= 1;
+  } else {
+    if (hasDownvoted) {
+      post.downvotes = post.downvotes.filter((id) => !id.equals(userId));
+      post.voteCount += 1;
+    }
+
+    post.upvotes.push(userId);
+    post.voteCount += 1;
   }
 
-  const wasDownvoted = post.downvotes.includes(req.user._id);
-
-  // Remove from downvotes if present
-  if (wasDownvoted) {
-    post.downvotes = post.downvotes.filter((id) => !id.equals(req.user._id));
-  }
-
-  post.upvotes.push(req.user._id);
-  post.voteCount += 1;
-  
   const updatedPost = await post.save();
-  console.log('Current vote count:', updatedPost.voteCount);
-  
+  console.log("Current vote count:", updatedPost.voteCount);
+
   res.status(200).json(updatedPost);
 });
 
@@ -353,24 +352,26 @@ const downVote = asyncHandler(async (req, res) => {
     throw new Error("No post found");
   }
 
-  if (post.downvotes.includes(req.user._id)) {
-    res.status(403);
-    throw new Error("Post already downvoted");
+  const userId = req.user._id;
+  const hasDownvoted = post.downvotes.includes(userId);
+  const hasUpvoted = post.upvotes.includes(userId);
+
+  if (hasDownvoted) {
+    post.downvotes = post.downvotes.filter((id) => !id.equals(userId));
+    post.voteCount += 1;
+  } else {
+    if (hasUpvoted) {
+      post.upvotes = post.upvotes.filter((id) => !id.equals(userId));
+      post.voteCount -= 1;
+    }
+
+    post.downvotes.push(userId);
+    post.voteCount -= 1;
   }
 
-  // Remove from upvotes if present
-  const wasUpvoted = post.upvotes.includes(req.user._id);
-  
-  if (wasUpvoted) {
-    post.upvotes = post.upvotes.filter(id => !id.equals(req.user._id));
-  }
-
-  post.downvotes.push(req.user._id);
-  post.voteCount -= 1;
-  
   const updatedPost = await post.save();
-  console.log('Current vote count:', updatedPost.voteCount);
-  
+  console.log("Current vote count:", updatedPost.voteCount);
+
   res.status(200).json(updatedPost);
 });
 
