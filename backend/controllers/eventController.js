@@ -40,14 +40,130 @@ const createEvent = asyncHandler(async (req, res) => {
     organizer,
     createdBy: userID,
     photo: cloudData?.secure_url,
-    attendance: [userID], 
+    attendance: [userID],
   });
 
   currentUser.events.push(event._id);
-  currentUser.registeredEvents.push(event._id); 
+  currentUser.registeredEvents.push(event._id);
   await currentUser.save();
 
   res.status(200).json({ message: "Event Created Successfully", event });
+});
+
+const deleteEvent = asyncHandler(async (req, res) => {
+  const eventId = req.params.id;
+  const userId = req.user._id;
+  const event = await Event.findById(eventId);
+  const currentUser = await User.findById(req.user._id);
+
+  if (!event) {
+    res.status(404);
+    throw new Error("No Event found");
+  }
+
+  if (event.createdBy.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error("Unauthorized");
+  }
+
+  if (event.photo) {
+    // Extract public_id from the Cloudinary URL
+    // Assuming the photo field contains the public_id or the full URL
+    const publicId = event.photo.split("/").pop().split(".")[0];
+
+    // Delete the image from Cloudinary
+    await cloudinary.uploader.destroy(publicId);
+  }
+
+  // Remove event ID from the creator's `events` array
+  await User.findByIdAndUpdate(userId, { $pull: { events: eventId } });
+
+  // Remove event ID from the `registeredEvents` array of all attendees
+  await User.updateMany(
+    { registeredEvents: eventId },
+    { $pull: { registeredEvents: eventId } }
+  );
+
+  await Event.findByIdAndDelete(eventId);
+  await currentUser.save();
+
+  res.status(200).json({ message: "Event deleted successfully" });
+});
+
+const editEvent = asyncHandler(async (req, res) => {
+  const { eventName, description, duration, date, eventType } = req.body;
+  const userId = req.user._id;
+  const eventId = req.params.id;
+  const event = await Event.findById(eventId);
+  const currentUser = await User.findById(req.user._id);
+
+  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    res.status(400);
+    throw new Error("Invalid event ID");
+  }
+  if (!event) {
+    res.status(404);
+    throw new Error("No event found");
+  }
+
+  if (event.createdBy.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error("Unauthorized");
+  }
+
+  if (eventName) {
+    event.eventName = eventName;
+    isUpdated = true;
+  }
+  if (description) {
+    event.description = description;
+    isUpdated = true;
+  }
+  if (duration) {
+    event.duration = duration;
+    isUpdated = true;
+  }
+  if (date) {
+    event.date = new Date(date);
+    isUpdated = true;
+  }
+  if (eventType) {
+    event.eventType = eventType;
+    isUpdated = true;
+  }
+
+  const file = req.file;
+  // Handle image update
+  if (req.file) {
+    try {
+      // Delete the old image from Cloudinary if it exists
+      if (event.photo) {
+        const publicId = event.photo.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+      const fileURI = getDataURI(file);
+
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(fileURI.content);
+
+      event.photo = result.secure_url;
+    } catch (error) {
+      res.status(500);
+      throw new Error("Error uploading image: " + error.message);
+    }
+  }
+
+  if (!isUpdated) {
+    res.status(400);
+    throw new Error("No valid fields to update");
+  }
+
+  // Save the updated event
+  await event.save();
+
+  res
+  .status(200)
+  .json({ message: "Event updated succesfully", event: event });
 });
 
 const getEventsForYou = asyncHandler(async (req, res) => {
@@ -65,12 +181,10 @@ const getEventsForYou = asyncHandler(async (req, res) => {
     return res.status(200).json({ events: [] });
   }
 
-  
   const scoredEvents = events.map((event) => {
     const eventObj = event.toObject();
     let relevanceScore = 0;
 
-    
     if (
       event.eventType === "department" &&
       event.organizer === currentUser.department
@@ -78,7 +192,6 @@ const getEventsForYou = asyncHandler(async (req, res) => {
       relevanceScore += 100;
     }
 
-   
     if (
       event.eventType === "club" &&
       currentUser.clubs.includes(event.organizer)
@@ -86,16 +199,13 @@ const getEventsForYou = asyncHandler(async (req, res) => {
       relevanceScore += 75;
     }
 
-    
     const friendsAttending = event.attendance.filter((attendee) =>
       currentUser.friends.includes(attendee._id)
     );
     relevanceScore += Math.min(friendsAttending.length * 10, 50);
 
-   
     relevanceScore += Math.min(event.attendance.length * 2, 25);
 
-    
     const daysUntilEvent = Math.floor(
       (new Date(event.date) - currentDate) / (1000 * 60 * 60 * 24)
     );
@@ -115,7 +225,6 @@ const getEventsForYou = asyncHandler(async (req, res) => {
     };
   });
 
- 
   scoredEvents.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
   res.json({ events: scoredEvents });
@@ -352,25 +461,25 @@ const getEventById = asyncHandler(async (req, res) => {
   const isCreator =
     eventObj.createdBy._id.toString() === currentUserId.toString();
 
- const transformedEvent = {
-   ...eventObj,
-   attendees: isCreator
-     ? eventObj.attendance
-     : eventObj.attendance.filter((attendee) =>
-         currentUser.friends.includes(attendee._id)
-       ),
-   totalAttendees: eventObj.attendance.length,
-   friendsCount: !isCreator
-     ? eventObj.attendance.filter((attendee) =>
-         currentUser.friends.includes(attendee._id)
-       ).length
-     : undefined,
-   isCreator,
-   isRegistered: eventObj.attendance.some(
-     (attendee) => attendee._id.toString() === currentUserId.toString()
-   ),
-   currentUserId: currentUserId, 
- };
+  const transformedEvent = {
+    ...eventObj,
+    attendees: isCreator
+      ? eventObj.attendance
+      : eventObj.attendance.filter((attendee) =>
+          currentUser.friends.includes(attendee._id)
+        ),
+    totalAttendees: eventObj.attendance.length,
+    friendsCount: !isCreator
+      ? eventObj.attendance.filter((attendee) =>
+          currentUser.friends.includes(attendee._id)
+        ).length
+      : undefined,
+    isCreator,
+    isRegistered: eventObj.attendance.some(
+      (attendee) => attendee._id.toString() === currentUserId.toString()
+    ),
+    currentUserId: currentUserId,
+  };
 
   res.status(200).json({ event: transformedEvent });
 });
@@ -378,7 +487,7 @@ const getEventById = asyncHandler(async (req, res) => {
 const searchEvents = asyncHandler(async (req, res) => {
   try {
     const searchQuery = req.query.search;
-    
+
     if (!searchQuery) {
       return res.status(200).json({ events: [] });
     }
@@ -388,44 +497,48 @@ const searchEvents = asyncHandler(async (req, res) => {
         { eventName: { $regex: searchQuery, $options: "i" } },
         { description: { $regex: searchQuery, $options: "i" } },
         { eventType: { $regex: searchQuery, $options: "i" } },
-        { organizer: { $regex: searchQuery, $options: "i" } }
-      ]
+        { organizer: { $regex: searchQuery, $options: "i" } },
+      ],
     })
-    .populate("createdBy", "fullName userName profilePicture department")
-    .populate("attendance", "fullName userName profilePicture")
-    .sort({ date: 1 })
-    .limit(10);
+      .populate("createdBy", "fullName userName profilePicture department")
+      .populate("attendance", "fullName userName profilePicture")
+      .sort({ date: 1 })
+      .limit(10);
 
     const currentUserId = req.user._id;
     const currentUser = await User.findById(currentUserId).select("friends");
 
-    const transformedEvents = events.map(event => {
+    const transformedEvents = events.map((event) => {
       const eventObj = event.toObject();
-      const isCreator = eventObj.createdBy._id.toString() === currentUserId.toString();
+      const isCreator =
+        eventObj.createdBy._id.toString() === currentUserId.toString();
 
       return {
         ...eventObj,
-        attendees: isCreator ? eventObj.attendance : 
-          eventObj.attendance.filter(attendee => 
-            currentUser.friends.includes(attendee._id)
-          ),
+        attendees: isCreator
+          ? eventObj.attendance
+          : eventObj.attendance.filter((attendee) =>
+              currentUser.friends.includes(attendee._id)
+            ),
         totalAttendees: eventObj.attendance.length,
-        friendsCount: !isCreator ? 
-          eventObj.attendance.filter(attendee => 
-            currentUser.friends.includes(attendee._id)
-          ).length : 
-          undefined,
+        friendsCount: !isCreator
+          ? eventObj.attendance.filter((attendee) =>
+              currentUser.friends.includes(attendee._id)
+            ).length
+          : undefined,
         isCreator,
         isRegistered: eventObj.attendance.some(
-          attendee => attendee._id.toString() === currentUserId.toString()
-        )
+          (attendee) => attendee._id.toString() === currentUserId.toString()
+        ),
       };
     });
 
     res.status(200).json({ events: transformedEvents });
   } catch (error) {
     console.error("Search events error:", error);
-    res.status(500).json({ message: "Error searching events", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error searching events", error: error.message });
   }
 });
 
@@ -438,5 +551,7 @@ module.exports = {
   getMyEvents,
   getRegisteredEvents,
   getEventsForYou,
-  searchEvents
+  searchEvents,
+  deleteEvent,
+  editEvent
 };

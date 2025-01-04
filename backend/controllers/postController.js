@@ -464,6 +464,66 @@ const editCaption = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Caption updated successfully" });
 });
 
+const editPost = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+  const {caption} = req.body;
+  const post = await Post.findById(postId);
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    res.status(400);
+    throw new Error("Invalid post ID");
+  }
+  if (!post) {
+    res.status(404);
+    throw new Error("No post found");
+  }
+
+  // Check if the user is the owner of the post
+  if (post.user.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error("Unauthorized");
+  }
+
+  if (caption) {
+    post.caption = caption;
+  }
+
+  const file = req.file;
+  // Handle image update
+  if (req.file) {
+    try {
+      // Delete the old image from Cloudinary if it exists
+      if (post.image && post.image.public_id) {
+        await cloudinary.uploader.destroy(post.image.public_id);
+      }
+      const fileURI = getDataURI(file);
+
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(fileURI.content);
+
+      post.image = {
+        public_id: result.public_id,
+        url: result.secure_url
+      }; 
+
+    } catch (error) {
+      res.status(500);
+      throw new Error("Error uploading image: " + error.message);
+    }
+  }
+
+  if (!caption && !file) {
+    res.status(400);
+    throw new Error("No valid fields to update");
+  }
+
+  // Update the post
+  await post.save();
+
+  res
+    .status(200)
+    .json({ message: "Post updated succesfully", post: post });
+});
+
 module.exports = {
   createPost,
   deletePost,
@@ -477,4 +537,5 @@ module.exports = {
   deleteComment,
   editCaption,
   getCommentsByPostId,
+  editPost,
 };

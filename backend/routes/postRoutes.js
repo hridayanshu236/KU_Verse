@@ -13,12 +13,14 @@ const {
   deleteComment,
   editCaption,
   getCommentsByPostId,
+  editPost,
 } = require("../controllers/postController");
 const { isAuth } = require("../middleware/isAuthenticated");
 const uploadFile = require("../middleware/multer");
 
 router.route("/createpost").post(isAuth, uploadFile, createPost);
 router.route("/deletepost/:id").delete(isAuth, deletePost);
+router.route("/editpost/:id").put(isAuth,uploadFile ,editPost);
 router.route("/posts").get(isAuth, getAllPosts);
 router.route("/friendposts/:id").get(isAuth, getPostsById);
 router.route("/myposts").get(isAuth, getPost);

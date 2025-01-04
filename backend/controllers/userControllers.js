@@ -4,6 +4,7 @@ const bcrypt=require("bcrypt");
 const getDataURI = require("../utilities/generateURL");
 const cloudinary = require("../utilities/cloudinary");
 const UserRecommendationSystem = require("../utilities/UserRecommendation");
+
 const myProfile = asyncHandler(async (req,res) =>{
     const user = await User.findById(req.user._id);
 
@@ -348,6 +349,7 @@ const getMutualFriends = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {myProfile,updateProfilePicture,viewUserProfile,getAllUsers,friend,unfriend,friendList,updateProfile,updatePassword,getRecommendations,updateRecommendationWeights,getMutualConnections,getMutualFriends};
 
