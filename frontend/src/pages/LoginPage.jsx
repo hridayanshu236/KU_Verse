@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Login from "../components/Login";
+import NavbarLanding from "../components/NavbarLanding";
+import Footerlanding from "../Components/Footerlanding";
 
 const LoginPage = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -47,22 +49,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={headerStyle}>Login</h1>
-        <Login />
-        <p style={footerTextStyle}>
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            style={linkStyle}
-            onMouseEnter={() => setIsHovered(true)} // Set hover state to true on mouse enter
-            onMouseLeave={() => setIsHovered(false)} // Reset hover state on mouse leave
-          >
-            Sign up
-          </Link>
-        </p>
+    <div>
+      <NavbarLanding />
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          <h1 style={headerStyle}>Login</h1>
+          <Login />
+          <p style={footerTextStyle}>
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              style={linkStyle}
+              onMouseEnter={() => setIsHovered(true)} // Set hover state to true on mouse enter
+              onMouseLeave={() => setIsHovered(false)} // Reset hover state on mouse leave
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
+      <Footerlanding/>
     </div>
   );
 };
