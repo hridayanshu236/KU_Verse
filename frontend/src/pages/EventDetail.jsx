@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,9 +11,16 @@ import {
   faCalendarPlus,
   faArrowLeft,
   faUserGroup,
+  faEdit,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import Navbar from "../components/Navbar";
-import { getEventById, registerForEvent } from "../utils/eventServices";
+import EditEventModal from "../components/EditEventModal";
+import {
+  getEventById,
+  registerForEvent,
+  deleteEvent,
+} from "../utils/eventServices";
 import { format } from "date-fns";
 
 const EventDetails = () => {
@@ -22,55 +30,73 @@ const EventDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
-
   useEffect(() => {
-    const fetchEventDetails = async () => {
-      try {
-        setLoading(true);
-        const data = await getEventById(eventId);
-        if (!data || !data.event) {
-          throw new Error("Event data not found");
-        }
-        setEvent(data.event);
-        // Check if the user is in the attendance list
-        const isUserRegistered = data.event.attendance?.some(
-          (attendee) => attendee._id === data.event.currentUserId
-        );
-        setIsRegistered(isUserRegistered || data.event.isRegistered);
-      } catch (error) {
-        console.error("Error loading event details:", error);
-        setError(error.message || "Failed to load event details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (eventId) {
-      fetchEventDetails();
-    }
+    fetchEventDetails();
   }, [eventId]);
+
+  const fetchEventDetails = async () => {
+    try {
+      setLoading(true);
+      const data = await getEventById(eventId);
+      if (!data || !data.event) {
+        throw new Error("Event data not found");
+      }
+      setEvent(data.event);
+      setIsRegistered(
+        data.event.attendance?.some(
+          (attendee) => attendee._id === data.event.currentUserId
+        ) || data.event.isRegistered
+      );
+    } catch (error) {
+      console.error("Error loading event details:", error);
+      setError(error.message || "Failed to load event details");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAttendance = async () => {
     if (isRegistering) return;
     try {
       setIsRegistering(true);
       await registerForEvent(eventId);
-      const data = await getEventById(eventId);
-      if (data && data.event) {
-        setEvent(data.event);
-        setIsRegistered(!isRegistered); 
-      }
+      await fetchEventDetails();
+      setIsRegistered(!isRegistered);
     } catch (error) {
       console.error("Error updating attendance:", error);
-      alert(error.message || "Failed to update attendance");
+      alert(error.response?.data?.message || "Failed to update attendance");
     } finally {
       setIsRegistering(false);
     }
   };
 
-  const formatDate = (date) => {
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this event?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteEvent(eventId);
+      navigate("/events");
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      alert(error.response?.data?.message || "Failed to delete event");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEventUpdated = (updatedEvent) => {
+    setEvent(updatedEvent);
+    setShowEditModal(false);
+  };
+
+  const formatEventDate = (date) => {
     try {
       return format(new Date(date), "PPP p");
     } catch (error) {
@@ -118,7 +144,7 @@ const EventDetails = () => {
           className="flex items-center text-purple-600 hover:text-purple-800 mb-4"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-          Back 
+          Back to Events
         </button>
 
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -161,7 +187,9 @@ const EventDetails = () => {
                         ? faCheck
                         : faCalendarPlus
                     }
-                    className="w-4 h-4 mr-2"
+                    className={`w-4 h-4 mr-2 ${
+                      isRegistering ? "animate-spin" : ""
+                    }`}
                   />
                   {isRegistering
                     ? "Processing..."
@@ -176,11 +204,13 @@ const EventDetails = () => {
               {event.description}
             </div>
 
+            {/* Event Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Left Column */}
               <div className="space-y-4">
                 <div className="flex items-center text-gray-600">
                   <FontAwesomeIcon icon={faCalendar} className="w-5 h-5 mr-3" />
-                  <span>{formatDate(event.date)}</span>
+                  <span>{formatEventDate(event.date)}</span>
                 </div>
 
                 <div className="flex items-center text-gray-600">
@@ -192,39 +222,10 @@ const EventDetails = () => {
                   <FontAwesomeIcon icon={faUsers} className="w-5 h-5 mr-3" />
                   <span>{event.organizer}</span>
                 </div>
-
-                {event.createdBy && (
-                  <div className="flex items-center text-gray-600">
-                    <FontAwesomeIcon
-                      icon={faUserGroup}
-                      className="w-5 h-5 mr-3"
-                    />
-                    <div className="flex items-center">
-                      <img
-                        src={
-                          event.createdBy.profilePicture ||
-                          "/default-avatar.png"
-                        }
-                        alt={event.createdBy.fullName}
-                        className="w-6 h-6 rounded-full mr-2"
-                      />
-                      <span>Created by {event.createdBy.fullName}</span>
-                    </div>
-                  </div>
-                )}
               </div>
 
+              {/* Right Column */}
               <div className="space-y-4">
-                {event.location && (
-                  <div className="flex items-center text-gray-600">
-                    <FontAwesomeIcon
-                      icon={faLocationDot}
-                      className="w-5 h-5 mr-3"
-                    />
-                    <span>{event.location}</span>
-                  </div>
-                )}
-
                 <div className="flex items-center text-gray-600">
                   <FontAwesomeIcon icon={faUsers} className="w-5 h-5 mr-3" />
                   <span>
@@ -244,6 +245,7 @@ const EventDetails = () => {
                 )}
               </div>
             </div>
+
             {/* Attendees Section */}
             {event.attendees && event.attendees.length > 0 && (
               <div className="border-t border-gray-200 pt-6">
@@ -278,92 +280,41 @@ const EventDetails = () => {
               </div>
             )}
 
-            {/* Event Status Section */}
-            <div className="border-t border-gray-200 mt-6 pt-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
-                    {new Date(event.date) > new Date()
-                      ? "Event starts in"
-                      : "Event started"}
-                  </span>
-                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                    {format(new Date(event.date), "PPP")}
-                  </span>
-                </div>
-
-                {!event.isCreator && (
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={handleAttendance}
-                      disabled={isRegistering}
-                      className={`flex items-center px-6 py-2 rounded-lg transition-colors duration-200 ${
-                        isRegistered
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : "bg-purple-600 text-white hover:bg-purple-700"
-                      } ${
-                        isRegistering ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <FontAwesomeIcon
-                        icon={
-                          isRegistering
-                            ? faClock
-                            : isRegistered
-                            ? faCheck
-                            : faCalendarPlus
-                        }
-                        className="w-4 h-4 mr-2"
-                      />
-                      {isRegistering
-                        ? "Processing..."
-                        : isRegistered
-                        ? "Going"
-                        : "Register Now"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Event Location Section (if applicable) */}
-            {event.location && (
-              <div className="border-t border-gray-200 mt-6 pt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Location
-                </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center text-gray-600">
-                    <FontAwesomeIcon
-                      icon={faLocationDot}
-                      className="w-5 h-5 mr-3 text-purple-600"
-                    />
-                    <span>{event.location}</span>
-                  </div>
-                </div>
+            {/* Creator Actions */}
+            {event.isCreator && (
+              <div className="border-t border-gray-200 mt-6 pt-6 flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center px-6 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faEdit} className="w-4 h-4 mr-2" />
+                  Edit Event
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex items-center px-6 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                >
+                  <FontAwesomeIcon
+                    icon={isDeleting ? faClock : faTrash}
+                    className={`w-4 h-4 mr-2 ${
+                      isDeleting ? "animate-spin" : ""
+                    }`}
+                  />
+                  {isDeleting ? "Deleting..." : "Delete Event"}
+                </button>
               </div>
             )}
-
-            {/* Bottom Action Bar */}
-            <div className="border-t border-gray-200 mt-6 pt-6 flex justify-between items-center">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center text-gray-600 hover:text-purple-600 transition-colors"
-              >
-                <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-                Back 
-              </button>
-
-              {event.isCreator && (
-                <div className="flex items-center">
-                  <span className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg">
-                    You created this event
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
+
+        {/* Edit Modal */}
+        <EditEventModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          event={event}
+          onEventUpdated={handleEventUpdated}
+        />
       </div>
     </div>
   );

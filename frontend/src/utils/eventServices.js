@@ -118,3 +118,37 @@ export const getEventById = async (eventId) => {
     );
   }
 };
+
+export const editEvent = async (eventId, formData) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/editevent/${eventId}`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error editing event:", error);
+    throw error;
+  }
+};
+
+export const deleteEvent = async (eventId) => {
+  try {
+    const response = await axios.delete(
+      `${API_BASE_URL}/deleteevent/${eventId}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    throw error;
+  }
+};
