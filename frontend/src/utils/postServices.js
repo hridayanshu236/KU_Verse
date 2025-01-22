@@ -13,11 +13,9 @@ const formatUserInfo = (user) => {
 
   return {
     fullName: user.fullName || "Anonymous",
-    department:
-      user.department != null && user.department.trim() !== ""
-        ? user.department
-        : "No Department",
+    department: user.department?.trim() || "No Department",
     profilePicture: user.profilePicture || "/default-profile-image.png",
+    id: user._id,
   };
 };
 
@@ -38,7 +36,6 @@ const transformPostData = (post) => ({
 export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
   try {
     let endpoint;
-
     switch (type) {
       case "friend":
         endpoint = id
@@ -52,19 +49,10 @@ export const fetchPosts = async ({ id = null, type = "feed" } = {}) => {
         endpoint = `${API_BASE_URL}/feedposts`;
     }
 
-    const response = await axios.get(endpoint, {
-      withCredentials: true,
-    });
-
-    const posts = response.data.posts || [];
-
-    return posts.map(transformPostData);
+    const response = await axios.get(endpoint, { withCredentials: true });
+    return response.data.posts.map(transformPostData);
   } catch (error) {
-    console.error("Failed to fetch posts:", error.response?.data || error);
-    throw new Error(
-      error.response?.data?.message ||
-        "Failed to fetch posts. Please try again."
-    );
+    handleError(error, "Failed to fetch posts");
   }
 };
 
@@ -73,15 +61,9 @@ export const createPost = async (postData) => {
     const response = await axios.post(`${API_BASE_URL}/createpost`, postData, {
       withCredentials: true,
     });
-
-    const post = response.data.post;
-    return transformPostData(post);
+    return transformPostData(response.data.post);
   } catch (error) {
-    console.error("Failed to create post:", error.response?.data || error);
-    throw new Error(
-      error.response?.data?.message ||
-        "Failed to create post. Please try again."
-    );
+    handleError(error, "Failed to create post");
   }
 };
 
@@ -90,14 +72,11 @@ export const upvotePost = async (postId) => {
     const response = await axios.post(
       `${API_BASE_URL}/upvote/${postId}`,
       {},
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
-    console.error("Failed to upvote post:", error.response?.data || error);
-    throw new Error("Failed to upvote. Try again.");
+    handleError(error, "Failed to upvote post");
   }
 };
 
@@ -106,30 +85,24 @@ export const downvotePost = async (postId) => {
     const response = await axios.post(
       `${API_BASE_URL}/downvote/${postId}`,
       {},
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
-    console.error("Failed to downvote post:", error.response?.data || error);
-    throw new Error("Failed to downvote. Try again.");
+    handleError(error, "Failed to downvote post");
   }
 };
-// Comment on Post
+
 export const commentOnPost = async (postId, commentText) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/comment/${postId}`,
       { comment: commentText },
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
-    console.error("Failed to comment on post:", error.response?.data || error);
-    throw new Error("Failed to add comment. Please try again.");
+    handleError(error, "Failed to add comment");
   }
 };
 
@@ -139,7 +112,7 @@ export const deletePost = async (postId) => {
       withCredentials: true,
     });
   } catch (error) {
-    throw new Error("Failed to delete post. Please try again later.");
+    handleError(error, "Failed to delete post");
   }
 };
 
@@ -150,7 +123,7 @@ export const deleteComment = async (postId, commentId) => {
       withCredentials: true,
     });
   } catch (error) {
-    throw new Error("Failed to delete comment. Please try again later.");
+    handleError(error, "Failed to delete comment");
   }
 };
 
@@ -161,8 +134,7 @@ export const fetchCommentsByPostId = async (postId) => {
     });
     return response.data.comments;
   } catch (error) {
-    console.error("Failed to fetch comments:", error.response?.data || error);
-    throw new Error("Failed to fetch comments. Try again.");
+    handleError(error, "Failed to fetch comments");
   }
 };
 
@@ -171,13 +143,11 @@ export const updateCaption = async (postId, newCaption) => {
     const response = await axios.put(
       `${API_BASE_URL}/updatecaption/${postId}`,
       { newCaption },
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
     return response.data;
   } catch (error) {
-    throw new Error("Failed to update caption. Please try again later.");
+    handleError(error, "Failed to update caption");
   }
 };
 
@@ -186,17 +156,35 @@ export const fetchPostUserInfo = async (postId) => {
     const response = await axios.get(`${API_BASE_URL}/${postId}`, {
       withCredentials: true,
     });
-
     const post = response.data.post;
     return {
       ...transformPostData(post).user,
       createdAt: post.time || new Date().toISOString(),
     };
   } catch (error) {
-    console.error(
-      "Failed to fetch post user info:",
-      error.response?.data || error
-    );
-    throw new Error("Failed to fetch post user info. Try again.");
+    handleError(error, "Failed to fetch post user info");
   }
+};
+
+export const editPost = async (postId, postData) => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/editpost/${postId}`,
+      postData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      }
+    );
+    return transformPostData(response.data.post);
+  } catch (error) {
+    handleError(error, "Failed to edit post");
+  }
+};
+
+const handleError = (error, defaultMessage) => {
+  console.error(`${defaultMessage}:`, error.response?.data || error);
+  throw new Error(error.response?.data?.message || defaultMessage);
 };

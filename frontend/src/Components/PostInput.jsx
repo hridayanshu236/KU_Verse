@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Camera, Video, School, X, Loader2 } from "lucide-react";
 import axios from "axios";
-
-
 import { useUser } from "../contexts/userContext";
+
+const API_BASE_URL = "http://localhost:5000/api/post";
 
 const PostInput = ({ onPostCreated }) => {
   const { user } = useUser();
@@ -18,7 +18,6 @@ const PostInput = ({ onPostCreated }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type and size
     const validTypes = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
     const maxSize = 5 * 1024 * 1024; // 5MB
 
@@ -35,7 +34,6 @@ const PostInput = ({ onPostCreated }) => {
     setSelectedFile(file);
     setError(null);
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result);
@@ -62,22 +60,21 @@ const PostInput = ({ onPostCreated }) => {
       }
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/post/createpost",
+        `${API_BASE_URL}/createpost`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user.token}`, // Include the authentication token
           },
           withCredentials: true,
         }
       );
 
-      // Reset form after successful post
       setCaption("");
       setSelectedFile(null);
       setPreview(null);
 
-      // Notify parent component about new post
       if (onPostCreated) {
         onPostCreated(data.post);
       }
@@ -96,8 +93,7 @@ const PostInput = ({ onPostCreated }) => {
     }
   };
 
-  // Add a default avatar URL or placeholder
-  const defaultAvatar = "/api/placeholder/40/40"; // Using the placeholder API for default avatar
+  const defaultAvatar = "/api/placeholder/40/40";
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-4 m-2">
@@ -116,7 +112,6 @@ const PostInput = ({ onPostCreated }) => {
         />
       </div>
 
-      {/* Preview Section */}
       {preview && (
         <div className="relative mb-4">
           {selectedFile.type.startsWith("image/") ? (

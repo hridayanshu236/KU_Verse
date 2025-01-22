@@ -5,10 +5,51 @@ import {
   commentOnPost,
   fetchCommentsByPostId,
   deletePost,
+  editPost,
 } from "../utils/postServices";
-import { ArrowUp, ArrowDown, MessageSquare, Share2, Trash } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowDown,
+  MessageSquare,
+  Share2,
+  MoreHorizontal,
+} from "lucide-react";
 import BookmarkButton from "./BookmarkButton";
 import { useUser } from "../contexts/userContext";
+import axios from "axios";
+import EditModal from "./EditModal";
+
+const API_BASE_URL = "http://localhost:5000/api/post"; // Ensure this URL is correct for your backend
+
+const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <h2 className="text-xl font-semibold mb-4">Confirm Delete</h2>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to delete this post? This action cannot be
+          undone.
+        </p>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 transition-colors text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 transition-colors text-white"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CommentSection = ({ userProfile, postId, comments, onComment }) => {
   const [comment, setComment] = useState("");
@@ -77,6 +118,11 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
 
 const Posts = ({ posts: initialPosts }) => {
   const { user } = useUser();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [postToEdit, setPostToEdit] = useState(null);
+  const [menuOpen, setMenuOpen] = useState({});
   const [localPosts, setLocalPosts] = useState(() =>
     initialPosts.map((post) => ({
       ...post,
@@ -93,6 +139,99 @@ const Posts = ({ posts: initialPosts }) => {
       time: post.time || new Date().toISOString(),
     }))
   );
+
+  useEffect(() => {
+    // Ensure user context is properly populated
+    if (!user) {
+      console.log("User Context is not available.");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!initialPosts || !user) return;
+
+    const processedPosts = initialPosts.map((post) => ({
+      ...post,
+      voteCount:
+        post.voteCount ??
+        (post.upvotes?.length || 0) - (post.downvotes?.length || 0),
+      userVoteStatus: post.upvotes?.includes(user?._id)
+        ? "upvoted"
+        : post.downvotes?.includes(user?._id)
+        ? "downvoted"
+        : "none",
+      showComments: false,
+      commentt: post.commentt || [],
+      time: post.time || new Date().toISOString(),
+    }));
+
+    setLocalPosts(processedPosts);
+  }, [initialPosts, user]);
+
+  const handleDeleteClick = (postId) => {
+    setPostToDelete(postId);
+    setIsDeleteModalOpen(true);
+    setMenuOpen({});
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!postToDelete) return;
+
+    try {
+      await deletePost(postToDelete);
+      setLocalPosts((prevPosts) =>
+        prevPosts.filter((post) => post._id !== postToDelete)
+      );
+      setIsDeleteModalOpen(false);
+      setPostToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setPostToDelete(null);
+  };
+
+  const handleEditClick = (post) => {
+    setPostToEdit(post);
+    setIsEditModalOpen(true);
+    setMenuOpen({});
+  };
+
+  const handleEditSubmit = async (formData) => {
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/editpost/${postToEdit._id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      );
+
+      setLocalPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postToEdit._id
+            ? { ...post, ...response.data.post, user: post.user }
+            : post
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setPostToEdit(null);
+    } catch (error) {
+      console.error("Failed to edit post:", error);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+    setPostToEdit(null);
+  };
 
   const handleVote = async (postId, isUpvote) => {
     const currentPost = localPosts.find((post) => post._id === postId);
@@ -115,8 +254,8 @@ const Posts = ({ posts: initialPosts }) => {
           updatedVoteCount +=
             post.userVoteStatus === oppositeVoteStatus
               ? isUpvote
-                ? 2
-                : -2
+                ? 1
+                : -1
               : isUpvote
               ? 1
               : -1;
@@ -175,22 +314,6 @@ const Posts = ({ posts: initialPosts }) => {
     }
   };
 
-  const handleDelete = async (postId) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this post?"
-    );
-    if (!confirmDelete) return;
-
-    try {
-      await deletePost(postId);
-      setLocalPosts((prevPosts) =>
-        prevPosts.filter((post) => post._id !== postId)
-      );
-    } catch (error) {
-      console.error("Failed to delete post:", error);
-    }
-  };
-
   const toggleComments = async (postId) => {
     const post = localPosts.find((p) => p._id === postId);
 
@@ -219,6 +342,13 @@ const Posts = ({ posts: initialPosts }) => {
     }
   };
 
+  const handleMenuToggle = (postId) => {
+    setMenuOpen((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
+
   useEffect(() => {
     setLocalPosts(
       initialPosts.map((post) => ({
@@ -238,148 +368,211 @@ const Posts = ({ posts: initialPosts }) => {
   }, [initialPosts, user?._id]);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      {localPosts.length === 0 ? (
-        <div className="text-center text-gray-500">No posts available</div>
-      ) : (
-        localPosts.map((post) => {
-          const isPostOwner = user._id === post.user._id;
-
-          return (
-            <div
-              key={post._id}
-              className="flex justify-center my-2 w-full px-2 md:px-4 min-w-[400px]"
-            >
-              <div className="flex flex-col h-auto w-full max-w-[640px] min-w-[280px] rounded p-2 border border-gray-200 shadow-sm">
-                <div className="bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-center relative">
-                  {isPostOwner && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(post._id)}
-                      className="absolute top-2 right-2 p-2 rounded-full hover:bg-red-100"
-                    >
-                      <Trash className="w-5 h-5 text-red-500" />
-                    </button>
-                  )}
-                  <div className="items-center flex flex-col p-2 m-1 justify-center">
-                    <img
-                      src={post.user.profilePicture || "/api/placeholder/70/70"}
-                      className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-full"
-                      alt="Profile_picture"
+    <>
+      <div className="flex flex-col gap-4 w-full">
+        {localPosts.length === 0 ? (
+          <div className="text-center text-gray-500">No posts available</div>
+        ) : (
+          localPosts.map((post) => {
+            const currentUser = useUser();
+            console.log("The user info is ");
+            console.log(post.user.id);
+            console.log(typeof currentUser.user._id);
+            const isPostOwner = () => {
+              if (post?.user?.id && currentUser?.user?._id) {
+                return (
+                  post.user.id.toString() === currentUser.user._id.toString()
+                );
+              }
+              return false;
+            };
+            return (
+              <div
+                key={post._id}
+                className="flex justify-center my-2 w-full px-2 md:px-4 min-w-[400px]"
+              >
+                <div className="flex flex-col h-auto w-full max-w-[640px] min-w-[280px] rounded p-2 border border-gray-200 shadow-sm">
+                  {isEditModalOpen &&
+                  postToEdit &&
+                  post._id === postToEdit._id ? (
+                    <EditModal
+                      isOpen={isEditModalOpen}
+                      onClose={handleEditCancel}
+                      onSubmit={handleEditSubmit}
+                      initialData={postToEdit}
                     />
-                    <span className="text-black font-semibold text-sm md:text-base w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                      {post.user.fullName}
-                    </span>
-                    <span className="text-gray-900 font-light text-xs md:text-sm w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">
-                      {post.user.department}
-                    </span>
-                    <span className="text-gray-400 font-extralight text-xs">
-                      {post.time
-                        ? new Date(post.time).toLocaleString()
-                        : "Time unavailable"}
-                    </span>
-                    {post.caption && (
-                      <div className="border-t border-green-100 pt-2">
-                        <p className="text-gray-800 text-center font-semibold text-sm md:text-base leading-relaxed">
-                          {post.caption}
-                        </p>
+                  ) : (
+                    <>
+                      <div className="bg-green-100 flex-1 rounded-t-lg mb-1 flex justify-center relative">
+                        {isPostOwner() && (
+                          <div className="absolute top-2 right-2">
+                            <div className="relative">
+                              <button
+                                type="button"
+                                className="p-2 rounded-full hover:bg-gray-200"
+                                onClick={() => handleMenuToggle(post._id)}
+                              >
+                                <MoreHorizontal className="w-5 h-5 text-gray-500" />
+                              </button>
+                              {menuOpen[post._id] && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditClick(post)}
+                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteClick(post._id)}
+                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <div className="items-center flex flex-col p-2 m-1 justify-center">
+                          <img
+                            src={
+                              post.user.profilePicture ||
+                              "/api/placeholder/70/70"
+                            }
+                            className="w-[50px] h-[50px] md:w-[70px] md:h-[70px] rounded-full"
+                            alt="Profile_picture"
+                          />
+                          <span className="text-black font-semibold text-sm md:text-base w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                            {post.user.fullName}
+                          </span>
+                          <span className="text-gray-900 font-light text-xs md:text-sm w-full text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                            {post.user.department}
+                          </span>
+                          <span className="text-gray-400 font-extralight text-xs">
+                            {post.time
+                              ? new Date(post.time).toLocaleString()
+                              : "Time unavailable"}
+                          </span>
+                          {post.caption && (
+                            <div className="border-t border-green-100 pt-2">
+                              <p className="text-gray-800 text-center font-semibold text-sm md:text-base leading-relaxed">
+                                {post.caption}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                <div className="flex-[2] flex items-center justify-center rounded-b-lg">
-                  {post.image?.url && (
-                    <img
-                      src={post.image.url}
-                      alt="Post content"
-                      className="min-h-[300px] min-w-[300px] max-h-[500px] w-full h-auto object-contain"
-                    />
+                      <div className="flex-[2] flex items-center justify-center rounded-b-lg">
+                        {post.image?.url && (
+                          <img
+                            src={post.image.url}
+                            alt="Post content"
+                            className="min-h-[300px] min-w-[300px] max-h-[500px] w-full h-auto object-contain"
+                          />
+                        )}
+                      </div>
+
+                      <div className="flex flex-row justify-between px-2 items-center mt-2">
+                        <button
+                          type="button"
+                          className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center rounded-full
+                            ${
+                              post.userVoteStatus === "upvoted"
+                                ? "bg-blue-100"
+                                : ""
+                            }`}
+                          onClick={() => handleVote(post._id, true)}
+                        >
+                          <ArrowUp
+                            className={`w-5 h-5 md:w-6 md:h-6 
+                              ${
+                                post.userVoteStatus === "upvoted"
+                                  ? "text-blue-500"
+                                  : "text-gray-500"
+                              }`}
+                          />
+                        </button>
+
+                        <span
+                          className={`font-semibold mx-2 text-sm md:text-base
+                            ${
+                              post.userVoteStatus === "upvoted"
+                                ? "text-blue-500"
+                                : post.userVoteStatus === "downvoted"
+                                ? "text-red-500"
+                                : "text-gray-500"
+                            }`}
+                        >
+                          {post.voteCount}
+                        </span>
+
+                        <button
+                          type="button"
+                          className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center rounded-full
+                            ${
+                              post.userVoteStatus === "downvoted"
+                                ? "bg-red-100"
+                                : ""
+                            }`}
+                          onClick={() => handleVote(post._id, false)}
+                        >
+                          <ArrowDown
+                            className={`w-5 h-5 md:w-6 md:h-6 
+                              ${
+                                post.userVoteStatus === "downvoted"
+                                  ? "text-red-500"
+                                  : "text-gray-500"
+                              }`}
+                          />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+                          onClick={() => toggleComments(post._id)}
+                        >
+                          <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
+                        >
+                          <Share2 className="w-5 h-5 md:w-6 md:h-6" />
+                        </button>
+
+                        <BookmarkButton
+                          postId={post._id}
+                          onBookmark={() => {}}
+                        />
+                      </div>
+
+                      {post.showComments && (
+                        <CommentSection
+                          userProfile={post.user}
+                          postId={post._id}
+                          comments={post.commentt || []}
+                          onComment={handleComment}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
-
-                <div className="flex flex-row justify-between px-2 items-center mt-2">
-                  <button
-                    type="button"
-                    className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center rounded-full
-                      ${
-                        post.userVoteStatus === "upvoted" ? "bg-blue-100" : ""
-                      }`}
-                    onClick={() => handleVote(post._id, true)}
-                  >
-                    <ArrowUp
-                      className={`w-5 h-5 md:w-6 md:h-6 
-                        ${
-                          post.userVoteStatus === "upvoted"
-                            ? "text-blue-500"
-                            : "text-gray-500"
-                        }`}
-                    />
-                  </button>
-
-                  <span
-                    className={`font-semibold mx-2 text-sm md:text-base
-                      ${
-                        post.userVoteStatus === "upvoted"
-                          ? "text-blue-500"
-                          : post.userVoteStatus === "downvoted"
-                          ? "text-red-500"
-                          : "text-gray-500"
-                      }`}
-                  >
-                    {post.voteCount}
-                  </span>
-
-                  <button
-                    type="button"
-                    className={`hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center rounded-full
-                      ${
-                        post.userVoteStatus === "downvoted" ? "bg-red-100" : ""
-                      }`}
-                    onClick={() => handleVote(post._id, false)}
-                  >
-                    <ArrowDown
-                      className={`w-5 h-5 md:w-6 md:h-6 
-                        ${
-                          post.userVoteStatus === "downvoted"
-                            ? "text-red-500"
-                            : "text-gray-500"
-                        }`}
-                    />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-                    onClick={() => toggleComments(post._id)}
-                  >
-                    <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
-
-                  <button
-                    type="button"
-                    className="hover:bg-slate-200 w-[40px] h-[40px] md:w-[50px] md:h-[50px] flex items-center justify-center"
-                  >
-                    <Share2 className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
-
-                  <BookmarkButton postId={post._id} onBookmark={() => {}} />
-                </div>
-
-                {post.showComments && (
-                  <CommentSection
-                    userProfile={post.user}
-                    postId={post._id}
-                    comments={post.commentt || []}
-                    onComment={handleComment}
-                  />
-                )}
               </div>
-            </div>
-          );
-        })
-      )}
-    </div>
+            );
+          })
+        )}
+      </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 };
 
