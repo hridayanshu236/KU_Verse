@@ -5,9 +5,10 @@ import {
   commentOnPost,
   fetchCommentsByPostId,
   deletePost,
-  editPost,
+  deleteComment,
 } from "../utils/postServices";
 import {
+  Trash,
   ArrowUp,
   ArrowDown,
   MessageSquare,
@@ -51,7 +52,13 @@ const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
-const CommentSection = ({ userProfile, postId, comments, onComment }) => {
+const CommentSection = ({
+  userProfile,
+  postId,
+  comments,
+  onComment,
+  onDeleteComment,
+}) => {
   const [comment, setComment] = useState("");
   const { user } = useUser();
 
@@ -60,6 +67,14 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
     if (comment.trim()) {
       onComment(postId, comment);
       setComment("");
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await onDeleteComment(postId, commentId);
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
     }
   };
 
@@ -92,7 +107,7 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
 
       <div className="space-y-3">
         {comments?.map((comment) => (
-          <div key={comment._id} className="flex gap-3">
+          <div key={comment._id} className="flex gap-3 items-center">
             <img
               src={comment.user?.profilePicture || "/api/placeholder/32/32"}
               alt="Profile"
@@ -109,6 +124,15 @@ const CommentSection = ({ userProfile, postId, comments, onComment }) => {
                 {new Date(comment.time).toLocaleString()}
               </div>
             </div>
+            {/* Show delete button if current user owns the comment */}
+            {comment.user?._id === user?._id && (
+              <button
+                onClick={() => handleDeleteComment(comment._id)}
+                className="text-red-500 hover:text-red-700 ml-2 text-sm"
+              >
+                <Trash className="h-5 w-5" />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -141,7 +165,6 @@ const Posts = ({ posts: initialPosts }) => {
   );
 
   useEffect(() => {
-    // Ensure user context is properly populated
     if (!user) {
       console.log("User Context is not available.");
     }
@@ -296,18 +319,32 @@ const Posts = ({ posts: initialPosts }) => {
     }
   };
 
-  const handleComment = async (postId, comment) => {
+  const handleComment = async (postId, commentText) => {
     try {
-      const newComment = await commentOnPost(postId, comment);
+      const response = await commentOnPost(postId, commentText);
+
+      const newComment = {
+        _id: response._id,
+        comment: commentText,
+        time: new Date().toISOString(),
+        user: {
+          _id: user._id,
+          fullName: user.fullName,
+          profilePicture: user.profilePicture,
+          department: user.department,
+        },
+      };
+
       setLocalPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post._id === postId
-            ? {
-                ...post,
-                commentt: [...(post.commentt || []), newComment],
-              }
-            : post
-        )
+        prevPosts.map((post) => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              commentt: [...(post.commentt || []), newComment],
+            };
+          }
+          return post;
+        })
       );
     } catch (error) {
       console.error("Failed to add comment:", error);
@@ -556,6 +593,25 @@ const Posts = ({ posts: initialPosts }) => {
                           postId={post._id}
                           comments={post.commentt || []}
                           onComment={handleComment}
+                          onDeleteComment={async (postId, commentId) => {
+                            try {
+                              await deleteComment(postId, commentId);
+                              setLocalPosts((prevPosts) =>
+                                prevPosts.map((p) =>
+                                  p._id === postId
+                                    ? {
+                                        ...p,
+                                        commentt: p.commentt.filter(
+                                          (c) => c._id !== commentId
+                                        ),
+                                      }
+                                    : p
+                                )
+                              );
+                            } catch (error) {
+                              console.error("Failed to delete comment:", error);
+                            }
+                          }}
                         />
                       )}
                     </>

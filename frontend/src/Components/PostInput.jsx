@@ -140,15 +140,7 @@ const PostInput = ({ onPostCreated }) => {
         <div className="text-red-500 text-sm mb-4 text-center">{error}</div>
       )}
 
-      <div className="flex flex-row justify-between pt-2 border-t border-emerald-100">
-        <button
-          className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-emerald-50 transition-colors"
-          onClick={() => {}}
-        >
-          <Video className="w-5 h-5 text-emerald-600" />
-          <span className="text-sm text-gray-600">Go Live</span>
-        </button>
-
+      <div className="flex flex-row justify-center pt-2 border-t border-emerald-100">
         <div className="relative">
           <input
             type="file"
@@ -165,14 +157,6 @@ const PostInput = ({ onPostCreated }) => {
             <span className="text-sm text-gray-600">Photo/Video</span>
           </button>
         </div>
-
-        <button
-          className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-emerald-50 transition-colors"
-          onClick={() => {}}
-        >
-          <School className="w-5 h-5 text-emerald-600" />
-          <span className="text-sm text-gray-600">Achievements</span>
-        </button>
       </div>
 
       <div className="mt-4 flex justify-end">

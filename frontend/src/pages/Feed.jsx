@@ -6,7 +6,7 @@ import Posts from "../Components/Posts";
 import AchievementCard from "../Components/AchievementCard";
 import EventCard from "../Components/EventCard";
 import ChatBubble from "../components/ChatBubble";
-import {fetchChats} from "../utils/chatService";
+import { fetchChats } from "../utils/chatService";
 import ChatInterface from "../Components/ChatInterface";
 import { fetchPosts, createPost } from "../utils/postServices";
 import EventsForYou from "../components/EventsForYou";
@@ -24,36 +24,36 @@ const Feed = () => {
     activeUserId: null,
     chatStates: {},
   });
-   const loadChats = async () => {
-     try {
-       setChatLoading(true);
-       const userChats = await fetchChats();
-       // Sort chats by last message timestamp
-       const sortedChats = userChats
-         .filter(
-           (chat) =>
-             chat &&
-             chat._id &&
-             Array.isArray(chat.participants) &&
-             chat.participants.length > 0
-         )
-         .sort((a, b) => {
-           const dateA = a.lastMessage?.time
-             ? new Date(a.lastMessage.time)
-             : new Date(0);
-           const dateB = b.lastMessage?.time
-             ? new Date(b.lastMessage.time)
-             : new Date(0);
-           return dateB - dateA; // Sort descending (newest first)
-         });
-       setChats(sortedChats);
-     } catch (error) {
-       console.error("Failed to load chats:", error);
-       setChats([]);
-     } finally {
-       setChatLoading(false);
-     }
-   };
+  const loadChats = async () => {
+    try {
+      setChatLoading(true);
+      const userChats = await fetchChats();
+      // Sort chats by last message timestamp
+      const sortedChats = userChats
+        .filter(
+          (chat) =>
+            chat &&
+            chat._id &&
+            Array.isArray(chat.participants) &&
+            chat.participants.length > 0
+        )
+        .sort((a, b) => {
+          const dateA = a.lastMessage?.time
+            ? new Date(a.lastMessage.time)
+            : new Date(0);
+          const dateB = b.lastMessage?.time
+            ? new Date(b.lastMessage.time)
+            : new Date(0);
+          return dateB - dateA; // Sort descending (newest first)
+        });
+      setChats(sortedChats);
+    } catch (error) {
+      console.error("Failed to load chats:", error);
+      setChats([]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const handleSidebarConnect = async (userId) => {
@@ -102,13 +102,8 @@ const Feed = () => {
     loadPosts();
   }, []);
 
-  const handleCreatePost = async (newPost) => {
-    try {
-      const createdPost = await createPost(newPost);
-      setPosts((prevPosts) => [createdPost, ...prevPosts]);
-    } catch (error) {
-      console.error(error.message);
-    }
+  const handlePostCreated = (newPost) => {
+    setLocalPosts([newPost, ...localPosts]);
   };
 
   return (
@@ -131,7 +126,7 @@ const Feed = () => {
 
         {/* Main Feed Section */}
         <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
-          <PostInput onPostCreate={handleCreatePost} className="mb-6" />
+          <PostInput onPostCreated={handlePostCreated} />
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>

@@ -394,9 +394,12 @@ const commentPost = asyncHandler(async (req, res) => {
   post.commentt.push(newComment._id);
   await post.save();
 
-  res.status(200).json({ message: "Comment added successfully" });
+  res.status(200).json({
+    _id: newComment._id,
+    comment: newComment.comment,
+    time: newComment.createdAt,
+  });
 });
-
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.body;
   const post = await Post.findById(req.params.id);
@@ -466,7 +469,7 @@ const editCaption = asyncHandler(async (req, res) => {
 
 const editPost = asyncHandler(async (req, res) => {
   const postId = req.params.id;
-  const {caption} = req.body;
+  const { caption } = req.body;
   const post = await Post.findById(postId);
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     res.status(400);
@@ -502,9 +505,8 @@ const editPost = asyncHandler(async (req, res) => {
 
       post.image = {
         public_id: result.public_id,
-        url: result.secure_url
-      }; 
-
+        url: result.secure_url,
+      };
     } catch (error) {
       res.status(500);
       throw new Error("Error uploading image: " + error.message);
@@ -519,9 +521,7 @@ const editPost = asyncHandler(async (req, res) => {
   // Update the post
   await post.save();
 
-  res
-    .status(200)
-    .json({ message: "Post updated succesfully", post: post });
+  res.status(200).json({ message: "Post updated succesfully", post: post });
 });
 
 module.exports = {

@@ -100,7 +100,7 @@ export const commentOnPost = async (postId, commentText) => {
       { comment: commentText },
       { withCredentials: true }
     );
-    return response.data;
+    return response.data.comment;
   } catch (error) {
     handleError(error, "Failed to add comment");
   }
