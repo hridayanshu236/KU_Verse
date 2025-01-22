@@ -24,7 +24,6 @@ const API_BASE_URL = "http://localhost:5000/api/post"; // Ensure this URL is cor
 
 const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
@@ -51,7 +50,6 @@ const DeleteModal = ({ isOpen, onClose, onConfirm }) => {
     </div>
   );
 };
-
 const CommentSection = ({
   userProfile,
   postId,
@@ -222,7 +220,25 @@ const Posts = ({ posts: initialPosts }) => {
     setIsEditModalOpen(true);
     setMenuOpen({});
   };
-
+  const handleDeleteComment = async (postId, commentId) => {
+    try {
+      await deleteComment(postId, commentId);
+      setLocalPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                commentt: post.commentt.filter(
+                  (comment) => comment._id !== commentId
+                ),
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+    }
+  };
   const handleEditSubmit = async (formData) => {
     try {
       const response = await axios.put(
@@ -412,9 +428,6 @@ const Posts = ({ posts: initialPosts }) => {
         ) : (
           localPosts.map((post) => {
             const currentUser = useUser();
-            console.log("The user info is ");
-            console.log(post.user.id);
-            console.log(typeof currentUser.user._id);
             const isPostOwner = () => {
               if (post?.user?.id && currentUser?.user?._id) {
                 return (
@@ -593,25 +606,7 @@ const Posts = ({ posts: initialPosts }) => {
                           postId={post._id}
                           comments={post.commentt || []}
                           onComment={handleComment}
-                          onDeleteComment={async (postId, commentId) => {
-                            try {
-                              await deleteComment(postId, commentId);
-                              setLocalPosts((prevPosts) =>
-                                prevPosts.map((p) =>
-                                  p._id === postId
-                                    ? {
-                                        ...p,
-                                        commentt: p.commentt.filter(
-                                          (c) => c._id !== commentId
-                                        ),
-                                      }
-                                    : p
-                                )
-                              );
-                            } catch (error) {
-                              console.error("Failed to delete comment:", error);
-                            }
-                          }}
+                          onDeleteComment={handleDeleteComment} // Pass the handleDeleteComment function
                         />
                       )}
                     </>

@@ -13,6 +13,7 @@ import EventsForYou from "../components/EventsForYou";
 import UpcomingEvents from "../components/UpcomingEvent";
 import { useUser } from "../contexts/userContext";
 import SidebarRecommendations from "../components/SidebarRecommendation";
+
 const Feed = () => {
   const [chats, setChats] = useState([]);
   const [chatLoading, setChatLoading] = useState(true);
@@ -102,8 +103,13 @@ const Feed = () => {
     loadPosts();
   }, []);
 
-  const handlePostCreated = (newPost) => {
-    setLocalPosts([newPost, ...localPosts]);
+  const handleCreatePost = async (newPost) => {
+    try {
+      const createdPost = await createPost(newPost);
+      setPosts((prevPosts) => [createdPost, ...prevPosts]);
+    } catch (error) {
+      console.error(error.message);
+    }
   };
 
   return (
@@ -126,7 +132,7 @@ const Feed = () => {
 
         {/* Main Feed Section */}
         <div className="flex-1 w-full mdd:flex-[2] mdd:min-w-[600px] px-4 overflow-auto h-full scrollbar-hide">
-          <PostInput onPostCreated={handlePostCreated} />
+          <PostInput onPostCreate={handleCreatePost} className="mb-6" />
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
