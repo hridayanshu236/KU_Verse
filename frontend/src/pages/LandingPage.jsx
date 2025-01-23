@@ -13,13 +13,13 @@ import kadelImage from "../Assets/kadel.png";
 import sachinImage from "../Assets/sachin.png";
 import parthImage from "../Assets/parth.png";
 import BhishmaImage from "../Assets/bhisma.png";
-import Harimage from "../Assets/profile.png";
+import Harimage from "../Assets/Harii.jpg";
 import Footerlanding from "../Components/Footerlanding";
 const LandingPage = () => {
   const teamMembers = [
     {
       name: "Ashraya Kadel",
-      role: "Fullstack Developer",
+      role: "Backend Developer",
       image: kadelImage,
       instagram: "https://www.instagram.com/kadel._.28/?",
       linkedin: "https://www.instagram.com/kadel._.28/?",
@@ -55,7 +55,7 @@ const LandingPage = () => {
     },
     {
       name: "Hridayanshu Acharya",
-      role: "Frontend Developer",
+      role: "FullStack Developer",
       image: Harimage,
       instagram: "https://www.instagram.com/hridayanshu_acharya",
       linkedin:
