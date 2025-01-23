@@ -10,6 +10,12 @@ const {
 } = require("../utilities/emailUtility");
 const getDataURI = require("../utilities/generateURL");
 const cloudinary = require("../utilities/cloudinary");
+const validator = require("validator");
+
+const validateEmail = (email) => {
+  const domainRegex = /^[a-zA-Z0-9._%+-]+@(ku\.edu\.np|student\.ku\.edu\.np)$/;
+  return validator.isEmail(email) && domainRegex.test(email);
+};
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -22,6 +28,10 @@ const registerUser = asyncHandler(async (req, res) => {
     address,
     department,
   } = req.body;
+
+  if (!(validateEmail(email))) {
+    return res.status(402).json({ message: "Invalid email" });
+  }
 
   if (
     !email ||
@@ -54,6 +64,7 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     }
   }
+  
 
   let user = await User.findOne({ email });
   if (user) {
